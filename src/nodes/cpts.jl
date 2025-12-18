@@ -11,9 +11,15 @@ struct ConditionalProbabilityTable{T<:Union{ContinuousProbability,DiscreteProbab
         data[:, :Π] = T[]
         return new{T}(data)
     end
+    function ConditionalProbabilityTable{T}(df::DataFrame) where {T<:Union{ContinuousProbability,DiscreteProbability}}
+        @assert "Π" in names(df) "DataFrame must contain column :Π"
+        @assert eltype(df.Π) <: T "Π column element type must be $T"
+        return new{T}(df)
+    end
 end
 
 function Base.setindex!(cpt::ConditionalProbabilityTable, value, key...)
+    value = verify_probability_value(value)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     evidence_nodes = collect(map(p -> p[1], key))
     cpt_nodes = Symbol.(filter(i -> i != "Π", names(cpt.data)))
@@ -40,4 +46,20 @@ function Base.getindex(cpt::ConditionalProbabilityTable, key...)
         @assert size(cp, 1) == 1
         return cp.Π[1]
     end
+end
+
+function verify_probability_value(value::Real)
+    (0 ≤ value ≤ 1) || error("provided probability value $value is unfeasible")
+    return value
+end
+function verify_probability_value(value::Interval)
+    (0 ≤ value.lb ≤ 1) || error("provided probability value $value is unfeasible")
+    (0 ≤ value.ub ≤ 1) || error("provided probability value $value is unfeasible")
+    return value
+end
+function verify_probability_value(value::UnivariateDistribution)
+    return value
+end
+function verify_probability_value(value::ProbabilityBox)
+    return value
 end
