@@ -2,17 +2,6 @@ abstract type AbstractNode end
 abstract type AbstractContinuousNode <: AbstractNode end
 abstract type AbstractDiscreteNode <: AbstractNode end
 
-@auto_hash_equals struct UnamedProbabilityBox{T<:UnivariateDistribution}
-    parameters::Vector{Interval}
-    lb::Real
-    ub::Real
-end
-
-function UnamedProbabilityBox{T}(p::AbstractVector{<:UQInput}) where {T<:UnivariateDistribution}
-    domain = support(T())
-    return UnamedProbabilityBox{T}(p, domain.lb, domain.ub)
-end
-
 abstract type AbstractDiscretization end
 
 """ ExactDiscretization
@@ -60,7 +49,7 @@ end
 ApproximatedDiscretization() = ApproximatedDiscretization(Vector{Real}(), 0)
 
 include("cpts.jl")
-# include("discretenodes.jl")
+include("discretenodes.jl")
 # include("../util/verify_discrete.jl")
 # include("continuousnodes.jl")
 # include("../util/verify_continuous.jl")
