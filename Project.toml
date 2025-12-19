@@ -20,5 +20,3 @@ UncertaintyQuantification = "7183a548-a887-11e9-15ce-a56ab60bad7a"
 [compat]
 Compose = "0.9.5"
 SparseArrays = "1.11.0"
-UncertaintyQuantification = "0.12"
-julia = "1.10"
