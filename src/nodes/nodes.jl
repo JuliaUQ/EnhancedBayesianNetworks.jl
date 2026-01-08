@@ -52,7 +52,3 @@ include("cpts.jl")
 include("discretenodes.jl")
 include("continuousnodes.jl")
 include("functionalnodes.jl")
-
-# include("../util/verify_discrete.jl")
-# include("../util/verify_continuous.jl")
-# include("functionalnodes.jl")

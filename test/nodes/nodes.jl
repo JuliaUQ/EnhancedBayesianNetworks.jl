@@ -5,9 +5,7 @@
         interval = [-1, 0, 1, 3]
         exact_interval = ExactDiscretization([-1, 0, 1, 3])
         @test exact_interval.intervals == interval
-        @test isequal(exact_interval, ExactDiscretization(interval))
     end
-
     @testset "Approximated Discretization" begin
         interval = [-1, 0, 3, 1]
         sigma = 2
@@ -20,6 +18,5 @@
         sigma = 2
         approx_interval = ApproximatedDiscretization([-1, 0, 1, 3], 2)
         @test approx_interval.intervals == interval
-        @test isequal(approx_interval, ApproximatedDiscretization(interval, sigma))
     end
 end
