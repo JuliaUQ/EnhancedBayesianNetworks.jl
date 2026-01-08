@@ -1,49 +1,34 @@
 @testset "Functional Nodes" begin
     @testset "ContinuousFunctionalNode" begin
-
         name = :functional
-        model = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
-        models = [model]
+        models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
         simulation = MonteCarlo(200)
-        discretization = ApproximatedDiscretization()
-
         node = ContinuousFunctionalNode(name, models, simulation)
-        @test ContinuousFunctionalNode(name, models, simulation, discretization) == node
-        @test isroot(node) == false
+        @test node.name == name
+        @test node.models == [models]
+        @test node.simulation == simulation
+        @test isa(node.discretization, ApproximatedDiscretization)
+        @test node.discretization.intervals == Real[]
+        @test node.discretization.sigma == 0
+        discretization = ApproximatedDiscretization([-2, -1, 0, 1, 2], 2)
+        node = ContinuousFunctionalNode(name, models, simulation, discretization)
+        @test isa(node.discretization, ApproximatedDiscretization)
+        @test node.discretization.intervals == [-2, -1, 0, 1, 2]
+        @test node.discretization.sigma == 2
     end
-
     @testset "DiscreteFunctionalNode" begin
-
         name = :functional
-        model = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
-        models = [model]
+        models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
         simulation = MonteCarlo(200)
-        performances = df -> 1 .- 2 .* df.value1
-        parameters = Dict{Symbol,Vector{Parameter}}()
-
-        node = DiscreteFunctionalNode(name, models, performances, simulation, parameters)
-        @test DiscreteFunctionalNode(name, models, performances, simulation) == node
-        @test isroot(node) == false
-    end
-
-    @testset "Wrap Model" begin
-        name = :functional
-        model = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
-        simulation = MonteCarlo(200)
-        performances = df -> 1 .- 2 .* df.value1
-        parameters = Dict{Symbol,Vector{Parameter}}()
-        node = DiscreteFunctionalNode(name, [model], performances, simulation, parameters)
-
-        @test node == DiscreteFunctionalNode(name, model, performances, simulation, parameters)
-        @test node == DiscreteFunctionalNode(name, model, performances, simulation)
-
-        name = :functional
-        model = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
-        simulation = MonteCarlo(200)
-        discretization = ApproximatedDiscretization()
-        node = ContinuousFunctionalNode(name, [model], simulation, discretization)
-
-        @test node == ContinuousFunctionalNode(name, model, simulation, discretization)
-        @test node == ContinuousFunctionalNode(name, model, simulation)
+        performance = df -> 1 .- 2 .* df.value1
+        node = DiscreteFunctionalNode(name, models, performance, simulation)
+        @test node.name == name
+        @test node.models == [models]
+        @test node.simulation == simulation
+        @test node.performance == performance
+        @test node.parameters == Dict{Symbol,Vector{Parameter}}()
+        parameters = Dict(:fail => [Parameter(1, :a), Parameter(2, :b)], :safe => [Parameter(0, :a), Parameter(0, :b)])
+        node = DiscreteFunctionalNode(name, models, performance, simulation, parameters)
+        @test node.parameters == parameters
     end
 end

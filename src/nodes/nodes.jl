@@ -10,7 +10,7 @@ abstract type AbstractDiscretization end
         intervals: vector of Float64 that discretize initial distribution support
 
 """
-@auto_hash_equals struct ExactDiscretization <: AbstractDiscretization
+struct ExactDiscretization <: AbstractDiscretization
     intervals::Vector{<:Real}
 
     function ExactDiscretization(intervals::Vector{<:Real})
@@ -30,7 +30,7 @@ ExactDiscretization() = ExactDiscretization(Vector{Real}())
         sigma: variance of the normal distribution used for appriximate initial continuous distribution
 
 """
-@auto_hash_equals struct ApproximatedDiscretization <: AbstractDiscretization
+struct ApproximatedDiscretization <: AbstractDiscretization
     intervals::Vector{<:Real}
     sigma::Real
 
@@ -51,6 +51,7 @@ ApproximatedDiscretization() = ApproximatedDiscretization(Vector{Real}(), 0)
 include("cpts.jl")
 include("discretenodes.jl")
 include("continuousnodes.jl")
+include("functionalnodes.jl")
 
 # include("../util/verify_discrete.jl")
 # include("../util/verify_continuous.jl")

@@ -1,4 +1,4 @@
-@auto_hash_equals struct ContinuousFunctionalNode <: AbstractContinuousNode
+struct ContinuousFunctionalNode <: AbstractNode
     name::Symbol
     models::AbstractVector{<:UQModel}
     simulation::AbstractMonteCarlo
@@ -8,25 +8,15 @@
         name::Symbol,
         models::Union{Vector{<:UQModel},<:UQModel},
         simulation::AbstractMonteCarlo,
-        discretization::ApproximatedDiscretization
+        discretization::ApproximatedDiscretization=ApproximatedDiscretization()
     )
         new(name, wrap(models), simulation, discretization)
     end
 end
 
-function ContinuousFunctionalNode(
-    name::Symbol,
-    models::Union{Vector{<:UQModel},<:UQModel},
-    simulation::AbstractMonteCarlo
-)
-    ContinuousFunctionalNode(name, models, simulation, ApproximatedDiscretization())
-end
-
-isroot(node::ContinuousFunctionalNode) = false
-
-@auto_hash_equals struct DiscreteFunctionalNode <: AbstractDiscreteNode
+struct DiscreteFunctionalNode <: AbstractDiscreteNode
     name::Symbol
-    models::Vector{<:UQModel}
+    models::AbstractVector{<:UQModel}
     performance::Function
     simulation::Union{AbstractSimulation,DoubleLoop,RandomSlicing}
     parameters::Dict{Symbol,Vector{Parameter}}
@@ -36,21 +26,10 @@ isroot(node::ContinuousFunctionalNode) = false
         models::Union{Vector{<:UQModel},<:UQModel},
         performance::Function,
         simulation::Union{AbstractSimulation,DoubleLoop,RandomSlicing},
-        parameters::Dict{Symbol,Vector{Parameter}}
+        parameters::Dict{Symbol,Vector{Parameter}}=Dict{Symbol,Vector{Parameter}}()
     )
         new(name, wrap(models), performance, simulation, parameters)
     end
 end
-
-function DiscreteFunctionalNode(
-    name::Symbol,
-    models::Union{Vector{<:UQModel},<:UQModel},
-    performance::Function,
-    simulation::Union{AbstractSimulation,DoubleLoop,RandomSlicing}
-)
-    DiscreteFunctionalNode(name, models, performance, simulation, Dict{Symbol,Vector{Parameter}}())
-end
-
-isroot(node::DiscreteFunctionalNode) = false
 
 const global FunctionalNode = Union{DiscreteFunctionalNode,ContinuousFunctionalNode}
