@@ -1,183 +1,95 @@
 @testset "Continuous Nodes" begin
-
-    @testset "Root Node" begin
-        name = :A
-        cpt1 = ContinuousConditionalProbabilityTable{PreciseContinuousInput}()
-        cpt1[] = Normal()
-        discretization = ApproximatedDiscretization([-1, 0, 1], 2)
-        add_info = Dict{Vector{Symbol},Dict}()
-        @test_throws ErrorException("Root node must have ExactDiscretization as discretization structure, provided discretization is $discretization and node cpt is $cpt1") ContinuousNode(name, cpt1, discretization, add_info)
-        node1 = ContinuousNode(name, cpt1)
-        node2 = ContinuousNode(name, cpt1, ExactDiscretization([-1, 0, 1]))
-
-        @test node1.name == name
-        @test node2.name == name
-        @test node1.cpt == cpt1
-        @test node2.cpt == cpt1
-        @test isempty(node1.discretization.intervals)
-        @test node2.discretization == ExactDiscretization([-1, 0, 1])
-        @test isempty(node1.additional_info)
-        @test isempty(node2.additional_info)
-
-        @test distributions(node2) == node2.cpt.data.Π
-        @test scenarios(node2) == Any[]
-        @test isprecise(node2)
-        @test isroot(node2)
-
-        cpt2_1 = DataFrame(:Π => (1, 5))
-        cpt2 = ContinuousConditionalProbabilityTable{ImpreciseContinuousInput}(cpt2_1)
-        node3 = ContinuousNode(name, cpt2)
-        @test node3.name == name
-        @test node3.cpt == cpt2
-        @test isempty(node3.discretization.intervals)
-        @test isempty(node3.additional_info)
-
-        cpt3_1 = DataFrame(:Π => UnamedProbabilityBox{Normal}([Interval(-0.5, 0.5, :μ), Interval(1, 2, :σ)]))
-        cpt3 = ContinuousConditionalProbabilityTable{ImpreciseContinuousInput}(cpt3_1)
-
-        node4 = ContinuousNode(name, cpt3)
-        @test node4.name == name
-        @test node4.cpt == cpt3
-        @test isempty(node4.discretization.intervals)
-        @test isempty(node4.additional_info)
-
-        @test distributions(node4) == node4.cpt.data.Π
-        @test scenarios(node4) == Any[]
-        @test !isprecise(node4)
-        @test isroot(node4)
-
+    @testset "structure and setindex" begin
+        node_a = ContinuousNode(:a)
+        @test isa(node_a, ContinuousNode)
+        @test isa(node_a.cpt, ConditionalProbabilityTable{EnhancedBayesianNetworks.ContinuousProbability})
+        @test names(node_a.cpt.data) == ["Π"]
+        @test isa(node_a.discretization, ExactDiscretization)
+        @test isa(node_a.results, Dict{Vector{Symbol},Tuple})
+        node_c = ContinuousNode(:c, [:a])
+        @test isa(node_c, ContinuousNode)
+        @test isa(node_c.cpt, ConditionalProbabilityTable{EnhancedBayesianNetworks.ContinuousProbability})
+        @test names(node_c.cpt.data) == ["a", "Π"]
+        @test isa(node_c.discretization, ApproximatedDiscretization)
+        @test isa(node_c.results, Dict{Vector{Symbol},Tuple})
+        node_a[] = Normal()
+        @test node_a.cpt.data.Π[1] == Normal()
+        node_c[:a=>:a1] = Normal()
+        node_c[:a=>:a2] = Interval(0.3, 0.6)
+        @test node_c.cpt.data.a == [:a1, :a2]
+        @test node_c.cpt.data.Π[1] == Normal()
+        @test node_c.cpt.data.Π[2] == Interval(0.3, 0.6)
     end
+    @testset "main functions" begin
+        node_a = ContinuousNode(:a)
+        node_a[] = Normal()
+        node_b = ContinuousNode(:b)
+        node_b[] = Interval(0.1, 0.3)
+        node_c = ContinuousNode(:c, [:a])
+        node_c[:a=>:a1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        node_c[:a=>:a2] = Interval(0.3, 0.6)
+        node_d = ContinuousNode(:d, [:a])
+        node_d[:a=>:a1] = Normal()
+        node_d[:a=>:a2] = Normal(2, 1)
 
-    @testset "Child Node" begin
-        name = :A
-        cpt1 = ContinuousConditionalProbabilityTable{PreciseContinuousInput}(:x)
-        cpt1[:x=>:x1] = Normal(1, 1)
-        cpt1[:x=>:x2] = Normal(1, 2)
-        discretization = ExactDiscretization([-1, 0, 1])
-        add_info = Dict{Vector{Symbol},Dict}()
-        @test_throws ErrorException("Child node must have ApproximatedDiscretization as discretization structure, provided discretization is $discretization and node cpt is $cpt1") ContinuousNode(name, cpt1, discretization, add_info)
+        @test isempty(scenarios(node_a))
+        @test isempty(scenarios(node_b))
+        @test scenarios(node_c) == [[:a => :a1], [:a => :a2]]
+        @test scenarios(node_d) == [[:a => :a1], [:a => :a2]]
+        @test isprecise(node_a)
+        @test isprecise(node_b) == false
+        @test isprecise(node_c) == false
+        @test isprecise(node_d)
+        @test isroot(node_a)
+        @test isroot(node_c) == false
 
-        node1 = ContinuousNode(name, cpt1)
-        node2 = ContinuousNode(name, cpt1, ApproximatedDiscretization([-1, 0, 1], 2))
+        node_e = ContinuousNode(:d, [:a, :b])
+        node_e[:a=>:a1, :b=>:b1] = Interval(0.1, 0.2)
+        node_e[:a=>:a1, :b=>:b2] = Uniform(0.1, 0.2)
+        node_e[:a=>:a2, :b=>:b1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        node_e[:a=>:a2, :b=>:b2] = Normal()
+        evidence = Evidence()
+        @test EnhancedBayesianNetworks._inputs(node_a, evidence) == Normal()
+        @test EnhancedBayesianNetworks._inputs(node_b, evidence) == Interval(0.1, 0.3)
+        @test_throws AssertionError EnhancedBayesianNetworks._inputs(node_c, evidence)
 
-        @test node1.name == name
-        @test node2.name == name
-        @test node1.cpt == cpt1
-        @test node2.cpt == cpt1
-        @test isempty(node1.discretization.intervals)
-        @test node2.discretization == ApproximatedDiscretization([-1, 0, 1], 2)
-        @test isempty(node1.additional_info)
-        @test isempty(node2.additional_info)
+        evidence = Evidence(:a => :a2)
+        @test EnhancedBayesianNetworks._inputs(node_a, evidence) == Normal()
+        @test EnhancedBayesianNetworks._inputs(node_b, evidence) == Interval(0.1, 0.3)
+        @test EnhancedBayesianNetworks._inputs(node_c, evidence) == Interval(0.3, 0.6)
+        @test_throws AssertionError EnhancedBayesianNetworks._inputs(node_e, evidence)
 
-        @test distributions(node2) == node2.cpt.data.Π
-        @test scenarios(node2) == [Dict(:x => :x1), Dict(:x => :x2)]
-        @test isprecise(node2)
-        @test !isroot(node2)
-
-        cpt2_1 = DataFrame(:x => [:x1, :x2], :Π => [(1, 5), (2, 6)])
-        cpt2 = ContinuousConditionalProbabilityTable{ImpreciseContinuousInput}(cpt2_1)
-        node3 = ContinuousNode(name, cpt2)
-        @test node3.name == name
-        @test node3.cpt == cpt2
-        @test isempty(node3.discretization.intervals)
-        @test isempty(node3.additional_info)
-
-        cpt3_1 = DataFrame(:x => [:x1, :x2], :Π => [UnamedProbabilityBox{Normal}([Interval(-0.5, 0.5, :μ), Interval(1, 2, :σ)]), UnamedProbabilityBox{Normal}([Interval(-0.5, 0.5, :μ), Interval(4, 5, :σ)])])
-        cpt3 = ContinuousConditionalProbabilityTable{ImpreciseContinuousInput}(cpt3_1)
-
-        node4 = ContinuousNode(name, cpt3)
-        @test node4.name == name
-        @test node4.cpt == cpt3
-        @test isempty(node4.discretization.intervals)
-        @test isempty(node4.additional_info)
-
-        @test distributions(node4) == node4.cpt.data.Π
-        @test scenarios(node4) == [Dict(:x => :x1), Dict(:x => :x2)]
-        @test !isprecise(node4)
-        @test !isroot(node4)
+        evidence = Evidence(:a => :a1, :b => :b1)
+        @test EnhancedBayesianNetworks._inputs(node_a, evidence) == Normal()
+        @test EnhancedBayesianNetworks._inputs(node_b, evidence) == Interval(0.1, 0.3)
+        @test isa(EnhancedBayesianNetworks._inputs(node_c, evidence), ProbabilityBox)
+        @test EnhancedBayesianNetworks._inputs(node_e, evidence) == Interval(0.1, 0.2)
     end
+    @testset "auxiliary functions" begin
+        dist = Normal()
+        @test EnhancedBayesianNetworks._distribution_bounds(dist) == [-Inf, Inf]
+        dist = truncated(Normal(), -1, 1)
+        @test EnhancedBayesianNetworks._distribution_bounds(dist) == [-1, 1]
+        dist = Interval(0, 1)
+        @test EnhancedBayesianNetworks._distribution_bounds(dist) == [0, 1]
+        dist = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        @test EnhancedBayesianNetworks._distribution_bounds(dist) == [-Inf, Inf]
+        dist = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1), -1, 1)
+        @test EnhancedBayesianNetworks._distribution_bounds(dist) == [-1, 1]
+        node_e = ContinuousNode(:d, [:a, :b])
+        node_e[:a=>:a1, :b=>:b1] = Interval(0.1, 0.2)
+        node_e[:a=>:a1, :b=>:b2] = Uniform(0.1, 0.2)
+        node_e[:a=>:a2, :b=>:b1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        node_e[:a=>:a2, :b=>:b2] = Normal()
+        @test EnhancedBayesianNetworks._distribution_bounds(node_e) == [-Inf, Inf]
 
-    @testset "uq inputs" begin
-
-        cpt0 = ContinuousConditionalProbabilityTable{PreciseContinuousInput}([:g, :s])
-        cpt0[:g=>:g1, :s=>:s1] = Normal(1, 2)
-        cpt0[:g=>:g1, :s=>:s2] = Normal(2, 3)
-        cpt0[:g=>:g2, :s=>:s1] = Normal(1, 2)
-        cpt0[:g=>:g2, :s=>:s2] = Normal(1, 4)
-        node0 = ContinuousNode(:a, cpt0)
-
-        cpt1 = ContinuousConditionalProbabilityTable{Tuple{Real,Real}}([:g, :s])
-        cpt1[:g=>:g1, :s=>:s1] = (1, 2)
-        cpt1[:g=>:g1, :s=>:s2] = (2, 3)
-        cpt1[:g=>:g2, :s=>:s1] = (1, 2)
-        cpt1[:g=>:g2, :s=>:s2] = (1, 4)
-        node1 = ContinuousNode(:a, cpt1)
-
-        cpt2 = ContinuousConditionalProbabilityTable{UnamedProbabilityBox}([:g, :s])
-        cpt2[:g=>:g1, :s=>:s1] = UnamedProbabilityBox{Normal}([Interval(1, 2, :μ), Interval(1, 2, :σ)])
-        cpt2[:g=>:g1, :s=>:s2] = UnamedProbabilityBox{Normal}([Interval(2, 3, :μ), Interval(3, 4, :σ)])
-        cpt2[:g=>:g2, :s=>:s1] = UnamedProbabilityBox{Normal}([Interval(1, 2, :μ), Interval(3, 4, :σ)])
-        cpt2[:g=>:g2, :s=>:s2] = UnamedProbabilityBox{Normal}([Interval(1, 4, :μ), Interval(3, 4, :σ)])
-        node2 = ContinuousNode(:a, cpt2)
-
-        evidence1 = Evidence(:g => :g1)
-        evidence2 = Evidence(:g => :g1, :s => :s1, :h => :h1)
-
-        @test issetequal(EnhancedBayesianNetworks._uq_inputs(node0, evidence1), [RandomVariable(Normal(1, 2), :a), RandomVariable(Normal(2, 3), :a)])
-        @test EnhancedBayesianNetworks._uq_inputs(node0, evidence2) == [RandomVariable(Normal(1, 2), :a)]
-
-        @test issetequal(EnhancedBayesianNetworks._uq_inputs(node1, evidence1), [Interval(1, 2, :a), Interval(2, 3, :a)])
-
-        @test EnhancedBayesianNetworks._uq_inputs(node1, evidence2) == [Interval(1, 2, :a)]
-
-        @test isa(EnhancedBayesianNetworks._uq_inputs(node2, evidence1), Vector{ProbabilityBox{Normal}})
-        @test isa(EnhancedBayesianNetworks._uq_inputs(node2, evidence2), Vector{ProbabilityBox{Normal}})
-
-        cpt3 = ContinuousConditionalProbabilityTable{ImpreciseContinuousInput}([:g, :s])
-        cpt3[:g=>:g1, :s=>:s1] = (1, 2)
-        cpt3[:g=>:g1, :s=>:s2] = (2, 3)
-        cpt3[:g=>:g2, :s=>:s1] = (1, 2)
-        cpt3[:g=>:g2, :s=>:s2] = (1, 4)
-        node3 = ContinuousNode(:a, cpt3)
-        @test EnhancedBayesianNetworks._uq_inputs(node3, evidence1) == EnhancedBayesianNetworks._uq_inputs(node1, evidence1)
-
-        @test issetequal(EnhancedBayesianNetworks._uq_inputs(node3), [Interval(1, 2, :a), Interval(2, 3, :a), Interval(1, 2, :a), Interval(1, 4, :a)])
-    end
-
-    @testset "distributions bounds" begin
-        dist1 = Normal()
-        dist2 = (1, 5)
-        dist3 = UnamedProbabilityBox{Normal}([Interval(-0.5, 0.5, :μ), Interval(1, 2, :σ)])
-
-        cpt_node1 = ContinuousConditionalProbabilityTable{PreciseContinuousInput}()
-        cpt_node1[] = dist1
-        node1 = ContinuousNode(:m, cpt_node1)
-
-        cpt_node2 = ContinuousConditionalProbabilityTable{Tuple{<:Real,<:Real}}()
-        cpt_node2[] = dist2
-        node2 = ContinuousNode(:m, cpt_node2)
-
-        cpt_node3 = ContinuousConditionalProbabilityTable{UnamedProbabilityBox}()
-        cpt_node3[] = dist3
-        node3 = ContinuousNode(:m, cpt_node3)
-
-        cpt_node4 = ContinuousConditionalProbabilityTable{PreciseContinuousInput}(:x)
-        cpt_node4[:x=>:x1] = truncated(Normal(1, 1), 0, 1)
-        cpt_node4[:x=>:x2] = truncated(Normal(1, 2), 0.5, 1.5)
-        node4 = ContinuousNode(:m, cpt_node4)
-
-        @test EnhancedBayesianNetworks._distribution_bounds(dist1) == [-Inf, Inf]
-        @test EnhancedBayesianNetworks._distribution_bounds(dist2) == [1, 5]
-        @test EnhancedBayesianNetworks._distribution_bounds(dist3) == [-Inf, Inf]
-
-        @test EnhancedBayesianNetworks._distribution_bounds(node1) == [-Inf, Inf]
-        @test EnhancedBayesianNetworks._distribution_bounds(node2) == [1, 5]
-        @test EnhancedBayesianNetworks._distribution_bounds(node3) == [-Inf, Inf]
-        @test EnhancedBayesianNetworks._distribution_bounds(node4) == [0, 1.5]
-
-        @test EnhancedBayesianNetworks._truncate(dist1, [-1, 1]) == truncated(Normal(), -1, 1)
-        @test EnhancedBayesianNetworks._truncate(dist2, [-1, 1]) == (-1, 1)
-        @test EnhancedBayesianNetworks._truncate(dist3, [-1, 1]).lb == -1
-        @test EnhancedBayesianNetworks._truncate(dist3, [-1, 1]).ub == 1
+        dist = Normal()
+        @test EnhancedBayesianNetworks._truncate(dist, (0, 1)) == truncated(Normal(), 0, 1)
+        dist = Interval(-1, 2)
+        @test EnhancedBayesianNetworks._truncate(dist, (0, 1)) == Interval(0, 1)
+        dist = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        res = EnhancedBayesianNetworks._truncate(dist, (0, 1))
+        @test res.lb == 0
+        @test res.ub == 1
     end
 end

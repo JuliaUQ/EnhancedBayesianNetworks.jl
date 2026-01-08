@@ -7,6 +7,7 @@ using CSV
 include("utils/wrap.jl")
 include("nodes/cpts.jl")
 include("nodes/discretenodes.jl")
+include("nodes/continuousnode.jl")
 # include("utils/verify_discrete.jl")
 # include("nodes/discretenodes.jl")
 # include("utils/verify_continuous.jl")
