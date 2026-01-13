@@ -73,8 +73,9 @@ export scenarios
 export states
 
 include("util/wrap.jl")
+include("util/flat.jl")
 include("nodes/nodes.jl")
-# include("networks/networks.jl")
+include("networks/networks.jl")
 # include("inference/inference.jl")
 # include("learning/learning.jl")
 
