@@ -72,13 +72,11 @@ export saveplot
 export scenarios
 export states
 
-include("util/wrap.jl")
-include("util/flat.jl")
 include("nodes/nodes.jl")
 include("networks/networks.jl")
 # include("inference/inference.jl")
 # include("learning/learning.jl")
 
-# include("util/base_show.jl")
-# include("util/plots.jl")
+# include("utils/base_show.jl")
+# include("utils/plots.jl")
 end

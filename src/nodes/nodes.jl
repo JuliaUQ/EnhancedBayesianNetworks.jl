@@ -48,6 +48,9 @@ end
 
 ApproximatedDiscretization() = ApproximatedDiscretization(Vector{Real}(), 0)
 
+
+include("../utils/wrap.jl")
+include("../utils/flat.jl")
 include("cpts.jl")
 include("discretenodes.jl")
 include("continuousnodes.jl")
