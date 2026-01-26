@@ -9,6 +9,9 @@ struct ContinuousNode <: AbstractNode
         discretization::AbstractDiscretization=ExactDiscretization(),
         results::Dict{Vector{Symbol},Tuple}=Dict{Vector{Symbol},Tuple}()
     )
+        if name == :Π
+            error(":Π is not allowed as node name")
+        end
         if isempty(discretization.intervals) && !isempty(parents)
             discretization = ApproximatedDiscretization()
         end

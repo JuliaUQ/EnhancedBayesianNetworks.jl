@@ -10,6 +10,9 @@ struct ContinuousFunctionalNode <: AbstractNode
         simulation::AbstractMonteCarlo,
         discretization::ApproximatedDiscretization=ApproximatedDiscretization()
     )
+        if name == :Π
+            error(":Π is not allowed as node name")
+        end
         new(name, wrap(models), simulation, discretization)
     end
 end
@@ -28,6 +31,9 @@ struct DiscreteFunctionalNode <: AbstractDiscreteNode
         simulation::Union{AbstractSimulation,DoubleLoop,RandomSlicing},
         parameters::Dict{Symbol,Vector{Parameter}}=Dict{Symbol,Vector{Parameter}}()
     )
+        if name == :Π
+            error(":Π is not allowed as node name")
+        end
         new(name, wrap(models), performance, simulation, parameters)
     end
 end

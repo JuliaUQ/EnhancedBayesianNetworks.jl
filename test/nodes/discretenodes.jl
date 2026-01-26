@@ -78,6 +78,7 @@
         @test node_c.results == results
     end
     @testset "main functions" begin
+        @test_throws ErrorException(":Π is not allowed as node name") DiscreteNode(:Π)
         node_a = DiscreteNode(:a)
         node_a[:a=>:a1] = Interval(0.1, 0.3)
         node_a[:a=>:a2] = Interval(0.6, 0.8)

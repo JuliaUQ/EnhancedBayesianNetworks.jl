@@ -15,6 +15,8 @@
         @test isa(node.discretization, ApproximatedDiscretization)
         @test node.discretization.intervals == [-2, -1, 0, 1, 2]
         @test node.discretization.sigma == 2
+        @test_throws ErrorException(":Π is not allowed as node name") ContinuousFunctionalNode(:Π, models, simulation)
+
     end
     @testset "DiscreteFunctionalNode" begin
         name = :functional
@@ -30,5 +32,7 @@
         parameters = Dict(:fail => [Parameter(1, :a), Parameter(2, :b)], :safe => [Parameter(0, :a), Parameter(0, :b)])
         node = DiscreteFunctionalNode(name, models, performance, simulation, parameters)
         @test node.parameters == parameters
+        @test_throws ErrorException(":Π is not allowed as node name") DiscreteFunctionalNode(:Π, models, performance, simulation)
+
     end
 end

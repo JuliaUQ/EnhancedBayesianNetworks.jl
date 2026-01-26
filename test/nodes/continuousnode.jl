@@ -21,6 +21,7 @@
         @test node_c.cpt.data.Π[2] == Interval(0.3, 0.6)
     end
     @testset "main functions" begin
+        @test_throws ErrorException(":Π is not allowed as node name") ContinuousNode(:Π)
         node_a = ContinuousNode(:a)
         node_a[] = Normal()
         node_b = ContinuousNode(:b)

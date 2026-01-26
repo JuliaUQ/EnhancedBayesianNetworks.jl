@@ -10,6 +10,9 @@ struct DiscreteNode <: AbstractNode
         parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}(),
         results::Dict{Vector{Symbol},Tuple}=Dict{Vector{Symbol},Tuple}()
     )
+        if name == :Π
+            error(":Π is not allowed as node name")
+        end
         cpt = ConditionalProbabilityTable{DiscreteProbability}([parents..., name])
         return new(name, cpt, parameters, results)
     end
