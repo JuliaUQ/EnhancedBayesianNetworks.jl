@@ -1,36 +1,36 @@
 function parents(net::AbstractNetwork, index::Int64)
-    reverse_dict = Dict(value => key for (key, value) in net.topology_dict)
-    indices = net.adj_matrix[:, index].nzind
+    reverse_dict = Dict(value => key for (key, value) in net.topology)
+    indices = net.A[:, index].nzind
     names = map(x -> reverse_dict[x], indices)
     nodes = filter(x -> x.name ∈ names, net.nodes)
     return indices, names, nodes
 end
 
 function parents(net::AbstractNetwork, name::Symbol)
-    index = net.topology_dict[name]
+    index = net.topology[name]
     parents(net, index)
 end
 
 function parents(net::AbstractNetwork, node::AbstractNode)
-    index = net.topology_dict[node.name]
+    index = net.topology[node.name]
     parents(net, index)
 end
 
 function children(net::AbstractNetwork, index::Int64)
-    reverse_dict = Dict(value => key for (key, value) in net.topology_dict)
-    indices = net.adj_matrix[index, :].nzind
+    reverse_dict = Dict(value => key for (key, value) in net.topology)
+    indices = net.A[index, :].nzind
     names = map(x -> reverse_dict[x], indices)
     nodes = filter(x -> x.name ∈ names, net.nodes)
     return indices, names, nodes
 end
 
 function children(net::AbstractNetwork, name::Symbol)
-    index = net.topology_dict[name]
+    index = net.topology[name]
     children(net, index)
 end
 
 function children(net::AbstractNetwork, node::AbstractNode)
-    index = net.topology_dict[node.name]
+    index = net.topology[node.name]
     children(net, index)
 end
 
@@ -56,8 +56,8 @@ function _theoretical_scenarios(net::AbstractNetwork, node::AbstractNode)
 end
 
 function add_child!(net::AbstractNetwork, par::Symbol, ch::Symbol)
-    index_par = net.topology_dict[par]
-    index_ch = net.topology_dict[ch]
+    index_par = net.topology[par]
+    index_ch = net.topology[ch]
     nodes = net.nodes
     par_node = first(filter(n -> n.name == par, nodes))
     ch_node = first(filter(n -> n.name == ch, nodes))
@@ -65,12 +65,12 @@ function add_child!(net::AbstractNetwork, par::Symbol, ch::Symbol)
     _verify_root(par_node, ch_node)
     _verify_child(par_node, ch_node)
     _verify_functional_node(par_node, ch_node)
-    net.adj_matrix[index_par, index_ch] = 1
+    net.A[index_par, index_ch] = 1
     return nothing
 end
 
 function add_child!(net::AbstractNetwork, par_index::Int64, ch_index::Int64)
-    reverse_dict = Dict(value => key for (key, value) in net.topology_dict)
+    reverse_dict = Dict(value => key for (key, value) in net.topology)
     par = reverse_dict[par_index]
     ch = reverse_dict[ch_index]
     add_child!(net, par, ch)
@@ -83,17 +83,17 @@ function add_child!(net::AbstractNetwork, par_node::AbstractNode, ch_node::Abstr
 end
 
 function order!(net::AbstractNetwork)
-    if _is_cyclic_dfs(net.adj_matrix)
+    if _is_cyclic_dfs(net.A)
         error("network is cyclic!")
     end
-    n = net.adj_matrix.n
-    reverse_dict = Dict(value => key for (key, value) in net.topology_dict)
+    n = net.A.n
+    reverse_dict = Dict(value => key for (key, value) in net.topology)
     all_nodes = range(1, n)
-    root_indices = findall(map(col -> all(col .== 0), eachcol(net.adj_matrix)))
+    root_indices = findall(map(col -> all(col .== 0), eachcol(net.A)))
     root_nodes = AbstractVector{AbstractNode}(map(x -> first(filter(j -> j.name == reverse_dict[x], net.nodes)), root_indices))
     to_be_classified = setdiff(all_nodes, root_indices)
     while !isempty(to_be_classified)
-        par_list = map(r -> net.adj_matrix[:, r].nzind, to_be_classified)
+        par_list = map(r -> net.A[:, r].nzind, to_be_classified)
         new_root_indices = findall(map(p -> all(p .∈ [root_indices]), par_list))
         new_root = map(i -> to_be_classified[i], new_root_indices)
         append!(root_indices, new_root)
@@ -102,28 +102,28 @@ function order!(net::AbstractNetwork)
         to_be_classified = setdiff(to_be_classified, new_root)
     end
 
-    ordered_topology_dict = Dict(map(i -> (reverse_dict[i[2]], i[1]), enumerate(root_indices)))
+    ordered_topology = Dict(map(i -> (reverse_dict[i[2]], i[1]), enumerate(root_indices)))
     conversion = Dict(map(i -> (i[2], i[1]), enumerate(root_indices)))
     ordered_matrix = sparse(zeros(n, n))
     for i in range(1, n)
         for j in range(1, n)
-            if net.adj_matrix[i, j] == 1
+            if net.A[i, j] == 1
                 ordered_matrix[conversion[i], conversion[j]] = 1
             end
         end
     end
 
-    net.adj_matrix = ordered_matrix
-    net.topology_dict = ordered_topology_dict
+    net.A = ordered_matrix
+    net.topology = ordered_topology
     net.nodes = root_nodes
     _verify_net(net)
     return nothing
 end
 
 function _remove_node!(net::AbstractNetwork, index::Int64)
-    adj_matrix = net.adj_matrix[1:end.!=index, 1:end.!=index]
+    A = net.A[1:end.!=index, 1:end.!=index]
     nodes = deleteat!(net.nodes, index)
-    topology_vec = collect(net.topology_dict)
+    topology_vec = collect(net.topology)
     function f(kv, i)
         if kv[2] > i
             return Pair(kv[1], kv[2] - 1)
@@ -133,28 +133,28 @@ function _remove_node!(net::AbstractNetwork, index::Int64)
     end
     topology_vec = map(t -> f(t, index), topology_vec)
     filter!(x -> !isnothing(x), topology_vec)
-    topology_dict = Dict(topology_vec)
-    net.adj_matrix = adj_matrix
-    net.topology_dict = topology_dict
+    topology = Dict(topology_vec)
+    net.A = A
+    net.topology = topology
     net.nodes = nodes
     return nothing
 end
 
 function _remove_node!(net::AbstractNetwork, name::Symbol)
-    index = net.topology_dict[name]
+    index = net.topology[name]
     _remove_node!(net, index)
 end
 
 function _remove_node!(net::AbstractNetwork, node::AbstractNode)
-    index = net.topology_dict[node.name]
+    index = net.topology[node.name]
     _remove_node!(net, index)
 end
 
 function _add_node!(net::AbstractNetwork, node::AbstractNode)
     push!(net.nodes, node)
-    net.topology_dict[node.name] = length(net.nodes)
-    net.adj_matrix = hcat(net.adj_matrix, zeros(net.adj_matrix.m))
-    net.adj_matrix = vcat(net.adj_matrix, zeros(net.adj_matrix.n)')
+    net.topology[node.name] = length(net.nodes)
+    net.A = hcat(net.A, zeros(net.A.m))
+    net.A = vcat(net.A, zeros(net.A.n)')
     return nothing
 end
 

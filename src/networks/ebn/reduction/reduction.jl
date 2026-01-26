@@ -12,6 +12,6 @@ function _eliminate_continuous_node!(net::EnhancedBayesianNetwork, node::Continu
     parents_indices = parents(net, node)[1]
     children_indices = children(net, node)[1]
     pairs = [(p, c) for p in parents_indices, c in children_indices]
-    map(i -> net.adj_matrix[i[1], i[2]] = 1, pairs)
+    map(i -> net.A[i[1], i[2]] = 1, pairs)
     _remove_node!(net, node)
 end

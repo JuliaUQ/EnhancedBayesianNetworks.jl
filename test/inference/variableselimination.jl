@@ -23,7 +23,7 @@
     factors = map(n -> Factor(bn, n.name, evidence), bn.nodes)
     dimensions = map(f -> f.dimensions, factors)
 
-    adj_moral = EnhancedBayesianNetworks._structure_adj_matrix(dimensions, bn.topology_dict)
+    adj_moral = EnhancedBayesianNetworks._structure_A(dimensions, bn.topology)
 
     @test adj_moral == sparse([
         0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0;
@@ -35,10 +35,10 @@
         0.0 0.0 0.0 0.0 1.0 1.0 0.0 0.0;
         0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0
     ])
-    @test map(x -> EnhancedBayesianNetworks._n_eliminated_edges(dimensions, bn.topology_dict, x), collect(values(bn.topology_dict))) == [3, 2, 3, 1, 2, 3, 1, 5]
-    @test map(x -> EnhancedBayesianNetworks._n_added_edges(dimensions, bn.topology_dict, x), collect(values(bn.topology_dict))) == [2, 0, 2, 0, 1, 2, 0, 8]
+    @test map(x -> EnhancedBayesianNetworks._n_eliminated_edges(dimensions, bn.topology, x), collect(values(bn.topology))) == [3, 2, 3, 1, 2, 3, 1, 5]
+    @test map(x -> EnhancedBayesianNetworks._n_added_edges(dimensions, bn.topology, x), collect(values(bn.topology))) == [2, 0, 2, 0, 1, 2, 0, 8]
 
-    listv = EnhancedBayesianNetworks._order_with_minimal_increase_in_complexity(factors, bn.topology_dict)
+    listv = EnhancedBayesianNetworks._order_with_minimal_increase_in_complexity(factors, bn.topology)
     @test listv == [(:D, 0.0), (:V, 0.0), (:X, 0.0), (:S, 0.5), (:T, 0.6666666666666666), (:L, 0.6666666666666666), (:B, 0.6666666666666666), (:E, 1.6)]
 
     @testset "Inference Precise" begin
@@ -237,7 +237,7 @@
 
             @suppress evaluate!(net)
 
-            @test net.adj_matrix == sparse([
+            @test net.A == sparse([
                 0.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0;
                 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0;
                 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0;
@@ -247,7 +247,7 @@
                 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0;
                 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
             ])
-            @test net.topology_dict == Dict(:R5_d => 5,
+            @test net.topology == Dict(:R5_d => 5,
                 :R4_d => 4,
                 :H => 3,
                 :R5 => 7,
@@ -257,7 +257,7 @@
                 :Uᵣ => 1)
 
             EnhancedBayesianNetworks._eliminate_continuous_node!(net, net.nodes[7])
-            @test net.adj_matrix == sparse([
+            @test net.A == sparse([
                 0.0 0.0 0.0 1.0 1.0 0.0 1.0;
                 0.0 0.0 0.0 0.0 0.0 0.0 1.0;
                 0.0 0.0 0.0 0.0 0.0 0.0 1.0;
@@ -267,7 +267,7 @@
                 0.0 0.0 0.0 0.0 0.0 0.0 0.0])
 
             reduce!(net)
-            @test net.adj_matrix == sparse([
+            @test net.A == sparse([
                 0.0 0.0 1.0;
                 0.0 0.0 1.0;
                 0.0 0.0 0.0])

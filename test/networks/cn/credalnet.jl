@@ -75,8 +75,8 @@
 
     cn = CredalNetwork([F, B, L, D, H])
 
-    @test cn.adj_matrix == sparse(zeros(5, 5))
-    @test cn.topology_dict == Dict(:F => 1, :H => 5, :D => 4, :B => 2, :L => 3)
+    @test cn.A == sparse(zeros(5, 5))
+    @test cn.topology == Dict(:F => 1, :H => 5, :D => 4, :B => 2, :L => 3)
     @test issetequal(cn.nodes, [F, B, L, D, H])
 
     add_child!(cn, F, L)
@@ -85,13 +85,13 @@
     add_child!(cn, D, H)
     order!(cn)
 
-    @test cn.adj_matrix == sparse([
+    @test cn.A == sparse([
         0.0 0.0 1.0 1.0 0.0;
         0.0 0.0 0.0 1.0 0.0;
         0.0 0.0 0.0 0.0 0.0;
         0.0 0.0 0.0 0.0 1.0;
         0.0 0.0 0.0 0.0 0.0])
-    @test cn.topology_dict == Dict(:F => 1, :H => 5, :D => 4, :B => 2, :L => 3)
+    @test cn.topology == Dict(:F => 1, :H => 5, :D => 4, :B => 2, :L => 3)
     @test issetequal(cn.nodes, [F, B, L, D, H])
 
     ebn = EnhancedBayesianNetwork([F, B, L, D, H])

@@ -1,11 +1,11 @@
 @testset "Plots" begin
 
-    adj_matrix = sparse([
+    A = sparse([
         0.0 1.0 1.0 0.0;
         0.0 0.0 0.0 1.0;
         0.0 0.0 0.0 1.0;
         0.0 0.0 0.0 0.0])
-    pos = EnhancedBayesianNetworks._get_position(adj_matrix)
+    pos = EnhancedBayesianNetworks._get_position(A)
 
     @test collect(Iterators.flatten(pos)) == [
         -0.526454202489129

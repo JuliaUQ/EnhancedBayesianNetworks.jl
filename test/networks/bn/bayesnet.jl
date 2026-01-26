@@ -74,12 +74,12 @@
     add_child!(bn, s, l)
     order!(bn)
 
-    @test bn.adj_matrix == sparse([
+    @test bn.A == sparse([
         0.0 0.0 1.0 0.0;
         0.0 0.0 0.0 1.0;
         0.0 0.0 0.0 0.0;
         0.0 0.0 0.0 0.0])
-    @test bn.topology_dict == Dict(:T => 3, :L => 4, :V => 1, :S => 2)
+    @test bn.topology == Dict(:T => 3, :L => 4, :V => 1, :S => 2)
     @test issetequal(bn.nodes, [v, s, t, l])
 
     ebn = EnhancedBayesianNetwork([v, s, t, l])

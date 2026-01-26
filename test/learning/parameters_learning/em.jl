@@ -68,7 +68,7 @@
     @testset "BN from incomplete Dataframe" begin
         net1 = deepcopy(bn)
         e_bn1 = @suppress EnhancedBayesianNetworks._bn_from_incomplete_df(df_m, net1, 100, states_space)
-        @test e_bn1.adj_matrix == bn.adj_matrix
+        @test e_bn1.A == bn.A
         @test isapprox(e_bn1.nodes[1].cpt.data.Π, [0.5229331, 0.47706687], atol=0.01)
         @test isapprox(e_bn1.nodes[2].cpt.data.Π, [0.8974266, 0.102573, 0.409045, 0.5909], atol=0.01)
         @test isapprox(e_bn1.nodes[3].cpt.data.Π, [0.097108, 0.902891, 0.7354979, 0.26450], atol=0.01)
@@ -79,7 +79,7 @@
 
         net3 = deepcopy(bn)
         e_bn3 = @suppress EnhancedBayesianNetworks._bn_from_incomplete_df(df_m, net3, 100, states_space3)
-        @test e_bn3.adj_matrix == bn.adj_matrix
+        @test e_bn3.A == bn.A
         @test isapprox(e_bn3.nodes[1].cpt.data.Π, [0.5229331, 0.47706687], atol=0.01)
         @test isapprox(e_bn3.nodes[2].cpt.data.Π, [0.8974266, 0.102573, 0.409045, 0.5909], atol=0.01)
         @test isapprox(e_bn3.nodes[3].cpt.data.Π, [0.097108, 0.902891, 0.7354979, 0.26450], atol=0.01)
@@ -94,8 +94,8 @@
         MLE_bn1 = deepcopy(bn)
         MLE_bn1 = learn_parameters_MLE(df, MLE_bn1)
         e_bn1 = @suppress learn_parameters_EM(df_m, net1, 100, states_space)
-        @test e_bn1.adj_matrix == MLE_bn1.adj_matrix
-        @test e_bn1.topology_dict == MLE_bn1.topology_dict
+        @test e_bn1.A == MLE_bn1.A
+        @test e_bn1.topology == MLE_bn1.topology
         @test isapprox(e_bn1.nodes[1].cpt.data.Π, MLE_bn1.nodes[1].cpt.data.Π, atol=0.1)
         @test isapprox(e_bn1.nodes[2].cpt.data.Π, MLE_bn1.nodes[2].cpt.data.Π, atol=0.1)
         @test isapprox(e_bn1.nodes[3].cpt.data.Π, MLE_bn1.nodes[3].cpt.data.Π, atol=0.2)

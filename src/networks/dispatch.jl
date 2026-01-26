@@ -5,9 +5,9 @@ function dispatch(net::EnhancedBayesianNetwork)
     end
     if isempty(filter(x -> isa(x, ContinuousNode), net.nodes))
         if all(isprecise.(net.nodes))
-            return BayesianNetwork(net.nodes, net.topology_dict, net.adj_matrix)
+            return BayesianNetwork(net.nodes, net.topology, net.A)
         else
-            return CredalNetwork(net.nodes, net.topology_dict, net.adj_matrix)
+            return CredalNetwork(net.nodes, net.topology, net.A)
         end
     else
         return net

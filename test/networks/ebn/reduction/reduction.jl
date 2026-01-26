@@ -47,30 +47,30 @@
     net1 = deepcopy(ebn)
 
     @test isnothing(reduce!(net1))
-    @test net1.adj_matrix == [
+    @test net1.A == [
         0.0 0.0 1.0 0.0;
         0.0 0.0 1.0 1.0;
         0.0 0.0 0.0 1.0;
         0.0 0.0 0.0 0.0
     ]
     @test all(isa.(net1.nodes, DiscreteNode))
-    @test net1.topology_dict == Dict(:fd => 4, :fd1 => 3, :z => 2, :x => 1)
+    @test net1.topology == Dict(:fd => 4, :fd1 => 3, :z => 2, :x => 1)
 
     evaluate!(ebn)
     net2 = deepcopy(ebn)
     reduce!(ebn)
-    @test ebn.adj_matrix == net1.adj_matrix
+    @test ebn.A == net1.A
     @test all(isa.(ebn.nodes, DiscreteNode))
-    @test ebn.topology_dict == Dict(:fd => 4, :fd1 => 3, :z => 2, :x => 1)
+    @test ebn.topology == Dict(:fd => 4, :fd1 => 3, :z => 2, :x => 1)
 
     EnhancedBayesianNetworks._eliminate_continuous_node!(net2, root2)
 
-    @test net2.adj_matrix == [
+    @test net2.A == [
         0.0 0.0 1.0 0.0;
         0.0 0.0 1.0 1.0;
         0.0 0.0 0.0 1.0;
         0.0 0.0 0.0 0.0
     ]
     @test length(net2.nodes) == 4
-    @test net2.topology_dict == Dict(:fd => 4, :fd1 => 3, :z => 2, :x => 1)
+    @test net2.topology == Dict(:fd => 4, :fd1 => 3, :z => 2, :x => 1)
 end

@@ -34,7 +34,7 @@ function gplot(net::AbstractNetwork;
     edgelinewidth *= max_edgelinewidth
 
     node_list = net.nodes
-    pos = _get_position(net.adj_matrix)
+    pos = _get_position(net.A)
     locs_x = map(p -> p[1], pos)
     locs_y = map(p -> p[2], pos)
     min_x, max_x = extrema(locs_x)
@@ -70,7 +70,7 @@ function gplot(net::AbstractNetwork;
     max_nodelabelsize = NODELABELSIZE / maximum(nodelabelsize)
     nodelabelsize *= max_nodelabelsize
 
-    edges_list = _get_edges(net.adj_matrix)
+    edges_list = _get_edges(net.A)
     lines, larrows = _build_straight_edges(edges_list, locs_x, locs_y, nodesize, ARROWLENGTH, arrowangleoffset)
 
     function _is2discretize(n)
@@ -123,17 +123,17 @@ end
 compose(context(), circle(0.5, 0.5, 0.4), fill("red"), Compose.stroke("black"), linewidth(4), strokedash([]))
 
 
-function _get_position(adj_matrix::SparseMatrixCSC)
-    pos = spring(adj_matrix; iterations=1000)
+function _get_position(A::SparseMatrixCSC)
+    pos = spring(A; iterations=1000)
     return pos
 end
 
-function _get_edges(adj_matrix::SparseMatrixCSC)
-    n = size(adj_matrix)
+function _get_edges(A::SparseMatrixCSC)
+    n = size(A)
     edge_list = Vector{Tuple{Int64,Int64}}()
     for i in range(1, n[1])
         for j in range(1, n[2])
-            if adj_matrix[i, j] != 0
+            if A[i, j] != 0
                 push!(edge_list, (i, j))
             end
         end

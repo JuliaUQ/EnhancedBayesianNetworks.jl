@@ -291,7 +291,7 @@
         d1, c1 = EnhancedBayesianNetworks._discretize(root3)
         d2, c2 = EnhancedBayesianNetworks._discretize(standard2_node)
 
-        @test net.adj_matrix == sparse([
+        @test net.A == sparse([
             0.0 0.0 0.0 1.0 0.0 1.0 0.0 0.0;
             0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0;
             0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0;
@@ -301,7 +301,7 @@
             0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0;
             0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
         ])
-        @test net.topology_dict == Dict(:α => 4, :β_d => 6, :z1_d => 3, :y => 2, :z1 => 5, :f2 => 7, :β => 8, :x => 1)
+        @test net.topology == Dict(:α => 4, :β_d => 6, :z1_d => 3, :y => 2, :z1 => 5, :f2 => 7, :β => 8, :x => 1)
         @test issetequal(net.nodes, [standard1_node, root1, d1, c1, root2, d2, c2, functional2_node])
     end
 end

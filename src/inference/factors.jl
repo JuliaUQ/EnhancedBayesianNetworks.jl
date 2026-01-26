@@ -49,7 +49,7 @@ function Factor(node::AbstractNode, e::Evidence=Evidence())
     return ϕ[e]
 end
 function Factor(bn, node::Symbol, e::Evidence=Evidence())
-    node = bn.nodes[bn.topology_dict[node]]
+    node = bn.nodes[bn.topology[node]]
     return Factor(node, e)
 end
 

@@ -7,7 +7,7 @@ function learn_parameters_MLE(df::DataFrame, bn::BayesianNetwork2be, states_spac
     end
     cpts = _initialize_cpt(df, bn, states_space)
     nodes = map(cpt -> DiscreteNode(cpt[1], cpt[2]), cpts)
-    return BayesianNetwork(nodes, bn.topology_dict, bn.adj_matrix)
+    return BayesianNetwork(nodes, bn.topology, bn.A)
 end
 
 function _initialize_cpt(df::DataFrame, net::BayesianNetwork2be, states_space)

@@ -16,39 +16,39 @@
     add_child!(bn, :Sprinkler, :Grass)
     add_child!(bn, :Rain, :Grass)
     order!(bn)
-    @test bn.adj_matrix == sparse([
+    @test bn.A == sparse([
         0.0 1.0 1.0 0.0;
         0.0 0.0 0.0 1.0;
         0.0 0.0 0.0 1.0;
         0.0 0.0 0.0 0.0
     ])
-    @test bn.topology_dict == Dict(:Rain => 3, :Grass => 4, :Weather => 1, :Sprinkler => 2)
+    @test bn.topology == Dict(:Rain => 3, :Grass => 4, :Weather => 1, :Sprinkler => 2)
     @test issetequal(bn.nodes, nodes)
 
     @testset "add_child!" begin
 
         nodes = [W, S, R, G]
         net = BayesianNetwork2be(nodes)
-        topology_dict = Dict(:Weather => 1, :Sprinkler => 2, :Grass => 4, :Rain => 3)
-        adj_matrix = spzeros(4, 4)
-        @test net.topology_dict == topology_dict
+        topology = Dict(:Weather => 1, :Sprinkler => 2, :Grass => 4, :Rain => 3)
+        A = spzeros(4, 4)
+        @test net.topology == topology
         @test issetequal(net.nodes, nodes)
-        @test net.adj_matrix == adj_matrix
+        @test net.A == A
 
         @test_throws ErrorException("Recursion on the same node 'Weather' is not allowed in BayesianNetworks") add_child!(net, W, W)
 
         net_new1 = deepcopy(net)
         net_new2 = deepcopy(net)
         add_child!(net, W, R)
-        adj_matrix_net = sparse([
+        A_net = sparse([
             0.0 0.0 1.0 0.0;
             0.0 0.0 0.0 0.0;
             0.0 0.0 0.0 0.0;
             0.0 0.0 0.0 0.0
         ])
-        @test net.topology_dict == topology_dict
+        @test net.topology == topology
         @test net.nodes == nodes
-        @test net.adj_matrix == adj_matrix_net
+        @test net.A == A_net
         add_child!(net_new1, W, R)
         @test net_new1 == net
         add_child!(net_new2, 1, 3)
@@ -94,8 +94,8 @@
         add_child!(net, :s, :g)
         add_child!(net, :r, :g)
         order!(net)
-        @test net.adj_matrix == sparse(Matrix([0 1.0 1.0 0; 0 0 0 1.0; 0 0 0 1.0; 0 0 0 0]))
-        @test net.topology_dict == Dict(:w => 1, :s => 2, :g => 4, :r => 3)
+        @test net.A == sparse(Matrix([0 1.0 1.0 0; 0 0 0 1.0; 0 0 0 1.0; 0 0 0 0]))
+        @test net.topology == Dict(:w => 1, :s => 2, :g => 4, :r => 3)
         @test net.nodes == [root, child1, child2, grass]
     end
 end

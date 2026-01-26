@@ -29,8 +29,8 @@
         new_discrete_functional = DiscreteFunctionalNode(:fd, [model1, model2], performance, MonteCarlo(300))
         EnhancedBayesianNetworks._transfer_single_continuous_functional!(net, cont_functional)
 
-        @test net.adj_matrix == sparse([0 0 1.0; 0 0 1.0; 0 0 0])
-        @test net.topology_dict == Dict(:y => 2, :fd => 3, :x => 1)
+        @test net.A == sparse([0 0 1.0; 0 0 1.0; 0 0 0])
+        @test net.topology == Dict(:y => 2, :fd => 3, :x => 1)
         @test issetequal(net.nodes, [root1, root2, new_discrete_functional])
 
         discretization = ApproximatedDiscretization([-2, 0, 2], 2)
@@ -119,7 +119,7 @@
 
         @test net.nodes[4] ∈ [new_discrete_functional1_1, new_discrete_functional1_2]
         @test net.nodes[5] == new_discrete_functional
-        @test net.adj_matrix == sparse([0 0 0 1.0 0; 0 0 0 1.0 1.0; 0 0 0 1.0 1.0; 0 0 0 0 1.0; 0 0 0 0 0])
-        @test net.topology_dict == Dict(:y => 2, :fd => 5, :fd1 => 4, :z => 3, :x => 1)
+        @test net.A == sparse([0 0 0 1.0 0; 0 0 0 1.0 1.0; 0 0 0 1.0 1.0; 0 0 0 0 1.0; 0 0 0 0 0])
+        @test net.topology == Dict(:y => 2, :fd => 5, :fd1 => 4, :z => 3, :x => 1)
     end
 end

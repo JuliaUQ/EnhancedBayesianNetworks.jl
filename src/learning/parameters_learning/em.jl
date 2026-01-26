@@ -16,13 +16,13 @@ function _bn_from_incomplete_df(df::DataFrame, net::BayesianNetwork2be, max_iter
 
     insertcols!(complete_df, :weight => fill(1, nrow(complete_df)))
     complete_df_updated = deepcopy(complete_df)
-    bn = BayesianNetwork(nodes, net.topology_dict, net.adj_matrix)
+    bn = BayesianNetwork(nodes, net.topology, net.A)
 
     for i in range(1, max_iter)
         exploded_weighted_df = mapreduce(nt -> _expectation_step_single_missing_line(copy(nt), bn, states_space), vcat, eachrow(incomplete_df))
         complete_df_updated = vcat(complete_df_updated, exploded_weighted_df)
         new_nodes = map(n -> DiscreteNode(n.name, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(_counts_and_probs(complete_df_updated, n.name, parents(bn, n)[2], states_space)[2])), bn.nodes)
-        bn = BayesianNetwork(new_nodes, bn.topology_dict, bn.adj_matrix)
+        bn = BayesianNetwork(new_nodes, bn.topology, bn.A)
         i += 1
     end
     return bn

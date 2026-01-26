@@ -34,11 +34,11 @@
 
         nodes = [weather, grass, rain, sprinkler]
         net = EnhancedBayesianNetwork(nodes)
-        topology_dict = Dict(:w => 1, :s => 4, :g => 2, :r => 3)
-        adj_matrix = spzeros(4, 4)
-        @test net.topology_dict == topology_dict
+        topology = Dict(:w => 1, :s => 4, :g => 2, :r => 3)
+        A = spzeros(4, 4)
+        @test net.topology == topology
         @test issetequal(net.nodes, nodes)
-        @test net.adj_matrix == adj_matrix
+        @test net.A == A
 
         @test_throws ErrorException("Recursion on the same node 'w' is not allowed in EnhancedBayesianNetworks") add_child!(net, :w, :w)
         @test_throws ErrorException("node 'w' is a root node and cannot have parents") add_child!(net, :s, :w)
@@ -63,15 +63,15 @@
         net_new1 = deepcopy(net)
         net_new2 = deepcopy(net)
         add_child!(net, weather, rain)
-        adj_matrix_net = sparse([
+        A_net = sparse([
             0.0 0.0 1.0 0.0;
             0.0 0.0 0.0 0.0;
             0.0 0.0 0.0 0.0;
             0.0 0.0 0.0 0.0
         ])
-        @test net.topology_dict == topology_dict
+        @test net.topology == topology
         @test net.nodes == nodes
-        @test net.adj_matrix == adj_matrix_net
+        @test net.A == A_net
         add_child!(net_new1, :w, :r)
         @test net_new1 == net
         add_child!(net_new2, 1, 3)
@@ -233,8 +233,8 @@
         add_child!(net, :r, :g)
 
         order!(net)
-        @test net.adj_matrix == sparse(Matrix([0 1.0 1.0 0; 0 0 0 1.0; 0 0 0 1.0; 0 0 0 0]))
-        @test net.topology_dict == Dict(:w => 1, :s => 2, :g => 4, :r => 3)
+        @test net.A == sparse(Matrix([0 1.0 1.0 0; 0 0 0 1.0; 0 0 0 1.0; 0 0 0 0]))
+        @test net.topology == Dict(:w => 1, :s => 2, :g => 4, :r => 3)
         @test net.nodes == [weather, sprinkler, rain, grass]
         @test isnothing(EnhancedBayesianNetworks._verify_net(net))
     end
@@ -268,8 +268,8 @@
             0.0 0.0 0.0;
             0.0 0.0 0.0
         ]
-        @test net1.adj_matrix == adj
-        @test net1.topology_dict == Dict(:w => 1, :r => 3, :s => 2)
+        @test net1.A == adj
+        @test net1.topology == Dict(:w => 1, :r => 3, :s => 2)
         @test net2 == net1
         @test net3 == net1
 

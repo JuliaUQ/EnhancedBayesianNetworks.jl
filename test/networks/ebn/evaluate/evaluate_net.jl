@@ -49,8 +49,8 @@
 
         evaluate!(ebn)
 
-        @test ebn.adj_matrix == sparse([0.0 0.0 0.0 1.0 0.0; 0.0 0.0 0.0 1.0 1.0; 0.0 0.0 0.0 1.0 1.0; 0.0 0.0 0.0 0.0 1.0; 0.0 0.0 0.0 0.0 0.0])
-        @test ebn.topology_dict == Dict(:y => 2, :fd => 5, :fd1 => 4, :z => 3, :x => 1)
+        @test ebn.A == sparse([0.0 0.0 0.0 1.0 0.0; 0.0 0.0 0.0 1.0 1.0; 0.0 0.0 0.0 1.0 1.0; 0.0 0.0 0.0 0.0 1.0; 0.0 0.0 0.0 0.0 0.0])
+        @test ebn.topology == Dict(:y => 2, :fd => 5, :fd1 => 4, :z => 3, :x => 1)
         @test isa(ebn.nodes[4], DiscreteNode)
         @test isroot(ebn.nodes[4]) == false
         @test isa(ebn.nodes[5], DiscreteNode)
@@ -187,7 +187,7 @@
         ebn1 = EnhancedBayesianNetworks._build_envelope_edges(ebn, envelopes[1])
         ebn2 = EnhancedBayesianNetworks._build_envelope_edges(ebn, envelopes[2])
 
-        @test ebn1.adj_matrix == sparse([
+        @test ebn1.A == sparse([
             0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0;
             0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0;
             0.0 0.0 0.0 0.0 1.0 1.0 1.0 1.0 1.0 0.0;
@@ -199,15 +199,15 @@
             0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0;
             0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0])
 
-        @test ebn1.topology_dict == Dict(:M => 2, :H => 1, :R2 => 6, :R5 => 9, :V => 4, :R4 => 8, :R3 => 7, :R1 => 5, :E => 10, :Uᵣ => 3)
+        @test ebn1.topology == Dict(:M => 2, :H => 1, :R2 => 6, :R5 => 9, :V => 4, :R4 => 8, :R3 => 7, :R1 => 5, :E => 10, :Uᵣ => 3)
         @test issetequal(ebn1.nodes, [Uᵣ, M, V, H, R1, R2, R3, R4, R5, frame])
 
-        @test ebn2.adj_matrix == sparse([
+        @test ebn2.A == sparse([
             0.0 0.0 0.0 1.0;
             0.0 0.0 1.0 0.0;
             0.0 0.0 0.0 1.0;
             0.0 0.0 0.0 0.0])
-        @test ebn2.topology_dict == Dict(:R9 => 1, :M => 2, :L => 3, :E2 => 4)
+        @test ebn2.topology == Dict(:R9 => 1, :M => 2, :L => 3, :E2 => 4)
         @test issetequal(ebn2.nodes, [r9, L, frame2, M])
 
         eebns = evaluate_with_envelopes(ebn)

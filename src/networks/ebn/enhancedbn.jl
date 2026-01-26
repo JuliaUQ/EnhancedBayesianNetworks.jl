@@ -1,9 +1,13 @@
-@auto_hash_equals mutable struct EnhancedBayesianNetwork <: AbstractNetwork
+mutable struct EnhancedBayesianNetwork <: AbstractNetwork
     nodes::AbstractVector{<:AbstractNode}
-    topology_dict::Dict
-    adj_matrix::SparseMatrixCSC
+    topology::Dict
+    A::SparseMatrixCSC
 
-    function EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode}, topology_dict::Dict, adj_matrix::SparseMatrixCSC)
+    function EnhancedBayesianNetwork(
+        nodes::AbstractVector{<:AbstractNode},
+        topology::Dict,
+        A::SparseMatrixCSC
+    )
         nodes_names = map(i -> i.name, nodes)
         if !allunique(nodes_names)
             error("network nodes names must be unique")
@@ -15,29 +19,64 @@
                 error("network nodes states must be unique")
             end
         end
-        new(nodes, topology_dict, adj_matrix)
+        new(nodes, topology, A)
     end
 end
 
 function EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode})
     n = length(nodes)
-    topology_dict = Dict()
+    topology = Dict()
     for (i, n) in enumerate(nodes)
-        topology_dict[n.name] = i
+        topology[n.name] = i
     end
-    adj_matrix = sparse(zeros(n, n))
-    return EnhancedBayesianNetwork(nodes, topology_dict, adj_matrix)
+    A = sparse(zeros(n, n))
+    return EnhancedBayesianNetwork(nodes, topology, A)
 end
 
-function _is_cyclic_dfs(adj_matrix)
-    n = size(adj_matrix, 1)  # Number of nodes
+function add_child!(
+    net::AbstractNetwork,
+    par::Union{<:AbstractNode,Vector{<:AbstractNode}},
+    ch::Union{<:AbstractNode,Vector{<:AbstractNode}}
+)
+    parents = wrap(par)
+    children = wrap(ch)
+    ## verify No recursion
+    verify_no_recursion(parents, children)
+    ## verify Discrete parent nodes
+    discrete_par = filter!(x -> isa(x, DiscreteNode), parents)
+    map(dp -> verify_discrete(dp, children), discrete_par)
+    ## verify Continuous and Functional parent nodes
+    continuous_par = filter!(x -> isa(x, ContinuousNode), parents)
+    functional_par = filter!(x -> isa(x, FunctionalNode), parents)
+    cont_and_fun_par = vcat(continuous_par, functional_par)
+    map(cfp -> verify_continuous_and_functional(cfp, children), cont_and_fun_par)
+
+    pidx = getindex.(Ref(net.topology), getfield.(parents, :name))
+    cidx = getindex.(Ref(net.topology), getfield.(children, :name))
+    net.A[pidx, cidx] .= 1
+end
+
+function add_child!(
+    net::AbstractNetwork,
+    par::Union{Symbol,Vector{Symbol}},
+    ch::Union{Symbol,Vector{Symbol}}
+)
+    parents = wrap(par)
+    children = wrap(ch)
+    par_nodes = filter(x -> x.name ∈ parents, net.nodes)
+    ch_nodes = filter(x -> x.name ∈ children, net.nodes)
+    add_child!(net, par_nodes, ch_nodes)
+end
+
+function _is_cyclic_dfs(A)
+    n = size(A, 1)  # Number of nodes
     visited = fill(false, n)
     recStack = fill(false, n)
     function dfs(v)
         visited[v] = true
         recStack[v] = true
         for neighbor in 1:n
-            if adj_matrix[v, neighbor] != 0  # there's an edge from v to neighbor
+            if A[v, neighbor] != 0  # there's an edge from v to neighbor
                 if !visited[neighbor]  # If neighbor hasn't been visited, visit it
                     if dfs(neighbor)
                         return true  # Cycle detected
@@ -62,7 +101,7 @@ end
 
 function markov_blanket(net::EnhancedBayesianNetwork, index::Int64)
     blanket = []
-    reverse_dict = Dict(value => key for (key, value) in net.topology_dict)
+    reverse_dict = Dict(value => key for (key, value) in net.topology)
     for child in children(net, index)[1]
         append!(blanket, parents(net, child)[1])
         push!(blanket, child)
@@ -75,12 +114,12 @@ function markov_blanket(net::EnhancedBayesianNetwork, index::Int64)
 end
 
 function markov_blanket(net::EnhancedBayesianNetwork, name::Symbol)
-    index = net.topology_dict[name]
+    index = net.topology[name]
     markov_blanket(net, index)
 end
 
 function markov_blanket(net::EnhancedBayesianNetwork, node::AbstractNode)
-    index = net.topology_dict[node.name]
+    index = net.topology[node.name]
     markov_blanket(net, index)
 end
 

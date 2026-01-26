@@ -5,7 +5,7 @@ function infer(inf::PreciseInferenceState)
     evidence = inf.evidence
     factors = map(n -> Factor(bn, n.name, evidence), nodes)
     # successively remove the hidden nodes
-    δ = [x[1] for x in _order_with_minimal_increase_in_complexity(factors, bn.topology_dict)]
+    δ = [x[1] for x in _order_with_minimal_increase_in_complexity(factors, bn.topology)]
     δ = deleteat!(δ, findall(x -> x ∈ vcat(query, collect(keys(evidence))), δ))
     list = []
     while !isempty(δ)
@@ -17,7 +17,7 @@ function infer(inf::PreciseInferenceState)
             τ_h = sum(reduce((*), contain_h), h)
             push!(factors, τ_h)
         end
-        δ = [x[1] for x in _order_with_minimal_increase_in_complexity(factors, bn.topology_dict)]
+        δ = [x[1] for x in _order_with_minimal_increase_in_complexity(factors, bn.topology)]
         δ = deleteat!(δ, findall(x -> x ∈ vcat(query, collect(keys(evidence)), list), δ))
     end
     ϕ = reduce((*), factors)
@@ -37,7 +37,7 @@ function infer(inf::ImpreciseInferenceState)
     all_nodes_combination = vec(collect(Iterators.product(all_nodes...)))
     all_nodes_combination = map(t -> [t...], all_nodes_combination)
 
-    bns = map(anc -> BayesianNetwork(anc, cn.topology_dict, cn.adj_matrix), all_nodes_combination)
+    bns = map(anc -> BayesianNetwork(anc, cn.topology, cn.A), all_nodes_combination)
 
     r = map(bn -> infer(bn, query, evidence), bns)
 
@@ -51,22 +51,22 @@ function infer(inf::ImpreciseInferenceState)
     return Factor(r[1].dimensions, potential, r[1].states_mapping)
 end
 
-function _order_with_minimal_increase_in_complexity(factors::Vector{Factor}, topology_dict::Dict{Symbol,Int64})
+function _order_with_minimal_increase_in_complexity(factors::Vector{Factor}, topology::Dict{Symbol,Int64})
     dimensions = map(f -> f.dimensions, factors)
-    res = map(x -> (x, _n_added_edges(dimensions, topology_dict, topology_dict[x]) / _n_eliminated_edges(dimensions, topology_dict, topology_dict[x])), collect(keys(topology_dict)))
+    res = map(x -> (x, _n_added_edges(dimensions, topology, topology[x]) / _n_eliminated_edges(dimensions, topology, topology[x])), collect(keys(topology)))
     return sort(res, by=x -> x[2])
 end
 
-function _n_eliminated_edges(dimensions::AbstractVector{Vector{Symbol}}, topology_dict::Dict{Symbol,Int}, index::Int)
-    structure_adj_matrix = _structure_adj_matrix(dimensions, topology_dict)
-    return length(structure_adj_matrix[index, :].nzind)
+function _n_eliminated_edges(dimensions::AbstractVector{Vector{Symbol}}, topology::Dict{Symbol,Int}, index::Int)
+    structure_A = _structure_A(dimensions, topology)
+    return length(structure_A[index, :].nzind)
 end
 
-function _n_added_edges(dimensions::AbstractVector{Vector{Symbol}}, topology_dict::Dict{Symbol,Int}, index::Int)
-    reverse_dict = Dict(value => key for (key, value) in topology_dict)
+function _n_added_edges(dimensions::AbstractVector{Vector{Symbol}}, topology::Dict{Symbol,Int}, index::Int)
+    reverse_dict = Dict(value => key for (key, value) in topology)
     node = reverse_dict[index]
-    structure_adj_matrix = _structure_adj_matrix(dimensions, topology_dict)
-    former_edges = length(structure_adj_matrix.nzval) - 2 * _n_eliminated_edges(dimensions, topology_dict, index)
+    structure_A = _structure_A(dimensions, topology)
+    former_edges = length(structure_A.nzval) - 2 * _n_eliminated_edges(dimensions, topology, index)
     function _ridimensionalize(d::AbstractVector{Symbol})
         return filter(x -> x != node, d)
     end
@@ -90,21 +90,21 @@ function _n_added_edges(dimensions::AbstractVector{Vector{Symbol}}, topology_dic
         end
         return new_dict
     end
-    new_topology_dict = _retopologyse(topology_dict)
-    new_structure_adj_matrix = _structure_adj_matrix(new_dims, new_topology_dict)
-    return Int((length(new_structure_adj_matrix.nzval) - former_edges) / 2)
+    new_topology = _retopologyse(topology)
+    new_structure_A = _structure_A(new_dims, new_topology)
+    return Int((length(new_structure_A.nzval) - former_edges) / 2)
 end
 
-function _structure_adj_matrix(dimensions::AbstractVector{Vector{Symbol}}, topology_dict::Dict{Symbol,Int})
-    n = length(topology_dict)
-    structure_adj_matrix = zeros(n, n)
+function _structure_A(dimensions::AbstractVector{Vector{Symbol}}, topology::Dict{Symbol,Int})
+    n = length(topology)
+    structure_A = zeros(n, n)
 
     function _structure_link(dim::AbstractVector{Symbol})
         links = Vector{}()
         if length(dim) > 1
             collection = collect(Iterators.product(dim, dim))
             collection = map(t -> [t...], collection)
-            collection = vec(map(v -> [topology_dict[v[1]], topology_dict[v[2]]], collection))
+            collection = vec(map(v -> [topology[v[1]], topology[v[2]]], collection))
             filter!(c -> c[1] != c[2], collection)
             append!(links, collection)
         end
@@ -113,9 +113,9 @@ function _structure_adj_matrix(dimensions::AbstractVector{Vector{Symbol}}, topol
 
     structural_links = unique!(mapreduce(dim -> _structure_link(dim), vcat, dimensions))
     for link in structural_links
-        structure_adj_matrix[link[1], link[2]] = 1
+        structure_A[link[1], link[2]] = 1
     end
-    return sparse(structure_adj_matrix)
+    return sparse(structure_A)
 end
 
 infer(bn::BayesianNetwork, query::Union{Symbol,Vector{Symbol}}, evidence::Evidence=Evidence()) = infer(PreciseInferenceState(bn, query, evidence))

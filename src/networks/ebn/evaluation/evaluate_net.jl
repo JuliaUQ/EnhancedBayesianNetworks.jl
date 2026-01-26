@@ -43,8 +43,8 @@ function _is_eliminable(net::EnhancedBayesianNetwork, node::AbstractNode)
     if !isa(node, AbstractContinuousNode)
         error("node elimination algorithm is for continuous nodes and $(node.name) is discrete")
     end
-    index = net.topology_dict[node.name]
-    test_matrix = deepcopy(net.adj_matrix)
+    index = net.topology[node.name]
+    test_matrix = deepcopy(net.A)
     pars = parents(net, index)[1]
     map(x -> test_matrix[x, index] = 0, pars)
     map(x -> test_matrix[index, x] = 1, pars)
@@ -55,7 +55,7 @@ function _is_eliminable(net::EnhancedBayesianNetwork, node::AbstractNode)
 end
 
 function _is_eliminable(net::EnhancedBayesianNetwork, index::Int64)
-    reverse_dict = Dict(value => key for (key, value) in net.topology_dict)
+    reverse_dict = Dict(value => key for (key, value) in net.topology)
     index = findfirst(x -> x.name == reverse_dict[index], net.nodes)
     _is_eliminable(net, net.nodes[index])
 end

@@ -1,9 +1,9 @@
 @auto_hash_equals mutable struct BayesianNetwork <: AbstractNetwork
     nodes::AbstractVector{<:AbstractNode}
-    topology_dict::Dict
-    adj_matrix::SparseMatrixCSC
+    topology::Dict
+    A::SparseMatrixCSC
 
-    function BayesianNetwork(nodes::AbstractVector{<:AbstractNode}, topology_dict::Dict, adj_matrix::SparseMatrixCSC)
+    function BayesianNetwork(nodes::AbstractVector{<:AbstractNode}, topology::Dict, A::SparseMatrixCSC)
         nodes_names = map(i -> i.name, nodes)
         if !allunique(nodes_names)
             error("network nodes names must be unique")
@@ -30,26 +30,26 @@
         if !isempty(imprecise_nodes)
             error("node/s $imprecise_nodes_names are imprecise. Use CrealNetwork structure!")
         end
-        new(nodes, topology_dict, adj_matrix)
+        new(nodes, topology, A)
     end
 end
 
 function BayesianNetwork(nodes::AbstractVector{<:AbstractNode})
     n = length(nodes)
-    topology_dict = Dict()
+    topology = Dict()
     for (i, n) in enumerate(nodes)
-        topology_dict[n.name] = i
+        topology[n.name] = i
     end
-    adj_matrix = sparse(zeros(n, n))
-    return BayesianNetwork(nodes, topology_dict, adj_matrix)
+    A = sparse(zeros(n, n))
+    return BayesianNetwork(nodes, topology, A)
 end
 
 function BayesianNetwork(net::EnhancedBayesianNetwork)
     order!(net)
     nodes = net.nodes
-    topology_dict = net.topology_dict
-    adj_matrix = net.adj_matrix
-    return BayesianNetwork(nodes, topology_dict, adj_matrix)
+    topology = net.topology
+    A = net.A
+    return BayesianNetwork(nodes, topology, A)
 end
 
 function joint_probability(bn::BayesianNetwork, scenario::Evidence)

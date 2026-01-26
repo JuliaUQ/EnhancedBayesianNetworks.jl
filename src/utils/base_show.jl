@@ -69,8 +69,8 @@ function print_object(io::IO, obj::DiscreteFunctionalNode; multiline::Bool)
                 push!(model_infos, "Model(name=$(m.name))")
             elseif isa(m, ExternalModel)
                 push!(model_infos,
-                      "ExternalModel(sourcedir=$(m.sourcedir), sources=$(m.sources), " *
-                      "extractors=$(m.extractors), solver=$(m.solver), workdir=$(m.workdir))")
+                    "ExternalModel(sourcedir=$(m.sourcedir), sources=$(m.sources), " *
+                    "extractors=$(m.extractors), solver=$(m.solver), workdir=$(m.workdir))")
             else
                 push!(model_infos, string(m)) # fallback
             end
@@ -100,8 +100,8 @@ function print_object(io::IO, obj::ContinuousFunctionalNode; multiline::Bool)
                 push!(model_infos, "Model(name=$(m.name))")
             elseif isa(m, ExternalModel)
                 push!(model_infos,
-                      "ExternalModel(sourcedir=$(m.sourcedir), sources=$(m.sources), " *
-                      "extractors=$(m.extractors), solver=$(m.solver), workdir=$(m.workdir))")
+                    "ExternalModel(sourcedir=$(m.sourcedir), sources=$(m.sources), " *
+                    "extractors=$(m.extractors), solver=$(m.solver), workdir=$(m.workdir))")
             else
                 push!(model_infos, string(m)) # fallback
             end
@@ -185,11 +185,11 @@ function print_object(io::IO, obj::AbstractNetwork; multiline::Bool)
         Base.show_default(io, obj)
     end
     print(io, "\n  ")
-    print(io, "adj_matrix:\n")
-    display(obj.adj_matrix)
+    print(io, "A:\n")
+    display(obj.A)
     print(io, "\n  ")
-    print(io, "topology_dict: \n ")
-    display(obj.topology_dict)
+    print(io, "topology: \n ")
+    display(obj.topology)
 end
 
 function Base.show(io::IO, obj::Factor)
