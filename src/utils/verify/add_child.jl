@@ -6,7 +6,8 @@ function verify_no_recursion(par::AbstractVector{<:AbstractNode}, ch::AbstractVe
 end
 
 function verify_discrete(node::DiscreteNode, ch::AbstractVector{<:AbstractNode})
-    for child in ch
+    not_functional_ch = filter(x -> !isa(x, FunctionalNode), ch)
+    for child in not_functional_ch
         cols = Symbol.(Set(names(child.cpt.data)))
         if node.name ∉ cols
             error("Invalid eBN: node $(child.name) does not have the node(s) $(node.name) in its CPT")
