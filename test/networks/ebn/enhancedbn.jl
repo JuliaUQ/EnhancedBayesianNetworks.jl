@@ -58,5 +58,12 @@
         @test_throws ErrorException("Invalid eBN: node G does not have the node(s) W in its CPT") add_child!(net, weather, grass)
         @test_throws ErrorException("Invalid eBN: node(s) [:G] are not functional node(s) and cannot be children of the continuous/functional node G2") add_child!(net, grass2, grass)
         @test_throws ErrorException("Invalid eBN: node(s) [:G] are not functional node(s) and cannot be children of the continuous/functional node Rc") add_child!(net, rain2, grass)
+        add_child!(net, weather, [rain, sprinkler])
+        @test net.A == sparse([1, 1], [3, 4], [true, true], 6, 6)
+        add_child!(net, [rain, sprinkler], grass)
+        @test net.A == sparse([1, 1, 3, 4], [3, 4, 2, 2], [true, true, true, true], 6, 6)
+        add_child!(net, rain2, grass2)
+        add_child!(net, sprinkler, grass2)
+        @test net.A == sparse([1, 1, 3, 4, 4, 5], [3, 4, 2, 2, 6, 6], [true, true, true, true, true, true], 6, 6)
     end
 end
