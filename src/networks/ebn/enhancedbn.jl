@@ -8,15 +8,17 @@ mutable struct EnhancedBayesianNetwork <: AbstractNetwork
         topology::Dict,
         A::SparseMatrixCSC
     )
-        nodes_names = map(i -> i.name, nodes)
-        if !allunique(nodes_names)
-            error("network nodes names must be unique")
+        node_names = map(i -> i.name, nodes)
+        dups = not_unique_elements(node_names)
+        if !isempty(dups)
+            error("Invalid eBN: duplicate node names $dups")
         end
         discrete_nodes = filter(x -> isa(x, DiscreteNode), nodes)
         if !isempty(discrete_nodes)
             states_list = mapreduce(i -> states(i), vcat, discrete_nodes)
-            if !allunique(states_list)
-                error("network nodes states must be unique")
+            dups = not_unique_elements(states_list)
+            if !isempty(dups)
+                error("Invalid eBN: duplicate node states $dups")
             end
         end
         new(nodes, topology, A)
@@ -43,11 +45,11 @@ function add_child!(
     ## verify No recursion
     verify_no_recursion(parents, children)
     ## verify Discrete parent nodes
-    discrete_par = filter!(x -> isa(x, DiscreteNode), parents)
+    discrete_par = filter(x -> isa(x, DiscreteNode), parents)
     map(dp -> verify_discrete(dp, children), discrete_par)
     ## verify Continuous and Functional parent nodes
-    continuous_par = filter!(x -> isa(x, ContinuousNode), parents)
-    functional_par = filter!(x -> isa(x, FunctionalNode), parents)
+    continuous_par = filter(x -> isa(x, ContinuousNode), parents)
+    functional_par = filter(x -> isa(x, FunctionalNode), parents)
     cont_and_fun_par = vcat(continuous_par, functional_par)
     map(cfp -> verify_continuous_and_functional(cfp, children), cont_and_fun_par)
 

@@ -1,7 +1,6 @@
 abstract type AbstractNetwork end
 
 include("ebn/ebn.jl")
-include("../utils/verify/add_child.jl")
 
 # include("networks_common.jl")
 # include("bn/bayesnet.jl")

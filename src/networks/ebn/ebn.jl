@@ -1,4 +1,6 @@
 
+include("../../utils/verify/add_child.jl")
+include("../../utils/require_unique.jl")
 include("enhancedbn.jl")
 # include("transmission/transmission.jl")
 # include("discretization/discretize.jl")
