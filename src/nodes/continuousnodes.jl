@@ -28,6 +28,9 @@ isprecise(node::ContinuousNode) = all(isa.(node.cpt.data[:, :Π], UnivariateDist
 
 isroot(node::ContinuousNode) = size(node.cpt.data, 2) == 1
 
+parents(node::ContinuousNode) = Symbol.(names(node.cpt.data[:, Not("Π")]))
+
+
 function _inputs(node::ContinuousNode, evidence::Evidence)
     new_evidence = filter(((k, v),) -> k ∈ Symbol.(names(node.cpt.data)), evidence)
     return node.cpt[new_evidence...]

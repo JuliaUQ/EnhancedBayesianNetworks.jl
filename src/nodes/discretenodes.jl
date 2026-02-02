@@ -39,6 +39,8 @@ isprecise(node::DiscreteNode) = all(isa.(node.cpt.data[:, :Π], Real))
 
 isroot(node::DiscreteNode) = size(node.cpt.data, 2) == 2
 
+parents(node::DiscreteNode) = Symbol.(names(node.cpt.data[:, Not(node.name, "Π")]))
+
 function _inputs(node::DiscreteNode, evidence::Evidence)
     if node.name ∉ keys(evidence)
         error("evidence `$evidence` does not contain the node `$(node.name)`")
