@@ -43,6 +43,9 @@
         @test isprecise(node_d)
         @test isroot(node_a)
         @test isroot(node_c) == false
+        @test isempty(parents(node_a))
+        @test issetequal(parents(node_c), [:a])
+
 
         node_e = ContinuousNode(:d, [:a, :b])
         node_e[:a=>:a1, :b=>:b1] = Interval(0.1, 0.2)

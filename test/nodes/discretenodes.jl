@@ -105,6 +105,8 @@
         @test isprecise(node_b)
         @test isroot(node_a)
         @test isroot(node_c) == false
+        @test isempty(parents(node_a))
+        @test issetequal(parents(node_c), [:a])
 
         ## inputs function
         parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)], :a3 => [Parameter(-1, :A)]]
