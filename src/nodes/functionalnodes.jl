@@ -38,4 +38,6 @@ struct DiscreteFunctionalNode <: AbstractDiscreteNode
     end
 end
 
+isroot(FunctionalNode) = false
+
 const global FunctionalNode = Union{DiscreteFunctionalNode,ContinuousFunctionalNode}
