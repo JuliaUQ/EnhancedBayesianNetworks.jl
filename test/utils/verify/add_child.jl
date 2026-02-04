@@ -42,7 +42,7 @@
     net = EnhancedBayesianNetwork(nodes)
     par = weather
     ch = weather
-    @test_throws ErrorException("Invalid eBN: node(s) '[:W]' have recursion") EnhancedBayesianNetworks.verify_no_recursion([par], [ch])
+    @test_throws ErrorException("Invalid eBN: node 'W' have recursion") EnhancedBayesianNetworks.verify_no_recursion(par, [ch])
 
     par = weather
     ch = [sprinkler, storm, grass]

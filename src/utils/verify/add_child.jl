@@ -1,7 +1,6 @@
-function verify_no_recursion(par::AbstractVector{<:AbstractNode}, ch::AbstractVector{<:AbstractNode})
-    overlap = intersect(par, ch)
-    if !isempty(overlap)
-        error("Invalid eBN: node(s) '$([i.name for i in overlap])' have recursion")
+function verify_no_recursion(node::AbstractNode, ch::AbstractVector{<:AbstractNode})
+    if node ∈ ch
+        error("Invalid eBN: node '$(node.name)' have recursion")
     end
 end
 

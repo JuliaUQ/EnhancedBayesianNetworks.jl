@@ -1,6 +1,7 @@
-
-include("../../utils/verify/add_child.jl")
 include("../../utils/require_unique.jl")
+include("../../utils/verify/cyclicality_and_connection.jl")
+include("../../utils/verify/add_child.jl")
+# include("../../utils/verify/order.jl")
 include("enhancedbn.jl")
 # include("transmission/transmission.jl")
 # include("discretization/discretize.jl")
