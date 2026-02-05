@@ -39,7 +39,22 @@
         @test_throws ErrorException("provided probability value [0.1, 1.1] is unfeasible") cpt[:x=>:yesx] = Interval(0.1, 1.1)
         cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:x])
         @test_throws ErrorException("provided probability value [-0.1, 0.9] is unfeasible") cpt[:x=>:yesx] = Interval(-0.1, 0.9)
+
+        cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:x, :y])
+        cpt[:x=>:x1, :y=>:y1] = 0.1
+        cpt[:x=>:x1, :y=>:y2] = 0.2
+        cpt[:x=>:x1, :y=>:y3] = 0.7
+        cpt[:x=>:x2, :y=>:y1] = 0.01
+        cpt[:x=>:x2, :y=>:y2] = 0.09
+        cpt[:x=>:x2, :y=>:y3] = 0.9
+        filtering1 = filter(cpt, ([:x => :x1])...)
+        @test isa(filtering1, SubDataFrame)
+        @test issetequal(filtering1.Π, [0.1, 0.2, 0.7])
+        filtering2 = filter(cpt, ([:x, :y] .=> [:x2, :y2])...)
+        @test isa(filtering2, SubDataFrame)
+        @test issetequal(filtering2.Π, [0.09])
     end
+
     @testset "Continuous CPT" begin
         cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.ContinuousProbability}(:x)
         @test names(cpt.data) == ["x", "Π"]
@@ -67,7 +82,20 @@
         cpt[] = Normal()
         @test cpt.data.Π == [Normal()]
         @test cpt[] == Normal()
+
+        cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.ContinuousProbability}([:x, :y])
+        cpt[:x=>:x1, :y=>:y1] = Normal(0, 1)
+        cpt[:x=>:x1, :y=>:y2] = Normal(1, 1)
+        cpt[:x=>:x2, :y=>:y1] = Normal(-1, 1)
+        cpt[:x=>:x2, :y=>:y2] = Normal(-2, 1)
+        filtering1 = filter(cpt, ([:x => :x1])...)
+        @test isa(filtering1, SubDataFrame)
+        @test issetequal(filtering1.Π, [Normal(0, 1), Normal(1, 1)])
+        filtering2 = filter(cpt, ([:x, :y] .=> [:x1, :y2])...)
+        @test isa(filtering2, SubDataFrame)
+        @test issetequal(filtering2.Π, [Normal(1, 1)])
     end
+
     @testset "CPT from DataFrame" begin
         df = DataFrame(:a => [:a1, :a2], :Π => [:a, 0])
         @test_throws AssertionError ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}(df)
