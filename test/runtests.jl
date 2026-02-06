@@ -5,6 +5,7 @@ using Suppressor
 using CSV
 
 include("utils/wrap.jl")
+include("utils/flat.jl")
 include("nodes/cpts.jl")
 include("nodes/nodes.jl")
 include("nodes/discretenodes.jl")
