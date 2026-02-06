@@ -46,6 +46,8 @@ struct ApproximatedDiscretization <: AbstractDiscretization
     end
 end
 
+Base.isempty(d::AbstractDiscretization) = isempty(d.intervals)
+
 ApproximatedDiscretization() = ApproximatedDiscretization(Vector{Real}(), 0)
 
 
