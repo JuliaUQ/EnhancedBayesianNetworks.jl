@@ -58,8 +58,6 @@ function add_child!(
     net.A[pidx, cidx] .= true
 end
 
-## Add Child and order network
-
 function add_child!(
     net::AbstractNetwork,
     par::Union{Symbol,Vector{Symbol}},

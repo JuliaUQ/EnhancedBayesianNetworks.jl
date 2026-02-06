@@ -112,7 +112,6 @@
         @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass))
         @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass2))
 
-
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = 0
         grass[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
@@ -257,6 +256,27 @@
     end
 
     @testset "order!" begin
+        A = DiscreteNode(:A, [:B])
+        A[:B=>:b1, :A=>:a1] = 0.05
+        A[:B=>:b1, :A=>:a2] = 0.95
+        A[:B=>:b2, :A=>:a1] = 0.7
+        A[:B=>:b2, :A=>:a2] = 0.3
+        B = DiscreteNode(:B, [:A])
+        B[:B=>:b1, :A=>:a1] = 0.05
+        B[:B=>:b1, :A=>:a2] = 0.95
+        B[:B=>:b2, :A=>:a1] = 0.7
+        B[:B=>:b2, :A=>:a2] = 0.3
+        net = EnhancedBayesianNetwork([A, B, weather])
+        add_child!(net, A, B)
+        add_child!(net, B, A)
+        @test_throws ErrorException("Invalid eBN: network is cyclic!") order!(net)
+
+        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain])
+        add_child!(net, [sprinkler, rain2], grass2)
+        @test_throws ErrorException("Invalid eBN: network is not connected") order!(net)
+
         nodes = [weather, grass, rain, sprinkler, rain2, grass2]
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
@@ -411,5 +431,14 @@
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain2, sprinkler], grass2)
         @test isnothing(order!(net))
+
+        nodes = [weather, grass, sprinkler, rain]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [rain, sprinkler])
+        add_child!(net, [rain, sprinkler], grass)
+        order!(net)
+        @test issetequal(net.nodes, nodes)
+        @test net.topology == Dict(:W => 1, :S => 2, :R => 3, :G => 4)
+        @test net.A == sparse([1, 1, 2, 3], [2, 3, 4, 4], [true, true, true, true], 4, 4)
     end
 end
