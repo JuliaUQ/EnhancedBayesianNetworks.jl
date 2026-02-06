@@ -125,7 +125,7 @@
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
 
-        @test_throws ErrorException("invalid eBN: node G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks.verify_scenarios(net, grass)
+        @test_throws ErrorException("Invalid eBN: node G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks.verify_scenarios(net, grass)
         grass[:R=>:yes, :S=>:on, :G=>:wet] = 1
         nodes = [weather, grass, rain, sprinkler, rain2, grass2]
         net = EnhancedBayesianNetwork(nodes)
@@ -163,7 +163,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT: node G has CPT values 'Union{Real, Interval}[0.3, 0.999]' not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
+        @test_throws ErrorException("Invalid CPT: node G has CPT values 'Union{Real, Interval}[0.3, 0.999]' not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
@@ -178,7 +178,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], [0.2, 0.3]]' for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
+        @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], [0.2, 0.3]]' for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
@@ -193,7 +193,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], [0.8, 0.9]]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
+        @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], [0.8, 0.9]]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
@@ -208,7 +208,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.2]' for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
+        @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.2]' for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
@@ -223,7 +223,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.8]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
+        @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.8]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
 
         nodes = [weather, grass, rain, sprinkler, rain2, grass2]
         net = EnhancedBayesianNetwork(nodes)
@@ -231,7 +231,7 @@
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain, rain2], grass2)
 
-        @test_throws ErrorException("invalid eBN: node R is a parent for the FuctionalNode G2 and cannot have an empty parameters attribute") EnhancedBayesianNetworks.verify_functional_parents(net, grass2)
+        @test_throws ErrorException("Invalid eBN: node R is a parent for the FuctionalNode G2 and cannot have an empty parameters attribute") EnhancedBayesianNetworks.verify_functional_parents(net, grass2)
 
         nodes = [weather, grass, rain, sprinkler, rain2, grass2]
         net = EnhancedBayesianNetwork(nodes)
@@ -296,7 +296,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid eBN: node G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") order!(net)
+        @test_throws ErrorException("Invalid eBN: node G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") order!(net)
 
         grass[:R=>:yes, :S=>:on, :G=>:wet] = 1
         nodes = [weather, grass, rain, sprinkler, rain2, grass2]
@@ -334,7 +334,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT: node G has CPT values 'Union{Real, Interval}[0.3, 0.999]' not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") order!(net)
+        @test_throws ErrorException("Invalid CPT: node G has CPT values 'Union{Real, Interval}[0.3, 0.999]' not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") order!(net)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
@@ -349,7 +349,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], [0.2, 0.3]]' for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") order!(net)
+        @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], [0.2, 0.3]]' for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") order!(net)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
@@ -364,7 +364,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], [0.8, 0.9]]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") order!(net)
+        @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], [0.8, 0.9]]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") order!(net)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
@@ -379,7 +379,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.2]' for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") order!(net)
+        @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.2]' for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") order!(net)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
@@ -394,7 +394,7 @@
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
-        @test_throws ErrorException("invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.8]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") order!(net)
+        @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.8]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") order!(net)
 
         grass = DiscreteNode(:G, [:S, :R])
         grass[:R=>:yes, :S=>:on, :G=>:dry] = 0
@@ -411,7 +411,7 @@
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain, rain2], grass2)
 
-        @test_throws ErrorException("invalid eBN: node R is a parent for the FuctionalNode G2 and cannot have an empty parameters attribute") order!(net)
+        @test_throws ErrorException("Invalid eBN: node R is a parent for the FuctionalNode G2 and cannot have an empty parameters attribute") order!(net)
 
         nodes = [weather, grass, rain, sprinkler, grass2]
         net = EnhancedBayesianNetwork(nodes)

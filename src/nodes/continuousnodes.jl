@@ -17,9 +17,9 @@ struct ContinuousNode <: AbstractNode
             discretization = ApproximatedDiscretization()
         end
         if isempty(parents) && isa(discretization, ApproximatedDiscretization)
-            error("invalid eBN: node $name, is a root node and the discretization must be an ExactDiscretization")
+            error("Invalid eBN: node $name, is a root node and the discretization must be an ExactDiscretization")
         elseif !isempty(parents) && isa(discretization, ExactDiscretization)
-            error("invalid eBN: node $name, is a child node and the discretization must be an ApproximatedDiscretization")
+            error("Invalid eBN: node $name, is a child node and the discretization must be an ApproximatedDiscretization")
         end
 
         cpt = ConditionalProbabilityTable{ContinuousProbability}(parents)

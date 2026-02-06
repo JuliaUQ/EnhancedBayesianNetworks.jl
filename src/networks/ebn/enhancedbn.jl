@@ -157,7 +157,7 @@ function verify_scenarios(net::AbstractNetwork, node::DiscreteNode)
     filtering_elements = map(th_s -> ([i.name for i in v] .=> th_s), theoretical_scenarios)
     for filtering_element in filtering_elements
         if isempty(filter(node.cpt, filtering_element...))
-            error("invalid eBN: node $(node.name) is missing the following scenario $(filtering_element)")
+            error("Invalid eBN: node $(node.name) is missing the following scenario $(filtering_element)")
         end
     end
 end
@@ -174,7 +174,7 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
                     @warn "node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element and will be normalized!"
                     filter(node.cpt, filtering_element...)[!, :Π] ./= cumulative_prob
                 else
-                    error("invalid CPT: node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' not exhaustive and mutually exclusive for the scenario $filtering_element")
+                    error("Invalid CPT: node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' not exhaustive and mutually exclusive for the scenario $filtering_element")
                 end
             end
         end
@@ -182,9 +182,9 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
         for filtering_element in filtering_elements
             lb_sum, ub_sum = EnhancedBayesianNetworks.sum_intervals_and_float(filter(node.cpt, filtering_element...).Π...)
             if lb_sum > 1
-                error("invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of lower bound values must be less than 1")
+                error("Invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of lower bound values must be less than 1")
             elseif ub_sum < 1
-                error("invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of upper bound values must be greater than 1")
+                error("Invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of upper bound values must be greater than 1")
             end
         end
     end
@@ -197,7 +197,7 @@ function verify_functional_parents(net::AbstractNetwork, node::FunctionalNode) #
 
     for dp in discrete_par
         if isempty(dp.parameters)
-            error("invalid eBN: node $(dp.name) is a parent for the FuctionalNode $(node.name) and cannot have an empty parameters attribute")
+            error("Invalid eBN: node $(dp.name) is a parent for the FuctionalNode $(node.name) and cannot have an empty parameters attribute")
         end
     end
     if isempty(cont_par)
