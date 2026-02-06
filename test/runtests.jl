@@ -4,17 +4,17 @@ using EnhancedBayesianNetworks
 using Suppressor
 using CSV
 
-include("utils/wrap.jl")
-include("nodes/cpts.jl")
-include("nodes/nodes.jl")
-include("nodes/discretenodes.jl")
-include("nodes/continuousnode.jl")
-include("nodes/functionalnodes.jl")
-include("utils/require_unique.jl")
-include("utils/sum_intervals_and_float.jl")
-include("utils/verify/add_child.jl")
-include("utils/verify/cyclicality_and_connection.jl")
-# include("networks/ebn/enhancedbn.jl")
+# include("utils/wrap.jl")
+# include("nodes/cpts.jl")
+# include("nodes/nodes.jl")
+# include("nodes/discretenodes.jl")
+# include("nodes/continuousnode.jl")
+# include("nodes/functionalnodes.jl")
+# include("utils/require_unique.jl")
+# include("utils/sum_intervals_and_float.jl")
+# include("utils/verify/add_child.jl")
+# include("utils/verify/cyclicality_and_connection.jl")
+include("networks/ebn/enhancedbn.jl")
 
 # include("utils/verify_discrete.jl")
 # include("nodes/discretenodes.jl")
