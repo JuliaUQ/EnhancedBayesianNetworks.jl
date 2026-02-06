@@ -3,6 +3,7 @@ struct ContinuousNode <: AbstractNode
     cpt::ConditionalProbabilityTable{ContinuousProbability}
     discretization::AbstractDiscretization
     results::Dict{Vector{Symbol},Tuple}
+
     function ContinuousNode(
         name::Symbol,
         parents::Vector{Symbol}=Symbol[],
@@ -12,13 +13,22 @@ struct ContinuousNode <: AbstractNode
         if name == :Π
             error(":Π is not allowed as node name")
         end
-        if isempty(discretization.intervals) && !isempty(parents)
+        if isempty(discretization) && !isempty(parents)
             discretization = ApproximatedDiscretization()
         end
+        if isempty(parents) && isa(discretization, ApproximatedDiscretization)
+            error("invalid eBN: node $name, is a root node and the discretization must be an ExactDiscretization")
+        elseif !isempty(parents) && isa(discretization, ExactDiscretization)
+            error("invalid eBN: node $name, is a child node and the discretization must be an ApproximatedDiscretization")
+        end
+
         cpt = ConditionalProbabilityTable{ContinuousProbability}(parents)
         return new(name, cpt, discretization, results)
     end
 end
+
+ContinuousNode(name::Symbol, discretization::AbstractDiscretization) = ContinuousNode(name, Symbol[], discretization, Dict{Vector{Symbol},Tuple}())
+
 
 Base.setindex!(node::ContinuousNode, value, key...) = setindex!(node.cpt, value, key...)
 

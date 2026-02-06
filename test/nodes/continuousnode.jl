@@ -46,7 +46,6 @@
         @test isempty(parents(node_a))
         @test issetequal(parents(node_c), [:a])
 
-
         node_e = ContinuousNode(:d, [:a, :b])
         node_e[:a=>:a1, :b=>:b1] = Interval(0.1, 0.2)
         node_e[:a=>:a1, :b=>:b2] = Uniform(0.1, 0.2)
@@ -68,7 +67,21 @@
         @test EnhancedBayesianNetworks._inputs(node_b, evidence) == Interval(0.1, 0.3)
         @test isa(EnhancedBayesianNetworks._inputs(node_c, evidence), ProbabilityBox)
         @test EnhancedBayesianNetworks._inputs(node_e, evidence) == Interval(0.1, 0.2)
+
+        exact = ExactDiscretization([-1, 0, 1])
+        approx = ApproximatedDiscretization([-1, 0, 1], 2)
+        @test_throws ErrorException("invalid eBN: node e, is a root node and the discretization must be an ExactDiscretization") ContinuousNode(:e, approx)
+        node_e = ContinuousNode(:e, [:a], approx)
+        @test node_e.name == :e
+        @test issetequal(Symbol.(names(node_e.cpt.data)), [:a, :Π])
+        @test node_e.discretization == approx
+        @test_throws ErrorException("invalid eBN: node e, is a child node and the discretization must be an ApproximatedDiscretization") ContinuousNode(:e, [:a], exact)
+        node_e = ContinuousNode(:e, exact)
+        @test node_e.name == :e
+        @test issetequal(Symbol.(names(node_e.cpt.data)), [:Π])
+        @test node_e.discretization == exact
     end
+
     @testset "auxiliary functions" begin
         dist = Normal()
         @test EnhancedBayesianNetworks._distribution_bounds(dist) == [-Inf, Inf]
