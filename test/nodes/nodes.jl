@@ -1,4 +1,4 @@
-@testset "Discretization structs" begin
+@testset "Discretization Structs" begin
     @testset "Exact Discretization" begin
         interval = [-1, 0, 3, 1]
         @test_throws ErrorException("interval values [-1, 0, 3, 1] are not sorted") ExactDiscretization(interval)
@@ -8,6 +8,7 @@
         @test !isempty(exact_interval)
         @test isempty(ExactDiscretization())
     end
+
     @testset "Approximated Discretization" begin
         interval = [-1, 0, 3, 1]
         sigma = 2

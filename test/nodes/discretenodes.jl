@@ -77,6 +77,7 @@
         @test node_c.parameters == parameters
         @test node_c.results == results
     end
+
     @testset "main functions" begin
         @test_throws ErrorException(":Π is not allowed as node name") DiscreteNode(:Π)
         node_a = DiscreteNode(:a)
@@ -124,6 +125,7 @@
         evidence = Evidence(:a => :a2, :b => :b1)
         @test EnhancedBayesianNetworks._inputs(node_a, evidence) == [Parameter(0, :A)]
     end
+
     @testset "extreme points" begin
         int1 = Interval(0.2, 0.5)
         int2 = Interval(0.5, 0.6)

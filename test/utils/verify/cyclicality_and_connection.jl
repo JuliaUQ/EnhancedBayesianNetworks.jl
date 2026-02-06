@@ -1,53 +1,56 @@
-@testset "transitive closure" begin
-    rowsA = [1, 1, 2, 3, 4, 4]
-    colsA = [3, 4, 6, 5, 5, 6]
-    valsA = trues(6)
-    A = sparse(rowsA, colsA, valsA, 6, 6)
+@testset "Verify cyclicality and connection" begin
 
-    rowsR = [1, 1, 1, 1, 2, 3, 4, 4]
-    colsR = [3, 4, 5, 6, 6, 5, 5, 6]
-    valsR = trues(8)
-    R = sparse(rowsR, colsR, valsR, 6, 6)
+    @testset "Transitive Closure" begin
+        rowsA = [1, 1, 2, 3, 4, 4]
+        colsA = [3, 4, 6, 5, 5, 6]
+        valsA = trues(6)
+        A = sparse(rowsA, colsA, valsA, 6, 6)
 
-    @test EnhancedBayesianNetworks.transitive_closure(A) == R
+        rowsR = [1, 1, 1, 1, 2, 3, 4, 4]
+        colsR = [3, 4, 5, 6, 6, 5, 5, 6]
+        valsR = trues(8)
+        R = sparse(rowsR, colsR, valsR, 6, 6)
 
-    rowsA = [1, 2, 3, 4, 5]
-    colsA = [3, 4, 5, 5, 1]
-    valsA = trues(5)
-    A = sparse(rowsA, colsA, valsA, 5, 5)
+        @test EnhancedBayesianNetworks.transitive_closure(A) == R
 
-    rowsR = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5]
-    colsR = [1, 3, 5, 1, 3, 4, 5, 1, 3, 5, 1, 3, 5, 1, 3, 5]
-    valsR = trues(16)
-    R = sparse(rowsR, colsR, valsR, 5, 5)
+        rowsA = [1, 2, 3, 4, 5]
+        colsA = [3, 4, 5, 5, 1]
+        valsA = trues(5)
+        A = sparse(rowsA, colsA, valsA, 5, 5)
 
-    @test EnhancedBayesianNetworks.transitive_closure(A) == R
-end
+        rowsR = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5]
+        colsR = [1, 3, 5, 1, 3, 4, 5, 1, 3, 5, 1, 3, 5, 1, 3, 5]
+        valsR = trues(16)
+        R = sparse(rowsR, colsR, valsR, 5, 5)
 
-@testset "iscyclic" begin
-    rowsA = [1, 2, 3, 4, 5]
-    colsA = [3, 4, 5, 5, 1]
-    valsA = trues(5)
-    A = sparse(rowsA, colsA, valsA, 5, 5)
-    @test EnhancedBayesianNetworks.iscyclic(A)
+        @test EnhancedBayesianNetworks.transitive_closure(A) == R
+    end
 
-    rowsA = [1, 2, 3, 4]
-    colsA = [3, 4, 5, 5]
-    valsA = trues(4)
-    A = sparse(rowsA, colsA, valsA, 5, 5)
-    @test !EnhancedBayesianNetworks.iscyclic(A)
-end
+    @testset "Iscyclic function" begin
+        rowsA = [1, 2, 3, 4, 5]
+        colsA = [3, 4, 5, 5, 1]
+        valsA = trues(5)
+        A = sparse(rowsA, colsA, valsA, 5, 5)
+        @test EnhancedBayesianNetworks.iscyclic(A)
 
-@testset "isconnected" begin
-    rowsA = [1, 2, 3, 4, 5]
-    colsA = [3, 4, 5, 5, 1]
-    valsA = trues(5)
-    A = sparse(rowsA, colsA, valsA, 5, 5)
-    @test EnhancedBayesianNetworks.isconnected(A)
+        rowsA = [1, 2, 3, 4]
+        colsA = [3, 4, 5, 5]
+        valsA = trues(4)
+        A = sparse(rowsA, colsA, valsA, 5, 5)
+        @test !EnhancedBayesianNetworks.iscyclic(A)
+    end
 
-    rowsA = [1, 2, 4]
-    colsA = [3, 4, 5]
-    valsA = trues(3)
-    A = sparse(rowsA, colsA, valsA, 5, 5)
-    @test !EnhancedBayesianNetworks.isconnected(A)
+    @testset "Isconnected function" begin
+        rowsA = [1, 2, 3, 4, 5]
+        colsA = [3, 4, 5, 5, 1]
+        valsA = trues(5)
+        A = sparse(rowsA, colsA, valsA, 5, 5)
+        @test EnhancedBayesianNetworks.isconnected(A)
+
+        rowsA = [1, 2, 4]
+        colsA = [3, 4, 5]
+        valsA = trues(3)
+        A = sparse(rowsA, colsA, valsA, 5, 5)
+        @test !EnhancedBayesianNetworks.isconnected(A)
+    end
 end

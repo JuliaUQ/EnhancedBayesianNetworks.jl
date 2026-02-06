@@ -1,5 +1,5 @@
 @testset "Functional Nodes" begin
-    @testset "ContinuousFunctionalNode" begin
+    @testset "Continuous" begin
         name = :functional
         models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
         simulation = MonteCarlo(200)
@@ -16,9 +16,9 @@
         @test node.discretization.intervals == [-2, -1, 0, 1, 2]
         @test node.discretization.sigma == 2
         @test_throws ErrorException(":Π is not allowed as node name") ContinuousFunctionalNode(:Π, models, simulation)
-
     end
-    @testset "DiscreteFunctionalNode" begin
+
+    @testset "Discrete" begin
         name = :functional
         models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
         simulation = MonteCarlo(200)
@@ -33,6 +33,5 @@
         node = DiscreteFunctionalNode(name, models, performance, simulation, parameters)
         @test node.parameters == parameters
         @test_throws ErrorException(":Π is not allowed as node name") DiscreteFunctionalNode(:Π, models, performance, simulation)
-
     end
 end
