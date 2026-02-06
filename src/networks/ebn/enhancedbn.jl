@@ -208,37 +208,18 @@ function verify_functional_parents(net::AbstractNetwork, node::FunctionalNode) #
     end
 end
 
+function markov_blanket(net::AbstractNetwork, node::Symbol)
+    blanket = []
+    for child in children(net, node)
+        append!(blanket, parents(net, child))
+        push!(blanket, child)
+    end
+    append!(blanket, parents(net, node))
+    return blanket
+end
 
+markov_blanket(net::AbstractNetwork, node::AbstractNode) = markov_blanket(net, node.name)
 
-
-
-
-
-
-
-# function markov_blanket(net::EnhancedBayesianNetwork, index::Int64)
-#     blanket = []
-#     reverse_dict = Dict(value => key for (key, value) in net.topology)
-#     for child in children(net, index)[1]
-#         append!(blanket, parents(net, child)[1])
-#         push!(blanket, child)
-#     end
-#     append!(blanket, parents(net, index)[1])
-#     indices = unique(setdiff(blanket, [index]))
-#     names = map(x -> reverse_dict[x], indices)
-#     nodes = filter(x -> x.name ∈ names, net.nodes)
-#     return indices, names, nodes
-# end
-
-# function markov_blanket(net::EnhancedBayesianNetwork, name::Symbol)
-#     index = net.topology[name]
-#     markov_blanket(net, index)
-# end
-
-# function markov_blanket(net::EnhancedBayesianNetwork, node::AbstractNode)
-#     index = net.topology[node.name]
-#     markov_blanket(net, index)
-# end
 
 # function _get_markov_group(net::EnhancedBayesianNetwork, node::AbstractNode)
 #     fun = (ebn, n) -> unique(vcat(n, mapreduce(x -> filter(x -> isa(x, AbstractContinuousNode), markov_blanket(ebn, node)[3]), vcat, n)))
