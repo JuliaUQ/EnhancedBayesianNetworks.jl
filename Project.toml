@@ -1,7 +1,7 @@
 name = "EnhancedBayesianNetworks"
 uuid = "886a9665-f0d4-4b74-bc12-f95153dc1848"
-authors = ["Andrea Perin <andrea.perin@irz.uni-hannover.de>"]
 version = "0.1.0"
+authors = ["Andrea Perin <andrea.perin@irz.uni-hannover.de>"]
 
 [deps]
 AutoHashEquals = "15f4f7f2-30c1-5605-9d31-71845cf9641f"
@@ -20,3 +20,4 @@ UncertaintyQuantification = "7183a548-a887-11e9-15ce-a56ab60bad7a"
 [compat]
 Compose = "0.9.5"
 SparseArrays = "1.11.0"
+UncertaintyQuantification = "0.14.0"
