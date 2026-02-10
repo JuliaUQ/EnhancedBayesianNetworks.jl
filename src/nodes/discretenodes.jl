@@ -1,4 +1,4 @@
-struct DiscreteNode <: AbstractNode
+struct DiscreteNode <: AbstractDiscreteNode
     name::Symbol
     cpt::ConditionalProbabilityTable{DiscreteProbability}
     parameters::Vector{Pair{Symbol,Vector{Parameter}}}

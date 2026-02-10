@@ -1,6 +1,8 @@
 @testset "Continuous Nodes" begin
     @testset "structure and setindex" begin
         node_a = ContinuousNode(:a)
+        @test isa(node_a, AbstractNode)
+        @test isa(node_a, AbstractContinuousNode)
         @test isa(node_a, ContinuousNode)
         @test isa(node_a.cpt, ConditionalProbabilityTable{EnhancedBayesianNetworks.ContinuousProbability})
         @test names(node_a.cpt.data) == ["Π"]
@@ -16,6 +18,9 @@
         @test node_a.cpt.data.Π[1] == Normal()
         node_c[:a=>:a1] = Normal()
         node_c[:a=>:a2] = Interval(0.3, 0.6)
+        @test isa(node_c, AbstractNode)
+        @test isa(node_c, AbstractContinuousNode)
+        @test isa(node_c, ContinuousNode)
         @test node_c.cpt.data.a == [:a1, :a2]
         @test node_c.cpt.data.Π[1] == Normal()
         @test node_c.cpt.data.Π[2] == Interval(0.3, 0.6)

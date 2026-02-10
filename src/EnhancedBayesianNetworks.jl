@@ -20,6 +20,8 @@ using Polyhedra: HalfSpace, doubledescription
 import Base: *, sum, reduce
 
 # Types
+export AbstractContinuousNode
+export AbstractDiscreteNode
 export AbstractDiscretization
 export AbstractInferenceState
 export AbstractNetwork
@@ -27,6 +29,7 @@ export AbstractNode
 export ApproximatedDiscretization
 export BayesianNetwork
 export BayesianNetwork2be
+export ConditionalProbabilityTable
 export ContinuousFunctionalNode
 export ContinuousInput
 export ContinuousNode
@@ -41,7 +44,6 @@ export FunctionalNode
 export ImpreciseInferenceState
 export PreciseInferenceState
 
-export ConditionalProbabilityTable
 # export Factor
 
 ## Constants

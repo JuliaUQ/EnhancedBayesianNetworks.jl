@@ -1,4 +1,4 @@
-struct ContinuousNode <: AbstractNode
+struct ContinuousNode <: AbstractContinuousNode
     name::Symbol
     cpt::ConditionalProbabilityTable{ContinuousProbability}
     discretization::AbstractDiscretization

@@ -1,6 +1,8 @@
 @testset "Discrete Nodes" begin
     @testset "structure and setindex" begin
         node_a = DiscreteNode(:a)
+        @test isa(node_a, AbstractNode)
+        @test isa(node_a, AbstractDiscreteNode)
         @test isa(node_a, DiscreteNode)
         @test isa(node_a.cpt, ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability})
         @test names(node_a.cpt.data) == ["a", "Π"]
@@ -24,6 +26,9 @@
         node_c[:a=>:a1, :c=>:c2] = 0.7
         node_c[:a=>:a2, :c=>:c1] = Interval(0.3, 0.6)
         node_c[:a=>:a2, :c=>:c2] = Interval(0.3, 0.6)
+        @test isa(node_c, AbstractNode)
+        @test isa(node_c, AbstractDiscreteNode)
+        @test isa(node_c, DiscreteNode)
         @test node_c.cpt.data.a == [:a1, :a1, :a2, :a2]
         @test node_c.cpt.data.c == [:c1, :c2, :c1, :c2]
         @test node_c.cpt.data.Π[1] == 0.3
