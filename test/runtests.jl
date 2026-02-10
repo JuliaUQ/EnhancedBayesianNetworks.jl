@@ -15,6 +15,7 @@ include("utils/require_unique.jl")
 include("utils/sum_intervals_and_float.jl")
 include("utils/verify/add_child.jl")
 include("utils/verify/cyclicality_and_connection.jl")
+include("networks/networks_common.jl")
 include("networks/ebn/enhancedbn.jl")
 
 # include("utils/verify_discrete.jl")

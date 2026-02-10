@@ -1,218 +1,144 @@
-function parents(net::AbstractNetwork, index::Int64)
-    reverse_dict = Dict(value => key for (key, value) in net.topology)
-    indices = net.A[:, index].nzind
-    names = map(x -> reverse_dict[x], indices)
-    nodes = filter(x -> x.name ∈ names, net.nodes)
-    return indices, names, nodes
-end
+iscyclic(net::AbstractNetwork) = iscyclic(net.A)
+
+isconnected(net::AbstractNetwork) = isconnected(net.A)
 
 function parents(net::AbstractNetwork, name::Symbol)
     index = net.topology[name]
-    parents(net, index)
-end
-
-function parents(net::AbstractNetwork, node::AbstractNode)
-    index = net.topology[node.name]
-    parents(net, index)
-end
-
-function children(net::AbstractNetwork, index::Int64)
+    parents_index = net.A[:, index].nzind
     reverse_dict = Dict(value => key for (key, value) in net.topology)
-    indices = net.A[index, :].nzind
-    names = map(x -> reverse_dict[x], indices)
-    nodes = filter(x -> x.name ∈ names, net.nodes)
-    return indices, names, nodes
+
+    return map(i -> reverse_dict[i], parents_index)
 end
+
+parents(net::AbstractNetwork, node::AbstractNode) = parents(net, node.name)
 
 function children(net::AbstractNetwork, name::Symbol)
     index = net.topology[name]
-    children(net, index)
-end
-
-function children(net::AbstractNetwork, node::AbstractNode)
-    index = net.topology[node.name]
-    children(net, index)
-end
-
-function discrete_ancestors(net::AbstractNetwork, node::AbstractNode)
-    discrete_parents = filter(x -> isa(x, AbstractDiscreteNode), parents(net, node)[3])
-    continuous_parents = filter(x -> isa(x, AbstractContinuousNode), parents(net, node)[3])
-    if isempty(continuous_parents)
-        return discrete_parents
-    end
-    return unique([discrete_parents..., mapreduce(x -> discrete_ancestors(net, x), vcat, continuous_parents)
-    ...])
-end
-
-function _theoretical_scenarios(net::AbstractNetwork, node::AbstractNode)
-    par = discrete_ancestors(net, node)
-    discrete_parents = filter(x -> isa(x, AbstractDiscreteNode), par)
-    function f(par)
-        return map(st -> (par.name => st), states(par))
-    end
-    discrete_parents_combination = Iterators.product(f.(discrete_parents)...)
-    discrete_parents_combination = map(t -> [t...], discrete_parents_combination)
-    return Dict.(vec(discrete_parents_combination))
-end
-
-function add_child!(net::AbstractNetwork, par::Symbol, ch::Symbol)
-    index_par = net.topology[par]
-    index_ch = net.topology[ch]
-    nodes = net.nodes
-    par_node = first(filter(n -> n.name == par, nodes))
-    ch_node = first(filter(n -> n.name == ch, nodes))
-    _verify_no_recursion(par_node, ch_node)
-    _verify_root(par_node, ch_node)
-    _verify_child(par_node, ch_node)
-    _verify_functional_node(par_node, ch_node)
-    net.A[index_par, index_ch] = 1
-    return nothing
-end
-
-function add_child!(net::AbstractNetwork, par_index::Int64, ch_index::Int64)
+    children_index = net.A[index, :].nzind
     reverse_dict = Dict(value => key for (key, value) in net.topology)
-    par = reverse_dict[par_index]
-    ch = reverse_dict[ch_index]
-    add_child!(net, par, ch)
+
+    return map(i -> reverse_dict[i], children_index)
 end
 
-function add_child!(net::AbstractNetwork, par_node::AbstractNode, ch_node::AbstractNode)
-    par = par_node.name
-    ch = ch_node.name
-    add_child!(net, par, ch)
+children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
+
+function verify_parents(net::AbstractNetwork, node::AbstractNode) ## verify if all the parents in the CPT have been added via add_child!
+    if isa(node, FunctionalNode)
+        return nothing
+    else
+        cpt_parents = parents(node)
+        net_parents = parents(net, node.name)
+        only_in_cpt = setdiff(cpt_parents, net_parents)
+        if !isempty(only_in_cpt)
+            error("Invalid CPT: node $(node.name) has node(s) '$only_in_cpt' defined in the CPT only, but they have not been added via add_child!")
+        end
+    end
 end
 
-function order!(net::AbstractNetwork)
-    if _is_cyclic_dfs(net.A)
-        error("network is cyclic!")
+function verify_scenarios(net::AbstractNetwork, node::DiscreteNode)
+    par = filter(n -> n.name ∈ parents(node), net.nodes)
+    v = vcat(par, node)
+    theoretical_scenarios = vec(collect(Iterators.product(states.(v)...)))
+    filtering_elements = map(th_s -> ([i.name for i in v] .=> th_s), theoretical_scenarios)
+    for filtering_element in filtering_elements
+        if isempty(filter(node.cpt, filtering_element...))
+            error("Invalid CPT: node $(node.name) is missing the following scenario $(filtering_element)")
+        end
     end
-    n = net.A.n
-    reverse_dict = Dict(value => key for (key, value) in net.topology)
-    all_nodes = range(1, n)
-    root_indices = findall(map(col -> all(col .== 0), eachcol(net.A)))
-    root_nodes = AbstractVector{AbstractNode}(map(x -> first(filter(j -> j.name == reverse_dict[x], net.nodes)), root_indices))
-    to_be_classified = setdiff(all_nodes, root_indices)
-    while !isempty(to_be_classified)
-        par_list = map(r -> net.A[:, r].nzind, to_be_classified)
-        new_root_indices = findall(map(p -> all(p .∈ [root_indices]), par_list))
-        new_root = map(i -> to_be_classified[i], new_root_indices)
-        append!(root_indices, new_root)
-        new_root_nodes = map(x -> first(filter(j -> j.name == reverse_dict[x], net.nodes)), new_root)
-        append!(root_nodes, new_root_nodes)
-        to_be_classified = setdiff(to_be_classified, new_root)
-    end
+end
 
-    ordered_topology = Dict(map(i -> (reverse_dict[i[2]], i[1]), enumerate(root_indices)))
-    conversion = Dict(map(i -> (i[2], i[1]), enumerate(root_indices)))
-    ordered_matrix = sparse(zeros(n, n))
-    for i in range(1, n)
-        for j in range(1, n)
-            if net.A[i, j] == 1
-                ordered_matrix[conversion[i], conversion[j]] = 1
+function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
+    par = filter(n -> n.name ∈ parents(node), net.nodes)
+    theoretical_scenarios = vec(collect(Iterators.product(states.(par)...)))
+    filtering_elements = map(th_s -> ([i.name for i in par] .=> th_s), theoretical_scenarios)
+    if isprecise(node)
+        for filtering_element in filtering_elements
+            cumulative_prob = sum(filter(node.cpt, filtering_element...).Π)
+            if cumulative_prob != 1
+                if isapprox(cumulative_prob, 1, atol=0.01)
+                    @warn "node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element and will be normalized!"
+                    filter(node.cpt, filtering_element...)[!, :Π] ./= cumulative_prob
+                else
+                    error("Invalid CPT: node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' not exhaustive and mutually exclusive for the scenario $filtering_element")
+                end
+            end
+        end
+    else
+        for filtering_element in filtering_elements
+            lb_sum, ub_sum = EnhancedBayesianNetworks.sum_intervals_and_float(filter(node.cpt, filtering_element...).Π...)
+            if lb_sum > 1
+                error("Invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of lower bound values must be less than 1")
+            elseif ub_sum < 1
+                error("Invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of upper bound values must be greater than 1")
             end
         end
     end
-
-    net.A = ordered_matrix
-    net.topology = ordered_topology
-    net.nodes = root_nodes
-    _verify_net(net)
-    return nothing
 end
 
-function _remove_node!(net::AbstractNetwork, index::Int64)
-    A = net.A[1:end.!=index, 1:end.!=index]
-    nodes = deleteat!(net.nodes, index)
-    topology_vec = collect(net.topology)
-    function f(kv, i)
-        if kv[2] > i
-            return Pair(kv[1], kv[2] - 1)
-        elseif kv[2] != i
-            return kv
+function verify_functional_parents(net::AbstractNetwork, node::FunctionalNode) ## Discrete Parents must have a non empty parameters attribute
+    par = filter(n -> n.name ∈ parents(net, node), net.nodes)
+    discrete_par = filter(x -> isa(x, DiscreteNode), par)
+    cont_par = filter(x -> isa(x, ContinuousNode), par)
+
+    for dp in discrete_par
+        if isempty(dp.parameters)
+            error("Invalid network: node $(dp.name) is a parent for the FuctionalNode $(node.name) and cannot have an empty parameters attribute")
         end
     end
-    topology_vec = map(t -> f(t, index), topology_vec)
-    filter!(x -> !isnothing(x), topology_vec)
-    topology = Dict(topology_vec)
-    net.A = A
-    net.topology = topology
-    net.nodes = nodes
-    return nothing
-end
-
-function _remove_node!(net::AbstractNetwork, name::Symbol)
-    index = net.topology[name]
-    _remove_node!(net, index)
-end
-
-function _remove_node!(net::AbstractNetwork, node::AbstractNode)
-    index = net.topology[node.name]
-    _remove_node!(net, index)
-end
-
-function _add_node!(net::AbstractNetwork, node::AbstractNode)
-    push!(net.nodes, node)
-    net.topology[node.name] = length(net.nodes)
-    net.A = hcat(net.A, zeros(net.A.m))
-    net.A = vcat(net.A, zeros(net.A.n)')
-    return nothing
-end
-
-function _verify_net(net::AbstractNetwork)
-    map(n -> _verify_child_node(net, n), filter(x -> !isa(x, FunctionalNode), net.nodes))
-    functional_nodes = filter(x -> isa(x, FunctionalNode), net.nodes)
-    map(fn -> _verify_functional_node(net, fn), functional_nodes)
-    return nothing
-end
-
-function _verify_functional_node(net::AbstractNetwork, node::FunctionalNode)
-    pars = parents(net, node)[3]
-    if isempty(pars)
-        error("functional node '$(node.name)' must have at least one parent")
+    if isempty(cont_par)
+        @warn "node $(node.name) is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean"
     end
-    cont_pars = filter(x -> isa(x, AbstractContinuousNode), pars)
-    if isempty(cont_pars)
-        @warn "functional node '$(node.name)' have no continuous parents. All the simulations will return the same output"
+    if isempty(discrete_par)
+        @warn "node $(node.name) is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis"
     end
-    disc_pars = filter(x -> isa(x, DiscreteNode), pars)
-    map(dp -> _non_empty_parameters_vector(net, dp), disc_pars)
-    return nothing
 end
 
-function _verify_child_node(net::AbstractNetwork, node::DiscreteNode)
-    if !isroot(node)
-        th_parents_names = Symbol.(names(node.cpt.data[!, Not(node.name, :Π)]))
-        if !issetequal(th_parents_names, parents(net, node)[2])
-            error("node '$(node.name)''s cpt requires exctly the nodes '$th_parents_names' to be its parents, but provided parents are '$(parents(net, node)[2])'")
-        end
-        th_scenarios = _theoretical_scenarios(net, node)
-        cpt_scenarios = scenarios(node)
-        if !issetequal(cpt_scenarios, th_scenarios)
-            error("node '$(node.name)' has defined cpt scenarios $(node.cpt) not coherent with the theoretical one $th_scenarios")
-        end
+function markov_blanket(net::AbstractNetwork, node::Symbol)
+    blanket = Symbol[]
+    for child in children(net, node)
+        append!(blanket, setdiff(parents(net, child), [node]))
+        push!(blanket, child)
     end
-    return nothing
+    append!(blanket, parents(net, node))
+    return unique!(blanket)
 end
 
-function _verify_child_node(net::AbstractNetwork, node::ContinuousNode)
-    if !isroot(node)
-        th_parents_names = Symbol.(names(node.cpt.data[!, Not(:Π)]))
-        if !issetequal(th_parents_names, parents(net, node)[2])
-            error("node '$(node.name)''s cpt requires exctly the nodes '$th_parents_names' to be its parents, but provided parents are '$(parents(net, node)[2])'")
-        end
-        th_scenarios = _theoretical_scenarios(net, node)
-        cpt_scenarios = scenarios(node)
-        if !issetequal(cpt_scenarios, th_scenarios)
-            error("node '$(node.name)' has defined cpt scenarios $(node.cpt) not coherent with the theoretical one $th_scenarios")
-        end
-    end
-    return nothing
-end
+markov_blanket(net::AbstractNetwork, node::AbstractNode) = markov_blanket(net, node.name)
 
-function _non_empty_parameters_vector(net::AbstractNetwork, node::DiscreteNode)
-    chs = children(net, node)[3]
-    if any(isa.(chs, FunctionalNode)) && isempty(node.parameters)
-        error("node '$(node.name)' is a discrete parent of a functional node and cannot have an empty parameters vector")
-    end
-    return nothing
-end
+# function _remove_node!(net::AbstractNetwork, index::Int64)
+#     A = net.A[1:end.!=index, 1:end.!=index]
+#     nodes = deleteat!(net.nodes, index)
+#     topology_vec = collect(net.topology)
+#     function f(kv, i)
+#         if kv[2] > i
+#             return Pair(kv[1], kv[2] - 1)
+#         elseif kv[2] != i
+#             return kv
+#         end
+#     end
+#     topology_vec = map(t -> f(t, index), topology_vec)
+#     filter!(x -> !isnothing(x), topology_vec)
+#     topology = Dict(topology_vec)
+#     net.A = A
+#     net.topology = topology
+#     net.nodes = nodes
+#     return nothing
+# end
+
+# function _remove_node!(net::AbstractNetwork, name::Symbol)
+#     index = net.topology[name]
+#     _remove_node!(net, index)
+# end
+
+# function _remove_node!(net::AbstractNetwork, node::AbstractNode)
+#     index = net.topology[node.name]
+#     _remove_node!(net, index)
+# end
+
+# function _add_node!(net::AbstractNetwork, node::AbstractNode)
+#     push!(net.nodes, node)
+#     net.topology[node.name] = length(net.nodes)
+#     net.A = hcat(net.A, zeros(net.A.m))
+#     net.A = vcat(net.A, zeros(net.A.n)')
+#     return nothing
+# end
