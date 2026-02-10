@@ -17,6 +17,16 @@ struct ContinuousFunctionalNode <: AbstractNode
     end
 end
 
+function isa_generalized_continuous(n::AbstractNode)
+    if isa(n, ContinuousNode)
+        return true
+    elseif isa(n, ContinuousFunctionalNode)
+        return true
+    else
+        return false
+    end
+end
+
 struct DiscreteFunctionalNode <: AbstractDiscreteNode
     name::Symbol
     models::AbstractVector{<:UQModel}
@@ -35,6 +45,16 @@ struct DiscreteFunctionalNode <: AbstractDiscreteNode
             error(":Π is not allowed as node name")
         end
         new(name, wrap(models), performance, simulation, parameters)
+    end
+end
+
+function isa_generalized_discrete(n::AbstractNode)
+    if isa(n, DiscreteNode)
+        return true
+    elseif isa(n, DiscreteFunctionalNode)
+        return true
+    else
+        return false
     end
 end
 
