@@ -441,4 +441,181 @@
         @test net.topology == Dict(:W => 1, :S => 2, :R => 3, :G => 4)
         @test net.A == sparse([1, 1, 2, 3], [2, 3, 4, 4], [true, true, true, true], 4, 4)
     end
+
+    @testset "Markov Blanket" begin
+        x1 = DiscreteNode(:x1)
+        x1[:x1=>:x1y] = 0.5
+        x1[:x1=>:x1n] = 0.5
+
+        x2 = DiscreteNode(:x2)
+        x2[:x2=>:x2y] = 0.5
+        x2[:x2=>:x2n] = 0.5
+
+        x4 = DiscreteNode(:x4)
+        x4[:x4=>:x4y] = 0.5
+        x4[:x4=>:x4n] = 0.5
+
+        x8 = DiscreteNode(:x8)
+        x8[:x8=>:x8y] = 0.5
+        x8[:x8=>:x8n] = 0.5
+
+        x3 = DiscreteNode(:x3, [:x1])
+        x3[:x1=>:x1y, :x3=>:x3y] = 0.5
+        x3[:x1=>:x1y, :x3=>:x3n] = 0.5
+        x3[:x1=>:x1n, :x3=>:x3y] = 0.5
+        x3[:x1=>:x1n, :x3=>:x3n] = 0.5
+
+        x5 = DiscreteNode(:x5, [:x2])
+        x5[:x2=>:x2y, :x5=>:x5y] = 0.5
+        x5[:x2=>:x2y, :x5=>:x5n] = 0.5
+        x5[:x2=>:x2n, :x5=>:x5y] = 0.5
+        x5[:x2=>:x2n, :x5=>:x5n] = 0.5
+
+        x7 = DiscreteNode(:x7, [:x4])
+        x7[:x4=>:x4y, :x7=>:x7y] = 0.5
+        x7[:x4=>:x4y, :x7=>:x7n] = 0.5
+        x7[:x4=>:x4n, :x7=>:x7y] = 0.5
+        x7[:x4=>:x4n, :x7=>:x7n] = 0.5
+
+        x11 = DiscreteNode(:x11, [:x8])
+        x11[:x8=>:x8y, :x11=>:x11y] = 0.5
+        x11[:x8=>:x8y, :x11=>:x11n] = 0.5
+        x11[:x8=>:x8n, :x11=>:x11y] = 0.5
+        x11[:x8=>:x8n, :x11=>:x11n] = 0.5
+
+        x6 = DiscreteNode(:x6, [:x3, :x4])
+        x6[:x3=>:x3y, :x4=>:x4y, :x6=>:x6y] = 0.5
+        x6[:x3=>:x3y, :x4=>:x4y, :x6=>:x6n] = 0.5
+        x6[:x3=>:x3y, :x4=>:x4n, :x6=>:x6y] = 0.5
+        x6[:x3=>:x3y, :x4=>:x4n, :x6=>:x6n] = 0.5
+        x6[:x3=>:x3n, :x4=>:x4y, :x6=>:x6y] = 0.5
+        x6[:x3=>:x3n, :x4=>:x4y, :x6=>:x6n] = 0.5
+        x6[:x3=>:x3n, :x4=>:x4n, :x6=>:x6y] = 0.5
+        x6[:x3=>:x3n, :x4=>:x4n, :x6=>:x6n] = 0.5
+
+        x9 = DiscreteNode(:x9, [:x5, :x6])
+        x9[:x5=>:x5y, :x6=>:x6y, :x9=>:x9y] = 0.5
+        x9[:x5=>:x5y, :x6=>:x6y, :x9=>:x9n] = 0.5
+        x9[:x5=>:x5y, :x6=>:x6n, :x9=>:x9y] = 0.5
+        x9[:x5=>:x5y, :x6=>:x6n, :x9=>:x9n] = 0.5
+        x9[:x5=>:x5n, :x6=>:x6y, :x9=>:x9y] = 0.5
+        x9[:x5=>:x5n, :x6=>:x6y, :x9=>:x9n] = 0.5
+        x9[:x5=>:x5n, :x6=>:x6n, :x9=>:x9y] = 0.5
+        x9[:x5=>:x5n, :x6=>:x6n, :x9=>:x9n] = 0.5
+
+        x10 = DiscreteNode(:x10, [:x8, :x6])
+        x10[:x8=>:x8y, :x6=>:x6y, :x10=>:x10y] = 0.5
+        x10[:x8=>:x8y, :x6=>:x6y, :x10=>:x10n] = 0.5
+        x10[:x8=>:x8y, :x6=>:x6n, :x10=>:x10y] = 0.5
+        x10[:x8=>:x8y, :x6=>:x6n, :x10=>:x10n] = 0.5
+        x10[:x8=>:x8n, :x6=>:x6y, :x10=>:x10y] = 0.5
+        x10[:x8=>:x8n, :x6=>:x6y, :x10=>:x10n] = 0.5
+        x10[:x8=>:x8n, :x6=>:x6n, :x10=>:x10y] = 0.5
+        x10[:x8=>:x8n, :x6=>:x6n, :x10=>:x10n] = 0.5
+
+        x12 = DiscreteNode(:x12, [:x9])
+        x12[:x9=>:x9y, :x12=>:x12y] = 0.5
+        x12[:x9=>:x9y, :x12=>:x12n] = 0.5
+        x12[:x9=>:x9n, :x12=>:x12y] = 0.5
+        x12[:x9=>:x9n, :x12=>:x12n] = 0.5
+
+        x13 = DiscreteNode(:x13, [:x10])
+        x13[:x10=>:x10y, :x13=>:x13y] = 0.5
+        x13[:x10=>:x10y, :x13=>:x13n] = 0.5
+        x13[:x10=>:x10n, :x13=>:x13y] = 0.5
+        x13[:x10=>:x10n, :x13=>:x13n] = 0.5
+
+        nodes = [x1, x2, x4, x8, x5, x7, x11, x3, x6, x9, x10, x12, x13]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, :x1, :x3)
+        add_child!(net, :x2, :x5)
+        add_child!(net, :x4, :x7)
+        add_child!(net, :x8, :x11)
+        add_child!(net, :x3, :x6)
+        add_child!(net, :x4, :x6)
+        add_child!(net, :x5, :x9)
+        add_child!(net, :x6, :x9)
+        add_child!(net, :x6, :x10)
+        add_child!(net, :x8, :x10)
+        add_child!(net, :x9, :x12)
+        add_child!(net, :x10, :x13)
+        order!(net)
+
+        @test issetequal(markov_blanket(net, :x6), [:x3, :x4, :x5, :x8, :x9, :x10])
+        @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
+    end
+
+    @testset "Markov Envelope" begin
+        parameterY1 = [:yy1 => [Parameter(1, :y1)], :ny1 => [Parameter(0, :y1)]]
+        Y1 = DiscreteNode(:y1, parameterY1)
+        Y1[:y1=>:yy1] = 0.5
+        Y1[:y1=>:ny1] = 0.5
+
+        X1 = ContinuousNode(:x1)
+        X1[] = Normal()
+
+        X2 = ContinuousNode(:x2)
+        X2[] = Normal()
+
+        X3 = ContinuousNode(:x3)
+        X3[] = Normal()
+
+        model = Model(df -> df.y1 .+ df.x1, :y2)
+        models = [model]
+        simulation = MonteCarlo(200)
+        performance = df -> df.y2
+        Y2 = DiscreteFunctionalNode(:y2, models, performance, simulation)
+
+        model = Model(df -> df.x1 .+ df.x2, :y3)
+        models = [model]
+        simulation = MonteCarlo(200)
+        performance = df -> df.y3
+        Y3 = DiscreteFunctionalNode(:y3, models, performance, simulation)
+
+        model = Model(df -> df.x3 .+ df.x2, :y4)
+        models = [model]
+        simulation = MonteCarlo(200)
+        performance = df -> df.y4
+        Y4 = DiscreteFunctionalNode(:y4, models, performance, simulation)
+
+        model = Model(df -> df.x3, :y5)
+        models = [model]
+        simulation = MonteCarlo(200)
+        performance = df -> df.y5
+        parameter = Dict(:fail_y5 => [Parameter(1, :y5)], :fail_y5 => [Parameter(0, :y5)])
+        Y5 = DiscreteFunctionalNode(:y5, models, performance, simulation, parameter)
+
+        model = Model(df -> df.y3, :x4)
+        models = [model]
+        simulation = MonteCarlo(200)
+        X4 = ContinuousFunctionalNode(:x4, models, simulation)
+
+        model = Model(df -> df.x4, :y6)
+        models = [model]
+        simulation = MonteCarlo(200)
+        performance = df -> df.y6
+        Y6 = DiscreteFunctionalNode(:y6, models, performance, simulation)
+        nodes = [X1, X2, X3, Y1, Y2, Y3, Y4, Y5, X4, Y6]
+        ebn = EnhancedBayesianNetwork(nodes)
+
+        add_child!(ebn, :y1, :y2)
+        add_child!(ebn, :x1, :y2)
+        add_child!(ebn, :x1, :y3)
+        add_child!(ebn, :x2, :y3)
+        add_child!(ebn, :x2, :y4)
+        add_child!(ebn, :x3, :y4)
+        add_child!(ebn, :x3, :y5)
+        add_child!(ebn, :y5, :x4)
+        add_child!(ebn, :x4, :y6)
+        @suppress order!(ebn)
+
+        @test issetequal(EnhancedBayesianNetworks.markov_continuous_group(ebn, X1), [X1, X2, X3])
+        @test issetequal(EnhancedBayesianNetworks.markov_continuous_group(ebn, X2), [X1, X2, X3])
+        @test issetequal(EnhancedBayesianNetworks.markov_continuous_group(ebn, X3), [X1, X2, X3])
+        @test issetequal(EnhancedBayesianNetworks.markov_continuous_group(ebn, X4), [X4])
+
+        envelopes = markov_envelope(ebn)
+        @test issetequal(envelopes[1], [:y3, :y1, :x2, :x3, :y4, :y5, :y2, :x1])
+        @test issetequal(envelopes[2], [:y6, :y5, :x4])
+    end
 end

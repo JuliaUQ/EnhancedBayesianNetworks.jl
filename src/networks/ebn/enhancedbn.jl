@@ -135,8 +135,6 @@ end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
 
-## Verification Steps
-
 function verify_parents(net::AbstractNetwork, node::AbstractNode) ## verify if all the parents in the CPT have been added via add_child!
     if isa(node, FunctionalNode)
         return nothing
@@ -209,47 +207,52 @@ function verify_functional_parents(net::AbstractNetwork, node::FunctionalNode) #
 end
 
 function markov_blanket(net::AbstractNetwork, node::Symbol)
-    blanket = []
+    blanket = Symbol[]
     for child in children(net, node)
-        append!(blanket, parents(net, child))
+        append!(blanket, setdiff(parents(net, child), [node]))
         push!(blanket, child)
     end
     append!(blanket, parents(net, node))
-    return blanket
+    return unique!(blanket)
 end
 
 markov_blanket(net::AbstractNetwork, node::AbstractNode) = markov_blanket(net, node.name)
 
+function markov_envelope(net::EnhancedBayesianNetwork)
+    Xm_groups = map(n -> markov_continuous_group(net, n), filter(x -> isa(x, AbstractContinuousNode), net.nodes))
+    envelopes = Vector{Vector{Symbol}}()
+    for Xm_group in Xm_groups
+        envelope = unique!(vcat(map(n -> vcat(markov_blanket(net, n), n.name), Xm_group)...))
+        push!(envelopes, envelope)
+    end
 
-# function _get_markov_group(net::EnhancedBayesianNetwork, node::AbstractNode)
-#     fun = (ebn, n) -> unique(vcat(n, mapreduce(x -> filter(x -> isa(x, AbstractContinuousNode), markov_blanket(ebn, node)[3]), vcat, n)))
-#     list = [node]
-#     new_list = fun(net, list)
-#     while !issetequal(list, new_list)
-#         list = new_list
-#         new_list = fun(net, new_list)
-#     end
-#     return new_list
-# end
+    sets = unique(Set.(envelopes))
+    envelopes = collect.(sets)
+    keep = trues(length(envelopes))
+    for i in eachindex(sets), j in eachindex(sets)
+        if i != j && issubset(sets[i], sets[j])
+            keep[i] = false
+            break
+        end
+    end
 
-# function markov_envelope(net::EnhancedBayesianNetwork)
-#     cont_nodes = filter(x -> isa(x, AbstractContinuousNode), net.nodes)
-#     Xm_groups = map(x -> _get_markov_group(net, x), cont_nodes)
-#     markov_envelopes = unique.(mapreduce.(x -> push!(markov_blanket(net, x)[3], x), vcat, Xm_groups))
-#     # check when a vector is included into another
-#     sorted_envelopes = sort(markov_envelopes, by=length, rev=true)
-#     final_envelopes = []
-#     while length(sorted_envelopes) >= 1
-#         if length(sorted_envelopes) == 1
-#             append!(final_envelopes, sorted_envelopes)
-#             popfirst!(sorted_envelopes)
-#         else
-#             envelope = first(sorted_envelopes)
-#             to_compare_list = sorted_envelopes[2:end]
-#             is_excluded = map(to_compare -> any(to_compare .∉ [envelope]), to_compare_list)
-#             sorted_envelopes = to_compare_list[is_excluded]
-#             push!(final_envelopes, envelope)
-#         end
-#     end
-#     return final_envelopes
-# end
+    return envelopes[keep]
+end
+
+function markov_continuous_group(net::EnhancedBayesianNetwork, node::Union{ContinuousNode,ContinuousFunctionalNode})
+    Xm_group = [node]
+    blanket = filter(n -> n.name ∈ markov_blanket(net, node), net.nodes)
+    continuous_node_in_blanket = filter(x -> isa(x, AbstractContinuousNode), blanket)
+    Xm_group_new = unique!(vcat(continuous_node_in_blanket, Xm_group))
+
+    while !issetequal(Xm_group, Xm_group_new)
+        new_nodes = setdiff(Xm_group_new, Xm_group)
+        Xm_group = Xm_group_new
+        blankets = unique!(vcat(map(n -> markov_blanket(net, n), new_nodes)...))
+        blankets = filter(n -> n.name in blankets, net.nodes)
+        continuous_node_in_blanket = filter(x -> isa(x, AbstractContinuousNode), blankets)
+        Xm_group_new = unique!(vcat(continuous_node_in_blanket, Xm_group))
+    end
+
+    return Xm_group_new
+end
