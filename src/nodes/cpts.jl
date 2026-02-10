@@ -1,6 +1,5 @@
 const ContinuousProbability = Union{UnivariateDistribution,ProbabilityBox,Interval}
 const DiscreteProbability = Union{Real,Interval}
-
 const Probability = Union{ContinuousProbability,DiscreteProbability}
 
 struct ConditionalProbabilityTable{T<:Union{ContinuousProbability,DiscreteProbability}}
@@ -52,14 +51,17 @@ function verify_probability_value(value::Real)
     (0 ≤ value ≤ 1) || error("provided probability value $value is unfeasible")
     return value
 end
+
 function verify_probability_value(value::Interval)
     (0 ≤ value.lb ≤ 1) || error("provided probability value $value is unfeasible")
     (0 ≤ value.ub ≤ 1) || error("provided probability value $value is unfeasible")
     return value
 end
+
 function verify_probability_value(value::UnivariateDistribution)
     return value
 end
+
 function verify_probability_value(value::ProbabilityBox)
     return value
 end
