@@ -43,6 +43,7 @@ export Factor
 export FunctionalNode
 export ImpreciseInferenceState
 export PreciseInferenceState
+export SimulationTable
 
 # export Factor
 
