@@ -47,6 +47,11 @@ function Base.getindex(cpt::ConditionalProbabilityTable, key...)
     end
 end
 
+function Base.filter(cpt::ConditionalProbabilityTable, key...)
+    selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
+    return subset(cpt.data, selector, view=true)
+end
+
 function verify_probability_value(value::Real)
     (0 ≤ value ≤ 1) || error("provided probability value $value is unfeasible")
     return value
@@ -64,9 +69,4 @@ end
 
 function verify_probability_value(value::ProbabilityBox)
     return value
-end
-
-function Base.filter(cpt::ConditionalProbabilityTable, key...)
-    selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
-    return subset(cpt.data, selector, view=true)
 end

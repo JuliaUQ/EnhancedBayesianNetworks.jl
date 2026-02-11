@@ -18,6 +18,9 @@
         @test cpt[:x=>:nox, :y=>:yesy] == 0.2
         @test cpt[:x=>:nox, :y=>:noy] == 0.8
 
+        @test_throws ErrorException("Cannot set index with [:x] into a CPT initialized with [:x, :y]") cpt[:x=>:x1] = 0.3
+        @test_throws ErrorException("Cannot set index with [:x, :y, :z] into a CPT initialized with [:x, :y]") cpt[:x=>:yesx, :y=>:yesy, :z=>:z1] = 0.3
+
         push!(cpt.data, (x=:yesx, y=:yesy, Π=0.5))
         @test_throws AssertionError cpt[:x=>:yesx, :y=>:yesy] = 0.3
         @test_throws AssertionError cpt[:x=>:yesx, :y=>:yesy]
@@ -34,6 +37,9 @@
         @test cpt[:x=>:yesx, :y=>:noy] == 0.9
         @test cpt[:x=>:nox, :y=>:yesy] == 0.2
         @test cpt[:x=>:nox, :y=>:noy] == 0.8
+
+        @test_throws ErrorException("index not find in the CPT $cpt") cpt[:x=>:x1]
+        @test_throws ErrorException("index not find in the CPT $cpt") cpt[:x=>:x1, :y=>:y3]
 
         cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:x])
         @test_throws ErrorException("provided probability value -0.2 is unfeasible") cpt[:x=>:yesx] = -0.2
@@ -90,6 +96,13 @@
         cpt[:x=>:x1, :y=>:y2] = Normal(1, 1)
         cpt[:x=>:x2, :y=>:y1] = Normal(-1, 1)
         cpt[:x=>:x2, :y=>:y2] = Normal(-2, 1)
+
+        @test_throws ErrorException("Cannot set index with [:x] into a CPT initialized with [:x, :y]") cpt[:x=>:x1] = Normal()
+        @test_throws ErrorException("Cannot set index with [:x, :y, :z] into a CPT initialized with [:x, :y]") cpt[:x=>:x1, :y=>:y1, :z=>:z1] = Normal()
+
+        @test_throws ErrorException("index not find in the CPT $cpt") cpt[:x=>:x3]
+        @test_throws ErrorException("index not find in the CPT $cpt") cpt[:x=>:x1, :y=>:y3]
+
         filtering1 = filter(cpt, ([:x => :x1])...)
         @test isa(filtering1, SubDataFrame)
         @test issetequal(filtering1.Π, [Normal(0, 1), Normal(1, 1)])
