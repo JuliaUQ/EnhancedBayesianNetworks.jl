@@ -26,6 +26,36 @@
         @test node.discretization.intervals == [-2, -1, 0, 1, 2]
         @test node.discretization.sigma == 2
         @test_throws ErrorException(":Π is not allowed as node name") ContinuousFunctionalNode(:Π, models, simulation)
+        @test_throws ErrorException(":sim is not allowed as node name") ContinuousFunctionalNode(:sim, models, simulation)
+
+        @test_throws MethodError ContinuousFunctionalNode(name, models, DoubleLoop(MonteCarlo(100)))
+        @test_throws MethodError ContinuousFunctionalNode(name, models, RandomSlicing(MonteCarlo(100)))
+        @test_throws MethodError ContinuousFunctionalNode(name, models, SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+
+        ancestors = [:x1, :x2, :y1]
+        node = ContinuousFunctionalNode(name, ancestors, models)
+        @test_throws ErrorException("Cannot set index with [:x1] into a SimulationTable initialized with [:x1, :x2, :y1]") node[:x1=>:x1y] = MonteCarlo(10)
+        @test_throws ErrorException("Cannot set index with [:x1, :x2, :y1, :z] into a SimulationTable initialized with [:x1, :x2, :y1]") node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y, :z=>:zy] = MonteCarlo(10)
+        node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(100)
+        node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(100)
+        node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] = MonteCarlo(10)
+        node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1n] = MonteCarlo(10)
+        node[:x1=>:x1n, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(20)
+        node[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(20)
+        node[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] = MonteCarlo(200)
+        node[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] = MonteCarlo(200)
+        @test eltype(node.simulation.data.sim) == AbstractMonteCarlo
+        @test node.simulation[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] == MonteCarlo(100)
+        @test node.simulation[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] == MonteCarlo(100)
+        @test node.simulation[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] == MonteCarlo(10)
+        @test node.simulation[:x1=>:x1y, :x2=>:x2n, :y1=>:y1n] == MonteCarlo(10)
+        @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1y] == MonteCarlo(20)
+        @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] == MonteCarlo(20)
+        @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] == MonteCarlo(200)
+        @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] == MonteCarlo(200)
+
+        node = ContinuousFunctionalNode(name, ancestors, models, discretization)
+        @test node.discretization == discretization
     end
 
     @testset "Discrete" begin
@@ -47,5 +77,31 @@
         node = DiscreteFunctionalNode(name, models, performance, simulation, parameters)
         @test node.parameters == parameters
         @test_throws ErrorException(":Π is not allowed as node name") DiscreteFunctionalNode(:Π, models, performance, simulation)
+        @test_throws ErrorException(":sim is not allowed as node name") DiscreteFunctionalNode(:sim, models, performance, simulation)
+
+        ancestors = [:x1, :x2, :y1]
+        node = DiscreteFunctionalNode(name, ancestors, models, performance)
+        @test_throws ErrorException("Cannot set index with [:x1] into a SimulationTable initialized with [:x1, :x2, :y1]") node[:x1=>:x1y] = MonteCarlo(10)
+        @test_throws ErrorException("Cannot set index with [:x1, :x2, :y1, :z] into a SimulationTable initialized with [:x1, :x2, :y1]") node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y, :z=>:zy] = MonteCarlo(10)
+        node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(100)
+        node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(100)
+        node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] = SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+        node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1n] = SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+        node[:x1=>:x1n, :x2=>:x2y, :y1=>:y1y] = DoubleLoop(MonteCarlo(10))
+        node[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] = DoubleLoop(MonteCarlo(10))
+        node[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] = RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+        node[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] = RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+        @test eltype(node.simulation.data.sim) == EnhancedBayesianNetworks.DiscreteSimulation
+        @test node.simulation[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] == MonteCarlo(100)
+        @test node.simulation[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] == MonteCarlo(100)
+        @test node.simulation[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] == SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+        @test node.simulation[:x1=>:x1y, :x2=>:x2n, :y1=>:y1n] == SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+        @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1y] == DoubleLoop(MonteCarlo(10))
+        @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] == DoubleLoop(MonteCarlo(10))
+        @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] == RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+        @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] == RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+
+        node = DiscreteFunctionalNode(name, ancestors, models, performance, parameters)
+        @test node.parameters == parameters
     end
 end
