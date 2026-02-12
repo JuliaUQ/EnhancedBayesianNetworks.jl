@@ -22,7 +22,18 @@ end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
 
-function verify_parents(net::AbstractNetwork, node::AbstractNode) ## verify if all the parents in the CPT have been added via add_child!
+function ancestors(net::AbstractNetwork, node::AbstractNode)
+    pars = filter(n -> n.name ∈ parents(net, node), net.nodes)
+    discrete_parents = filter(x -> isa(x, AbstractDiscreteNode), pars)
+    continuous_parents = filter(x -> isa(x, AbstractContinuousNode), pars)
+    if isempty(continuous_parents)
+        return discrete_parents
+    end
+    return unique([discrete_parents..., mapreduce(x -> ancestors(net, x), vcat, continuous_parents)
+    ...])
+end
+
+function verify_parents(net::AbstractNetwork, node::DiscreteNode) ## verify if all the parents in the CPT have been added via add_child!
     if isa(node, FunctionalNode)
         return nothing
     else
@@ -72,24 +83,6 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
                 error("Invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of upper bound values must be greater than 1")
             end
         end
-    end
-end
-
-function verify_functional_parents(net::AbstractNetwork, node::FunctionalNode) ## Discrete Parents must have a non empty parameters attribute
-    par = filter(n -> n.name ∈ parents(net, node), net.nodes)
-    discrete_par = filter(x -> isa(x, DiscreteNode), par)
-    cont_par = filter(x -> isa(x, ContinuousNode), par)
-
-    for dp in discrete_par
-        if isempty(dp.parameters)
-            error("Invalid network: node $(dp.name) is a parent for the FuctionalNode $(node.name) and cannot have an empty parameters attribute")
-        end
-    end
-    if isempty(cont_par)
-        @warn "node $(node.name) is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean"
-    end
-    if isempty(discrete_par)
-        @warn "node $(node.name) is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis"
     end
 end
 
