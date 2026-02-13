@@ -180,3 +180,39 @@ function verify_functional_parents(net::EnhancedBayesianNetwork, node::Functiona
         @warn "node $(node.name) is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis"
     end
 end
+
+function build_simulation_table(net::EnhancedBayesianNetwork, node::FunctionalNode)
+    if isa(node.simulation, SimulationTable)
+        return nothing
+    else
+        anc = filter(n -> n.name ∈ ancestors(net, node), net.nodes)
+        if isa(node, AbstractContinuousNode)
+            st = SimulationTable{ContinuousSimulation}([i.name for i in anc])
+        else
+            st = SimulationTable{DiscreteSimulation}([i.name for i in anc])
+        end
+        theoretical_scenarios = vec(collect(Iterators.product(states.(anc)...)))
+        map(th_s -> st[([i.name for i in anc] .=> th_s)...] = node.simulation, theoretical_scenarios)
+        node.simulation = st
+    end
+end
+
+function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ## verify if all the ancestors in the ST have been added via add_child!
+    st_ancestors = Symbol.(names(node.simulation.data[:, Not(:sim)]))
+    net_ancestors = ancestors(net, node.name)
+    only_in_st = setdiff(st_ancestors, net_ancestors)
+    if !isempty(only_in_st)
+        error("Invalid SimulationTable: node $(node.name) has node(s) '$only_in_st' defined in the SimulationTable only, but they have not been added via add_child!")
+    end
+end
+
+function verify_scenarios(net::EnhancedBayesianNetwork, node::FunctionalNode)
+    anc = filter(n -> n.name ∈ ancestors(net, node), net.nodes)
+    theoretical_scenarios = vec(collect(Iterators.product(states.(anc)...)))
+    filtering_elements = map(th_s -> ([i.name for i in anc] .=> th_s), theoretical_scenarios)
+    for filtering_element in filtering_elements
+        if isempty(filter(node.simulation, filtering_element...))
+            error("Invalid SimulationTable: node $(node.name) is missing the following scenario $(filtering_element)")
+        end
+    end
+end
