@@ -29,8 +29,14 @@ function ancestors(net::AbstractNetwork, node::AbstractNode)
     if isempty(continuous_parents)
         return discrete_parents
     end
-    return unique([discrete_parents..., mapreduce(x -> ancestors(net, x), vcat, continuous_parents)
+    anc = unique([discrete_parents..., mapreduce(x -> ancestors(net, x), vcat, continuous_parents)
     ...])
+    return [i.name for i in anc]
+end
+
+function ancestors(net::AbstractNetwork, name::Symbol)
+    node = filter(n -> n.name == name, net.nodes)
+    return ancestors(net, first(node))
 end
 
 function verify_parents(net::AbstractNetwork, node::DiscreteNode) ## verify if all the parents in the CPT have been added via add_child!

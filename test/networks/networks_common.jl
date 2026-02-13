@@ -34,7 +34,7 @@
     simulation = MonteCarlo(100)
     grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
 
-    @testset "cyclicality connection parents and children" begin
+    @testset "cyclicality connection parents children and ancestors" begin
         A = DiscreteNode(:A, [:B])
         A[:B=>:b1, :A=>:a1] = 0.05
         A[:B=>:b1, :A=>:a2] = 0.95
@@ -66,6 +66,18 @@
         @test isempty(children(net, :G))
         @test issetequal(children(net, :W), [:R, :S])
         @test issetequal(children(net, weather), [:R, :S])
+
+        rain2 = ContinuousNode(:Rc, [:W])
+        rain2[:W=>:sunny] = Normal()
+        rain2[:W=>:cloudy] = Normal()
+        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain, rain2])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain2, sprinkler], grass2)
+        order!(net)
+        @test issetequal(EnhancedBayesianNetworks.ancestors(net, grass2), [:W, :S])
+        @test issetequal(EnhancedBayesianNetworks.ancestors(net, :G2), [:W, :S])
     end
 
     @testset "verify parents, scenarios, exhaustiveness and functional" begin
