@@ -327,4 +327,51 @@
         @test issetequal(envelopes[1], [:y3, :y1, :x2, :x3, :y4, :y5, :y2, :x1])
         @test issetequal(envelopes[2], [:y6, :y5, :x4])
     end
+
+    @testset "verify parents and functional parents" begin
+        rain3 = ContinuousNode(:R3, [:W])
+        rain3[:W=>:sunny] = Normal()
+        rain3[:W=>:cloudy] = Normal()
+        nodes = [weather, grass, rain, sprinkler, rain2, rain3, grass2]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain])
+        add_child!(net, [sprinkler, rain2], grass2)
+        add_child!(net, [rain, sprinkler], grass)
+        @test isnothing(EnhancedBayesianNetworks.verify_parents(net, rain2))
+        @test_throws ErrorException("Invalid CPT: node R3 has node(s) '[:W]' defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks.verify_parents(net, rain3)
+        add_child!(net, weather, rain3)
+        @test isnothing(EnhancedBayesianNetworks.verify_parents(net, rain3))
+        @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass2))
+
+        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain, rain2], grass2)
+
+        @test_throws ErrorException("Invalid network: node R is a parent for the FuctionalNode G2 and cannot have an empty parameters attribute") EnhancedBayesianNetworks.verify_functional_parents(net, grass2)
+
+        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [sprinkler], grass2)
+        @test_logs (:warn, "node G2 is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean") EnhancedBayesianNetworks.verify_functional_parents(net, grass2)
+
+        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain2], grass2)
+        @test_logs (:warn, "node G2 is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis") EnhancedBayesianNetworks.verify_functional_parents(net, grass2)
+
+        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain2, sprinkler], grass2)
+        @test isnothing(EnhancedBayesianNetworks.verify_functional_parents(net, grass2))
+
+    end
+
 end

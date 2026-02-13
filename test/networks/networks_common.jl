@@ -203,35 +203,6 @@
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
         @test_throws ErrorException("Invalid CPT:  node G has CPT values 'Union{Real, Interval}[[0.3, 0.4], 0.8]' for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass)
-
-        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
-        net = EnhancedBayesianNetwork(nodes)
-        add_child!(net, weather, [sprinkler, rain])
-        add_child!(net, [rain, sprinkler], grass)
-        add_child!(net, [rain, rain2], grass2)
-
-        @test_throws ErrorException("Invalid network: node R is a parent for the FuctionalNode G2 and cannot have an empty parameters attribute") EnhancedBayesianNetworks.verify_functional_parents(net, grass2)
-
-        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
-        net = EnhancedBayesianNetwork(nodes)
-        add_child!(net, weather, [sprinkler, rain])
-        add_child!(net, [rain, sprinkler], grass)
-        add_child!(net, [sprinkler], grass2)
-        @test_logs (:warn, "node G2 is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean") EnhancedBayesianNetworks.verify_functional_parents(net, grass2)
-
-        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
-        net = EnhancedBayesianNetwork(nodes)
-        add_child!(net, weather, [sprinkler, rain])
-        add_child!(net, [rain, sprinkler], grass)
-        add_child!(net, [rain2], grass2)
-        @test_logs (:warn, "node G2 is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis") EnhancedBayesianNetworks.verify_functional_parents(net, grass2)
-
-        nodes = [weather, grass, rain, sprinkler, rain2, grass2]
-        net = EnhancedBayesianNetwork(nodes)
-        add_child!(net, weather, [sprinkler, rain])
-        add_child!(net, [rain, sprinkler], grass)
-        add_child!(net, [rain2, sprinkler], grass2)
-        @test isnothing(EnhancedBayesianNetworks.verify_functional_parents(net, grass2))
     end
 
     @testset "Markov Blanket" begin
