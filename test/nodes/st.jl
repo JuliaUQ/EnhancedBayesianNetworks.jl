@@ -27,6 +27,20 @@
         push!(st.data, (x=:yesx, y=:yesy, sim=MonteCarlo(10)))
         @test_throws AssertionError st[:x=>:yesx, :y=>:yesy] = MonteCarlo(10)
         @test_throws AssertionError st[:x=>:yesx, :y=>:yesy]
+
+        st = SimulationTable{EnhancedBayesianNetworks.DiscreteSimulation}([:x, :y])
+        st[:x=>:x1, :y=>:y1] = MonteCarlo(10)
+        st[:x=>:x1, :y=>:y2] = MonteCarlo(20)
+        st[:x=>:x1, :y=>:y3] = SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+        st[:x=>:x2, :y=>:y1] = MonteCarlo(40)
+        st[:x=>:x2, :y=>:y2] = DoubleLoop(MonteCarlo(50))
+        st[:x=>:x2, :y=>:y3] = MonteCarlo(60)
+        filtering1 = filter(st, ([:x => :x1])...)
+        @test isa(filtering1, SubDataFrame)
+        @test issetequal(filtering1.sim, [MonteCarlo(10), MonteCarlo(20), SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))])
+        filtering2 = filter(st, ([:x, :y] .=> [:x2, :y2])...)
+        @test isa(filtering2, SubDataFrame)
+        @test issetequal(filtering2.sim, [DoubleLoop(MonteCarlo(50))])
     end
 
     @testset "Continuous ST" begin
@@ -53,5 +67,19 @@
         push!(st.data, (x=:yesx, sim=MonteCarlo(10)))
         @test_throws AssertionError st[:x=>:yesx] = MonteCarlo(10)
         @test_throws AssertionError st[:x=>:yesx]
+
+        st = SimulationTable{EnhancedBayesianNetworks.ContinuousSimulation}([:x, :y])
+        st[:x=>:x1, :y=>:y1] = MonteCarlo(10)
+        st[:x=>:x1, :y=>:y2] = MonteCarlo(20)
+        st[:x=>:x1, :y=>:y3] = MonteCarlo(30)
+        st[:x=>:x2, :y=>:y1] = MonteCarlo(40)
+        st[:x=>:x2, :y=>:y2] = MonteCarlo(50)
+        st[:x=>:x2, :y=>:y3] = MonteCarlo(60)
+        filtering1 = filter(st, ([:x => :x1])...)
+        @test isa(filtering1, SubDataFrame)
+        @test issetequal(filtering1.sim, [MonteCarlo(10), MonteCarlo(20), MonteCarlo(30)])
+        filtering2 = filter(st, ([:x, :y] .=> [:x2, :y2])...)
+        @test isa(filtering2, SubDataFrame)
+        @test issetequal(filtering2.sim, [MonteCarlo(50)])
     end
 end

@@ -40,3 +40,8 @@ function Base.getindex(st::SimulationTable, key...)
         return cp.sim[1]
     end
 end
+
+function Base.filter(st::SimulationTable, key...)
+    selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
+    return subset(st.data, selector, view=true)
+end
