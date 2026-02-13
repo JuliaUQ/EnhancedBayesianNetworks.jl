@@ -1,4 +1,4 @@
-struct ContinuousFunctionalNode <: AbstractContinuousNode
+mutable struct ContinuousFunctionalNode <: AbstractContinuousNode
     name::Symbol
     models::AbstractVector{<:UQModel}
     simulation::Union{AbstractMonteCarlo,SimulationTable{ContinuousSimulation}}
@@ -31,7 +31,7 @@ end
 
 Base.setindex!(node::ContinuousFunctionalNode, value, key...) = setindex!(node.simulation, value, key...)
 
-struct DiscreteFunctionalNode <: AbstractDiscreteNode
+mutable struct DiscreteFunctionalNode <: AbstractDiscreteNode
     name::Symbol
     models::AbstractVector{<:UQModel}
     performance::Function
