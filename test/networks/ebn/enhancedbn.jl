@@ -371,7 +371,86 @@
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain2, sprinkler], grass2)
         @test isnothing(EnhancedBayesianNetworks.verify_functional_parents(net, grass2))
-
     end
 
+    @testset "verify ancestors and scenarios" begin
+        parameters_rain = [:yes => [Parameter(0, :R)], :no => [Parameter(1, :R)]]
+        rain = DiscreteNode(:R, [:W], parameters_rain)
+        rain[:W=>:sunny, :R=>:yes] = 0.05
+        rain[:W=>:sunny, :R=>:no] = 0.95
+        rain[:W=>:cloudy, :R=>:yes] = 0.7
+        rain[:W=>:cloudy, :R=>:no] = 0.3
+
+        rain2 = ContinuousNode(:Rc, [:W])
+        rain2[:W=>:sunny] = Normal()
+        rain2[:W=>:cloudy] = Normal()
+
+        rain3 = ContinuousNode(:R3, [:W])
+        rain3[:W=>:sunny] = Normal()
+        rain3[:W=>:cloudy] = Normal()
+
+        grass3 = ContinuousFunctionalNode(:G3, [:W, :S, :R], model)
+        grass3[:W=>:sunny, :S=>:on, :R=>:yes] = MonteCarlo(10)
+        grass3[:W=>:sunny, :S=>:off, :R=>:yes] = MonteCarlo(20)
+        grass3[:W=>:cloudy, :S=>:on, :R=>:yes] = MonteCarlo(30)
+        grass3[:W=>:cloudy, :S=>:off, :R=>:yes] = MonteCarlo(40)
+        grass3[:W=>:sunny, :S=>:on, :R=>:no] = MonteCarlo(10)
+        grass3[:W=>:sunny, :S=>:off, :R=>:no] = MonteCarlo(20)
+        grass3[:W=>:cloudy, :S=>:on, :R=>:no] = MonteCarlo(30)
+        grass3[:W=>:cloudy, :S=>:off, :R=>:no] = MonteCarlo(40)
+        nodes = [weather, grass, rain, sprinkler, rain2, rain3, grass2, grass3]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain, rain2, rain3])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain2, sprinkler], grass2)
+        @test_throws ErrorException("Invalid SimulationTable: node G3 has node(s) 'Any[:W, :S, :R]' defined in the SimulationTable only, but they have are not ancestor(s) in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
+
+        grass3 = ContinuousFunctionalNode(:G3, [:W], model)
+        grass3[:W=>:sunny] = MonteCarlo(10)
+        grass3[:W=>:cloudy] = MonteCarlo(40)
+        nodes = [weather, grass, rain, sprinkler, rain2, rain3, grass2, grass3]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain, rain2, rain3])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain2, sprinkler], grass2)
+        add_child!(net, [rain3, sprinkler], grass3)
+        @test_throws ErrorException("Invalid SimulationTable: node G3 has ancestors(s) '[:S]' defined in the eBN only, but they are not present in its SimulationTable") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
+
+        grass3 = ContinuousFunctionalNode(:G3, [:W, :S], model)
+        grass3[:W=>:sunny, :S=>:on] = MonteCarlo(10)
+        grass3[:W=>:sunny, :S=>:off] = MonteCarlo(20)
+        grass3[:W=>:cloudy, :S=>:on] = MonteCarlo(30)
+        grass3[:W=>:cloudy, :S=>:off] = MonteCarlo(40)
+        nodes = [weather, grass, rain, sprinkler, rain2, rain3, grass2, grass3]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain, rain2, rain3])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain2, sprinkler], grass2)
+        add_child!(net, [rain3, sprinkler], grass3)
+        @test isnothing(EnhancedBayesianNetworks.verify_ancestors(net, grass3))
+
+        grass3 = ContinuousFunctionalNode(:G3, [:W, :S], model)
+        grass3[:W=>:sunny, :S=>:on] = MonteCarlo(10)
+        grass3[:W=>:sunny, :S=>:off] = MonteCarlo(20)
+        nodes = [weather, grass, rain, sprinkler, rain2, rain3, grass2, grass3]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain, rain2, rain3])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain2, sprinkler], grass2)
+        add_child!(net, [rain3, sprinkler], grass3)
+        @test_throws ErrorException("Invalid SimulationTable: node G3 is missing the following scenario [:W => :cloudy, :S => :on]") EnhancedBayesianNetworks.verify_scenarios(net, grass3)
+
+        grass3 = ContinuousFunctionalNode(:G3, [:W, :S], model)
+        grass3[:W=>:sunny, :S=>:on] = MonteCarlo(10)
+        grass3[:W=>:sunny, :S=>:off] = MonteCarlo(20)
+        grass3[:W=>:cloudy, :S=>:on] = MonteCarlo(30)
+        grass3[:W=>:cloudy, :S=>:off] = MonteCarlo(40)
+        nodes = [weather, grass, rain, sprinkler, rain2, rain3, grass2, grass3]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, weather, [sprinkler, rain, rain2, rain3])
+        add_child!(net, [rain, sprinkler], grass)
+        add_child!(net, [rain2, sprinkler], grass2)
+        add_child!(net, [rain3, sprinkler], grass3)
+        @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass3))
+    end
 end

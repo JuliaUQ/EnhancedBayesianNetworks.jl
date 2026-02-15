@@ -202,7 +202,11 @@ function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ##
     net_ancestors = ancestors(net, node.name)
     only_in_st = setdiff(st_ancestors, net_ancestors)
     if !isempty(only_in_st)
-        error("Invalid SimulationTable: node $(node.name) has node(s) '$only_in_st' defined in the SimulationTable only, but they have not been added via add_child!")
+        error("Invalid SimulationTable: node $(node.name) has node(s) '$only_in_st' defined in the SimulationTable only, but they have are not ancestor(s) in the defined eBN")
+    end
+    only_in_net = setdiff(net_ancestors, st_ancestors)
+    if !isempty(only_in_net)
+        error("Invalid SimulationTable: node $(node.name) has ancestors(s) '$only_in_net' defined in the eBN only, but they are not present in its SimulationTable")
     end
 end
 
