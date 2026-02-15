@@ -181,7 +181,7 @@ function verify_functional_parents(net::EnhancedBayesianNetwork, node::Functiona
     end
 end
 
-function build_simulation_table(net::EnhancedBayesianNetwork, node::FunctionalNode)
+function build_simulation_table!(net::EnhancedBayesianNetwork, node::FunctionalNode)
     if isa(node.simulation, SimulationTable)
         return nothing
     else
