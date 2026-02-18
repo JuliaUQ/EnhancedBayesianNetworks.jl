@@ -55,6 +55,7 @@ function _inputs(node::DiscreteNode, evidence::Evidence)
     end
 end
 
+# TODO: Avoid the roundtrip with a temporary  DataFrame
 function _extreme_nodes(node::DiscreteNode)
     function _extreme_points(cpt)
         extreme_probs = _extreme_probabilities(cpt.Π...)
@@ -92,6 +93,7 @@ function _extreme_nodes(node::DiscreteNode)
     end
 end
 
+# TODO: Try to implement without PolyHedra
 function _extreme_probabilities(intervals::Vararg{Union{Real,Interval}})
     n = length(intervals)
     A = zeros(2 * n, n)

@@ -167,5 +167,6 @@
         node_a[:b=>:b2, :c=>:c2, :a=>:a3] = Interval(0.41123, 0.511223)
         nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
         @test length(nodes) == 400
+        # TODO: Add test with precise scenario
     end
 end
