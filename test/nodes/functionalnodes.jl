@@ -103,5 +103,7 @@
 
         node = DiscreteFunctionalNode(name, ancestors, models, performance, parameters)
         @test node.parameters == parameters
+
+        @test issetequal(states(node), Symbol.([string(name) * "_safe", string(name) * "_failed"]))
     end
 end
