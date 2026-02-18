@@ -305,60 +305,64 @@
         @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
     end
 
-    # @testset "add & remove nodes" begin
-    #     sprinkler_states = DataFrame(:w => [:sunny, :sunny, :cloudy, :cloudy], :s => [:on, :off, :on, :off], :Π => [0.9, 0.1, 0.2, 0.8])
-    #     sprinkler = DiscreteNode(:s, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(sprinkler_states))
-    #     rain_state = DataFrame(:w => [:sunny, :sunny, :cloudy, :cloudy], :r => [:no_rain, :rain, :no_rain, :rain], :Π => [0.9, 0.1, 0.2, 0.8])
-    #     rain = DiscreteNode(:r, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(rain_state))
-    #     grass_states = DataFrame(:s => [:on, :on, :on, :on, :off, :off, :off, :off], :r => [:no_rain, :no_rain, :rain, :rain, :no_rain, :no_rain, :rain, :rain], :g => [:dry, :wet, :dry, :wet, :dry, :wet, :dry, :wet], :Π => [0.9, 0.1, 0.9, 0.1, 0.9, 0.1, 0.9, 0.1])
-    #     grass = DiscreteNode(:g, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(grass_states))
+    @testset "add & remove nodes" begin
+        weather = DiscreteNode(:W)
+        weather[:W=>:sunny] = 0.5
+        weather[:W=>:cloudy] = 0.5
 
-    #     nodes = [weather, sprinkler, rain, grass]
-    #     net = EnhancedBayesianNetwork(nodes)
-    #     add_child!(net, :w, :s)
-    #     add_child!(net, :w, :r)
-    #     add_child!(net, :s, :g)
-    #     add_child!(net, :r, :g)
-    #     order!(net)
-    #     net1 = deepcopy(net)
-    #     net2 = deepcopy(net)
-    #     net3 = deepcopy(net)
+        sprinkler = DiscreteNode(:S, [:W])
+        sprinkler[:W=>:sunny, :S=>:on] = 0.9
+        sprinkler[:W=>:sunny, :S=>:off] = 0.1
+        sprinkler[:W=>:cloudy, :S=>:on] = 0.2
+        sprinkler[:W=>:cloudy, :S=>:off] = 0.8
 
-    #     EnhancedBayesianNetworks._remove_node!(net1, grass)
-    #     EnhancedBayesianNetworks._remove_node!(net2, :g)
-    #     EnhancedBayesianNetworks._remove_node!(net3, 4)
+        rain = DiscreteNode(:R, [:W])
+        rain[:W=>:sunny, :R=>:yes] = 0.1
+        rain[:W=>:sunny, :R=>:no] = 0.9
+        rain[:W=>:cloudy, :R=>:yes] = 0.5
+        rain[:W=>:cloudy, :R=>:no] = 0.5
 
-    #     @test issetequal(net1.nodes, [weather, sprinkler, rain])
-    #     adj = [
-    #         0.0 1.0 1.0;
-    #         0.0 0.0 0.0;
-    #         0.0 0.0 0.0
-    #     ]
-    #     @test net1.A == adj
-    #     @test net1.topology == Dict(:w => 1, :r => 3, :s => 2)
-    #     @test net2 == net1
-    #     @test net3 == net1
+        grass = DiscreteNode(:G, [:R, :S])
+        grass[:S=>:on, :R=>:yes, :G=>:wet] = 1
+        grass[:S=>:on, :R=>:yes, :G=>:dry] = 0
+        grass[:S=>:on, :R=>:no, :G=>:wet] = 0.8
+        grass[:S=>:on, :R=>:no, :G=>:dry] = 0.2
+        grass[:S=>:off, :R=>:yes, :G=>:wet] = 0.6
+        grass[:S=>:off, :R=>:yes, :G=>:dry] = 0.4
+        grass[:S=>:off, :R=>:no, :G=>:wet] = 0.1
+        grass[:S=>:off, :R=>:no, :G=>:dry] = 0.9
 
-    #     net4 = deepcopy(net1)
-    #     net5 = deepcopy(net1)
-    #     net6 = deepcopy(net1)
+        nodes = [weather, sprinkler, rain, grass]
+        net = EnhancedBayesianNetwork(nodes)
+        add_child!(net, :W, :S)
+        add_child!(net, :W, :R)
+        add_child!(net, :S, :G)
+        add_child!(net, :R, :G)
+        order!(net)
+        net1 = deepcopy(net)
+        net2 = deepcopy(net)
+        net3 = deepcopy(net)
 
-    #     EnhancedBayesianNetworks._add_node!(net4, grass)
-    #     EnhancedBayesianNetworks._add_node!(net5, grass)
-    #     EnhancedBayesianNetworks._add_node!(net6, grass)
+        EnhancedBayesianNetworks.remove_node!(net1, grass)
+        EnhancedBayesianNetworks.remove_node!(net2, :G)
 
-    #     add_child!(net4, :s, :g)
-    #     add_child!(net4, :r, :g)
-    #     order!(net4)
-    #     add_child!(net5, :s, :g)
-    #     add_child!(net5, :r, :g)
-    #     order!(net5)
-    #     add_child!(net6, :s, :g)
-    #     add_child!(net6, :r, :g)
-    #     order!(net6)
+        issetequal(net1.nodes, [weather, sprinkler, rain])
+        adj = sparse([1, 1], [2, 3], [true, true], 3, 3)
+        net1.A == adj
+        net1.topology == Dict(:w => 1, :r => 3, :s => 2)
+        net2.A == net1.A
+        issetequal(net2.nodes, net1.nodes)
+        net2.topology == net1.topology
+        isnothing(EnhancedBayesianNetworks.remove_node!(net3, :G))
 
-    #     @test net4 == net
-    #     @test net5 == net
-    #     @test net6 == net
-    # end
+        net4 = deepcopy(net1)
+        net5 = deepcopy(net1)
+
+        EnhancedBayesianNetworks.add_node!(net4, grass)
+        issetequal([i.name for i in net4.nodes], [:W, :R, :S, :G])
+        adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
+        net4.A == adj
+        net4.topology == Dict(:W => 1, :R => 3, :S => 2, :G => 4)
+        isnothing(EnhancedBayesianNetworks.add_node!(net5, grass))
+    end
 end

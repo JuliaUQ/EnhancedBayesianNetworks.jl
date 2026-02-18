@@ -109,40 +109,33 @@ end
 
 markov_blanket(net::AbstractNetwork, node::AbstractNode) = markov_blanket(net, node.name)
 
-# function _remove_node!(net::AbstractNetwork, index::Int64)
-#     A = net.A[1:end.!=index, 1:end.!=index]
-#     nodes = deleteat!(net.nodes, index)
-#     topology_vec = collect(net.topology)
-#     function f(kv, i)
-#         if kv[2] > i
-#             return Pair(kv[1], kv[2] - 1)
-#         elseif kv[2] != i
-#             return kv
-#         end
-#     end
-#     topology_vec = map(t -> f(t, index), topology_vec)
-#     filter!(x -> !isnothing(x), topology_vec)
-#     topology = Dict(topology_vec)
-#     net.A = A
-#     net.topology = topology
-#     net.nodes = nodes
-#     return nothing
-# end
+function remove_node!(net::AbstractNetwork, node::AbstractNode)
+    A = net.A[1:end.!=net.topology[node.name], 1:end.!=net.topology[node.name]]
+    nodes = deleteat!(net.nodes, net.topology[node.name])
+    topology_vec = collect(net.topology)
+    function f(kv, i)
+        if kv[2] > i
+            return Pair(kv[1], kv[2] - 1)
+        elseif kv[2] != i
+            return kv
+        end
+    end
+    topology_vec = map(t -> f(t, net.topology[node.name]), topology_vec)
+    filter!(x -> !isnothing(x), topology_vec)
+    topology = Dict(topology_vec)
+    net.A = A
+    net.topology = topology
+    net.nodes = nodes
+    return nothing
+end
 
-# function _remove_node!(net::AbstractNetwork, name::Symbol)
-#     index = net.topology[name]
-#     _remove_node!(net, index)
-# end
+remove_node!(net::AbstractNetwork, name::Symbol) = remove_node!(net, first(filter(n -> n.name == name, net.nodes)))
 
-# function _remove_node!(net::AbstractNetwork, node::AbstractNode)
-#     index = net.topology[node.name]
-#     _remove_node!(net, index)
-# end
-
-# function _add_node!(net::AbstractNetwork, node::AbstractNode)
-#     push!(net.nodes, node)
-#     net.topology[node.name] = length(net.nodes)
-#     net.A = hcat(net.A, zeros(net.A.m))
-#     net.A = vcat(net.A, zeros(net.A.n)')
-#     return nothing
-# end
+function add_node!(net::AbstractNetwork, node::AbstractNode)
+    push!(net.nodes, node)
+    net.topology[node.name] = length(net.nodes)
+    n = size(net.A, 1)
+    net.A = hcat(net.A, spzeros(Bool, n, 1))
+    net.A = vcat(net.A, spzeros(Bool, 1, n + 1))
+    return nothing
+end
