@@ -22,22 +22,27 @@ end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
 
-function ancestors(net::AbstractNetwork, node::AbstractNode)
-    pars = filter(n -> n.name ∈ parents(net, node), net.nodes)
-    discrete_parents = filter(x -> isa(x, AbstractDiscreteNode), pars)
-    continuous_parents = filter(x -> isa(x, AbstractContinuousNode), pars)
-    if isempty(continuous_parents)
-        return discrete_parents
+function ancestors(net::AbstractNetwork, name::Symbol)
+    visited = Set{Symbol}()
+    result = Set{Symbol}()
+    function dfs(current_name::Symbol)
+        if current_name ∈ visited
+            return
+        end
+        for p in parents(net, current_name)
+            node = first(filter(n -> n.name == p, net.nodes))
+            if isa(node, AbstractDiscreteNode)
+                push!(result, p)
+            elseif isa(node, AbstractContinuousNode)
+                dfs(p)
+            end
+        end
     end
-    anc = unique([discrete_parents..., mapreduce(x -> ancestors(net, x), vcat, continuous_parents)
-    ...])
-    return [i.name for i in anc]
+    dfs(name)
+    return unique(collect(result))
 end
 
-function ancestors(net::AbstractNetwork, name::Symbol)
-    node = filter(n -> n.name == name, net.nodes)
-    return ancestors(net, first(node))
-end
+ancestors(net::AbstractNetwork, node::AbstractNode) = ancestors(net, node.name)
 
 function verify_parents(net::AbstractNetwork, node::DiscreteNode) ## verify if all the parents in the CPT have been added via add_child!
     if isa(node, FunctionalNode)

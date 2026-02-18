@@ -58,11 +58,9 @@
         add_child!(net, [rain2, sprinkler], grass2)
         @test !EnhancedBayesianNetworks.iscyclic(net)
         @test EnhancedBayesianNetworks.isconnected(net)
-
         @test isempty(parents(net, :W))
         @test issetequal(parents(net, :G), [:R, :S])
         @test issetequal(parents(net, grass), [:R, :S])
-
         @test isempty(children(net, :G))
         @test issetequal(children(net, :W), [:R, :S])
         @test issetequal(children(net, weather), [:R, :S])
@@ -75,7 +73,6 @@
         add_child!(net, weather, [sprinkler, rain, rain2])
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain2, sprinkler], grass2)
-        order!(net)
         @test issetequal(EnhancedBayesianNetworks.ancestors(net, grass2), [:W, :S])
         @test issetequal(EnhancedBayesianNetworks.ancestors(net, :G2), [:W, :S])
     end
