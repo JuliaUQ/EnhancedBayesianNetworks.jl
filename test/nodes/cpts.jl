@@ -38,17 +38,17 @@
         @test cpt[:x=>:nox, :y=>:yesy] == 0.2
         @test cpt[:x=>:nox, :y=>:noy] == 0.8
 
-        @test_throws ErrorException("index not find in the CPT $cpt") cpt[:x=>:x1]
-        @test_throws ErrorException("index not find in the CPT $cpt") cpt[:x=>:x1, :y=>:y3]
+        @test_throws ErrorException("index [:x => :x1] not found in the CPT $cpt") cpt[:x=>:x1]
+        @test_throws ErrorException("index [:x => :x1, :y => :y3] not found in the CPT $cpt") cpt[:x=>:x1, :y=>:y3]
 
         cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:x])
-        @test_throws ErrorException("provided probability value -0.2 is unfeasible") cpt[:x=>:yesx] = -0.2
+        @test_throws ArgumentError("probability -0.2 must be >= 0 and <= 1") cpt[:x=>:yesx] = -0.2
         cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:x])
-        @test_throws ErrorException("provided probability value 2 is unfeasible") cpt[:x=>:yesx] = 2
+        @test_throws ArgumentError("probability 2 must be >= 0 and <= 1") cpt[:x=>:yesx] = 2
         cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:x])
-        @test_throws ErrorException("provided probability value [0.1, 1.1] is unfeasible") cpt[:x=>:yesx] = Interval(0.1, 1.1)
+        @test_throws ArgumentError("probability [0.1, 1.1] must be >= 0 and <= 1") cpt[:x=>:yesx] = Interval(0.1, 1.1)
         cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:x])
-        @test_throws ErrorException("provided probability value [-0.1, 0.9] is unfeasible") cpt[:x=>:yesx] = Interval(-0.1, 0.9)
+        @test_throws ArgumentError("probability [-0.1, 0.9] must be >= 0 and <= 1") cpt[:x=>:yesx] = Interval(-0.1, 0.9)
 
         cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:x, :y])
         cpt[:x=>:x1, :y=>:y1] = 0.1
@@ -100,8 +100,8 @@
         @test_throws ErrorException("Cannot set index with [:x] into a CPT initialized with [:x, :y]") cpt[:x=>:x1] = Normal()
         @test_throws ErrorException("Cannot set index with [:x, :y, :z] into a CPT initialized with [:x, :y]") cpt[:x=>:x1, :y=>:y1, :z=>:z1] = Normal()
 
-        @test_throws ErrorException("index not find in the CPT $cpt") cpt[:x=>:x3]
-        @test_throws ErrorException("index not find in the CPT $cpt") cpt[:x=>:x1, :y=>:y3]
+        @test_throws ErrorException("index [:x => :x3] not found in the CPT $cpt") cpt[:x=>:x3]
+        @test_throws ErrorException("index [:x => :x1, :y => :y3] not found in the CPT $cpt") cpt[:x=>:x1, :y=>:y3]
 
         filtering1 = filter(cpt, ([:x => :x1])...)
         @test isa(filtering1, SubDataFrame)

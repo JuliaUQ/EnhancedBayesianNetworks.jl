@@ -18,7 +18,7 @@ struct ConditionalProbabilityTable{T<:Union{ContinuousProbability,DiscreteProbab
 end
 
 function Base.setindex!(cpt::ConditionalProbabilityTable, value, key...)
-    value = verify_probability_value(value)
+    verify_probability_value(value)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     evidence_nodes = collect(map(p -> p[1], key))
     cpt_nodes = Symbol.(filter(i -> i != "Π", names(cpt.data)))
@@ -40,7 +40,7 @@ function Base.getindex(cpt::ConditionalProbabilityTable, key...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     cp = subset(cpt.data, selector, view=true)
     if isempty(cp)
-        error("index not find in the CPT $cpt")
+        error("index $(collect(key)) not found in the CPT $cpt")
     else
         @assert size(cp, 1) == 1
         return cp.Π[1]
@@ -53,20 +53,23 @@ function Base.filter(cpt::ConditionalProbabilityTable, key...)
 end
 
 function verify_probability_value(value::Real)
-    (0 ≤ value ≤ 1) || error("provided probability value $value is unfeasible")
-    return value
+    if !(0 <= value <= 1)
+        throw(ArgumentError("probability $value must be >= 0 and <= 1"))
+    end
+    return nothing
 end
 
 function verify_probability_value(value::Interval)
-    (0 ≤ value.lb ≤ 1) || error("provided probability value $value is unfeasible")
-    (0 ≤ value.ub ≤ 1) || error("provided probability value $value is unfeasible")
-    return value
+    if !all(0 .<= UncertaintyQuantification.bounds(value) .<= 1)
+        throw(ArgumentError("probability $value must be >= 0 and <= 1"))
+    end
+    return nothing
 end
 
-function verify_probability_value(value::UnivariateDistribution)
-    return value
+function verify_probability_value(_::UnivariateDistribution)
+    return nothing
 end
 
-function verify_probability_value(value::ProbabilityBox)
-    return value
+function verify_probability_value(_::ProbabilityBox)
+    return nothing
 end
