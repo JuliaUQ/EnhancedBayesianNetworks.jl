@@ -29,7 +29,6 @@ end
 
 ContinuousNode(name::Symbol, discretization::AbstractDiscretization) = ContinuousNode(name, Symbol[], discretization, Dict{Vector{Symbol},Tuple}())
 
-
 Base.setindex!(node::ContinuousNode, value, key...) = setindex!(node.cpt, value, key...)
 
 scenarios(node::ContinuousNode) = map(row -> [Symbol(col) => row[col] for col in names(node.cpt.data[:, Not("Π")])], eachrow(node.cpt.data[:, Not("Π")]))
