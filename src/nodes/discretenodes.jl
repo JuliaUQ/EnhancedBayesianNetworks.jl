@@ -8,7 +8,7 @@ struct DiscreteNode <: AbstractDiscreteNode
         name::Symbol,
         parents::Vector{Symbol}=Symbol[],
         parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}(),
-        results::Dict{Vector{Symbol},Tuple}=Dict{Vector{Symbol},Tuple}()
+        results::Dict{Vector{Symbol},}=Dict{Vector{Symbol},Tuple}()
     )
         if name == :Π
             error(":Π is not allowed as node name")
@@ -30,6 +30,7 @@ end
 DiscreteNode(name::Symbol, parameters::Vector{Pair{Symbol,Vector{Parameter}}}) = DiscreteNode(name, Symbol[], parameters, Dict{Vector{Symbol},Tuple}())
 
 Base.setindex!(node::DiscreteNode, value, key...) = setindex!(node.cpt, value, key...)
+Base.getindex(node::DiscreteNode, key...) = getindex(node.cpt, key...)
 
 states(node::DiscreteNode) = unique(node.cpt.data[:, node.name])
 
