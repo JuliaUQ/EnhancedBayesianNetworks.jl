@@ -222,7 +222,6 @@
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain, rain2], grass2)
-
         @test_throws ErrorException("Invalid network: node R is a parent for the FuctionalNode G2 and cannot have an empty parameters attribute") order!(net)
 
         nodes = [weather, grass, rain, sprinkler, grass2]
@@ -232,11 +231,17 @@
         add_child!(net, [sprinkler], grass2)
         @test_logs (:warn, "node G2 is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean") order!(net)
 
+        model = Model(df -> df.Rc .+ df.S, :G2)
+        performance = df -> df.G2
+        simulation = MonteCarlo(100)
+        grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
+
         nodes = [rain2, grass2]
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, [rain2], grass2)
         @test_logs (:warn, "node G2 is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis") order!(net)
 
+        grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
         nodes = [weather, grass, rain, sprinkler, rain2, grass2]
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
@@ -403,7 +408,7 @@
         add_child!(net, weather, [sprinkler, rain, rain2, rain3])
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain2, sprinkler], grass2)
-        @test_throws ErrorException("Invalid SimulationTable: node G3 has node(s) 'Any[:W, :S, :R]' defined in the SimulationTable only, but they have are not ancestor(s) in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
+        @test_throws ErrorException("Invalid SimulationTable: node G3 has node(s) '[:W, :S, :R]' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
 
         grass3 = ContinuousFunctionalNode(:G3, [:W], model)
         grass3[:W=>:sunny] = MonteCarlo(10)

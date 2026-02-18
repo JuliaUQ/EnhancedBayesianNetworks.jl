@@ -108,6 +108,10 @@ function order!(net::EnhancedBayesianNetwork)
     map(n -> verify_scenarios(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
     map(n -> verify_exhaustiveness(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
     map(n -> verify_functional_parents(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
+    map(n -> build_simulation_table!(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
+    map(n -> verify_ancestors(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
+    map(n -> verify_scenarios(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
+
     return nothing
 end
 
@@ -185,24 +189,27 @@ function build_simulation_table!(net::EnhancedBayesianNetwork, node::FunctionalN
     if isa(node.simulation, SimulationTable)
         return nothing
     else
-        anc = filter(n -> n.name ∈ ancestors(net, node), net.nodes)
+        anc = Symbol[]
+        anc_nodes = filter(n -> n.name ∈ ancestors(net, node), net.nodes)
+        append!(anc, [i.name for i in anc_nodes])
+        # anc = filter(n -> n.name ∈ ancestors(net, node), net.nodes)
         if isa(node, AbstractContinuousNode)
-            st = SimulationTable{ContinuousSimulation}([i.name for i in anc])
+            st = SimulationTable{ContinuousSimulation}(anc)
         else
-            st = SimulationTable{DiscreteSimulation}([i.name for i in anc])
+            st = SimulationTable{DiscreteSimulation}(anc)
         end
-        theoretical_scenarios = vec(collect(Iterators.product(states.(anc)...)))
-        map(th_s -> st[([i.name for i in anc] .=> th_s)...] = node.simulation, theoretical_scenarios)
+        theoretical_scenarios = vec(collect(Iterators.product(states.(anc_nodes)...)))
+        map(th_s -> st[([i.name for i in anc_nodes] .=> th_s)...] = node.simulation, theoretical_scenarios)
         node.simulation = st
     end
 end
 
 function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ## verify if all the ancestors in the ST have been added via add_child!
     st_ancestors = Symbol.(names(node.simulation.data[:, Not(:sim)]))
-    net_ancestors = ancestors(net, node.name)
+    net_ancestors = ancestors(net, node)
     only_in_st = setdiff(st_ancestors, net_ancestors)
     if !isempty(only_in_st)
-        error("Invalid SimulationTable: node $(node.name) has node(s) '$only_in_st' defined in the SimulationTable only, but they have are not ancestor(s) in the defined eBN")
+        error("Invalid SimulationTable: node $(node.name) has node(s) '$only_in_st' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN")
     end
     only_in_net = setdiff(net_ancestors, st_ancestors)
     if !isempty(only_in_net)
