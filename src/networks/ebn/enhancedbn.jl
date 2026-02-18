@@ -42,6 +42,11 @@ function add_child!(
 )
     parents = wrap(par)
     children = wrap(ch)
+    all_nodes = vcat(parents, children)
+    missing_nodes = setdiff([i.name for i in all_nodes], [i.name for i in net.nodes])
+    if !isempty(missing_nodes)
+        error("node(s) $missing_nodes is (are) not defined in the eBN")
+    end
     ## verify No recursion
     map(p -> verify_no_recursion(p, children), parents)
     ## verify Discrete parent nodes
@@ -65,6 +70,11 @@ function add_child!(
 )
     parents = wrap(par)
     children = wrap(ch)
+    all_nodes = vcat(parents, children)
+    missing_nodes = setdiff(all_nodes, [i.name for i in net.nodes])
+    if !isempty(missing_nodes)
+        error("node(s) $missing_nodes is (are) not defined in the eBN")
+    end
     par_nodes = filter(x -> x.name ∈ parents, net.nodes)
     ch_nodes = filter(x -> x.name ∈ children, net.nodes)
     add_child!(net, par_nodes, ch_nodes)

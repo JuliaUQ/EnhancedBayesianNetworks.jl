@@ -65,6 +65,12 @@
         add_child!(net, rain2, grass2)
         add_child!(net, sprinkler, grass2)
         @test net.A == sparse([1, 1, 3, 4, 4, 5], [3, 4, 2, 2, 6, 6], [true, true, true, true, true, true], 6, 6)
+
+        b = DiscreteNode(:b)
+        b[:b=>:b1] = 0.5
+        b[:b=>:b2] = 0.5
+        @test_throws ErrorException("node(s) [:b] is (are) not defined in the eBN") add_child!(net, b, sprinkler)
+        @test_throws ErrorException("node(s) [:b] is (are) not defined in the eBN") add_child!(net, :b, :S)
     end
 
     @testset "order!" begin
