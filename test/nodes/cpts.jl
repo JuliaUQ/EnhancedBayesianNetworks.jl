@@ -110,15 +110,4 @@
         @test isa(filtering2, SubDataFrame)
         @test issetequal(filtering2.Π, [Normal(1, 1)])
     end
-
-    @testset "CPT from DataFrame" begin
-        df = DataFrame(:a => [:a1, :a2], :Π => [:a, 0])
-        @test_throws AssertionError ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}(df)
-        df = DataFrame(:a => [:a1, :a2], :c => [1, 0])
-        @test_throws AssertionError ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}(df)
-        df = DataFrame(:a => [:a1, :a2], :Π => [1, 0])
-        cpt = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}(df)
-        @test cpt[:a=>:a1] == 1
-        @test cpt[:a=>:a2] == 0
-    end
 end

@@ -10,11 +10,6 @@ struct ConditionalProbabilityTable{T<:Union{ContinuousProbability,DiscreteProbab
         data[:, :Π] = T[]
         return new{T}(data)
     end
-    function ConditionalProbabilityTable{T}(df::DataFrame) where {T<:Union{ContinuousProbability,DiscreteProbability}}
-        @assert "Π" in names(df) "DataFrame must contain column :Π"
-        @assert eltype(df.Π) <: T "Π column element type must be $T"
-        return new{T}(df)
-    end
 end
 
 function Base.setindex!(cpt::ConditionalProbabilityTable, value, key...)

@@ -57,7 +57,7 @@ end
 
 function _extreme_nodes(node::DiscreteNode)
     function _extreme_points(cpt)
-        extreme_probs = EnhancedBayesianNetworks._extreme_probabilities(cpt.Π...)
+        extreme_probs = _extreme_probabilities(cpt.Π...)
         dfs = map(extreme_probs) do v
             df2 = copy(cpt)
             df2[!, :Π] = v
@@ -69,11 +69,26 @@ function _extreme_nodes(node::DiscreteNode)
     if isprecise(node)
         return [node]
     else
-        sub_cpts = groupby(node.cpt.data, names(node.cpt.data[:, Not(node.name, "Π")])) |> collect
+        par = parents(node)
+        if !isempty(par)
+            par_comb = collect.(Iterators.product(map(p -> unique(node.cpt.data[:, p]), par)...))
+            sub_cpts = map(pc -> filter(node.cpt, (par .=> pc)...), par_comb)
+        else
+            sub_cpts = [deepcopy(node.cpt.data)]
+        end
         combinations = Iterators.product(map(sub_cpt -> _extreme_points(sub_cpt), sub_cpts)...) |> collect
         extreme_dataframes = vec(map(c -> vcat(c...), combinations))
-        extreme_cpts = map(extreme_df -> ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}(extreme_df), extreme_dataframes)
-        return map(extreme_cpt -> DiscreteNode(extreme_cpt, node.parameters, node.results), extreme_cpts)
+        extreme_nodes = DiscreteNode[]
+        for df in extreme_dataframes
+            vars = vcat(par, node.name)
+            n = DiscreteNode(node.name, par)
+            for row in eachrow(df)
+                inds = map(v -> v => row[v], vars)
+                n[inds...] = row[:Π]
+            end
+            push!(extreme_nodes, n)
+        end
+        return extreme_nodes
     end
 end
 
