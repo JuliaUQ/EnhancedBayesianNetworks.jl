@@ -167,6 +167,21 @@
         node_a[:b=>:b2, :c=>:c2, :a=>:a3] = Interval(0.41123, 0.511223)
         nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
         @test length(nodes) == 400
-        # TODO: Add test with precise scenario
+
+        node_a = DiscreteNode(:a, [:b, :c])
+        node_a[:b=>:b1, :c=>:c1, :a=>:a1] = Interval(0.1, 0.2)
+        node_a[:b=>:b1, :c=>:c1, :a=>:a2] = 0.5
+        node_a[:b=>:b1, :c=>:c1, :a=>:a3] = Interval(0.4, 0.5)
+        node_a[:b=>:b1, :c=>:c2, :a=>:a1] = Interval(0.15, 0.45)
+        node_a[:b=>:b1, :c=>:c2, :a=>:a2] = Interval(0.05, 0.25)
+        node_a[:b=>:b1, :c=>:c2, :a=>:a3] = Interval(0.45, 0.55)
+        node_a[:b=>:b2, :c=>:c1, :a=>:a1] = Interval(0.01, 0.02)
+        node_a[:b=>:b2, :c=>:c1, :a=>:a2] = Interval(0.03, 0.07)
+        node_a[:b=>:b2, :c=>:c1, :a=>:a3] = Interval(0.93, 0.99)
+        node_a[:b=>:b2, :c=>:c2, :a=>:a1] = Interval(0.1112, 0.21123)
+        node_a[:b=>:b2, :c=>:c2, :a=>:a2] = Interval(0.31123, 0.71123)
+        node_a[:b=>:b2, :c=>:c2, :a=>:a3] = Interval(0.41123, 0.511223)
+        nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
+        @test length(nodes) == 100
     end
 end
