@@ -230,6 +230,10 @@
         add_child!(net, [rain, rain2], grass2)
         @test_throws ErrorException("Invalid network: node R is a parent for the FuctionalNode G2 and cannot have an empty parameters attribute") order!(net)
 
+        model = Model(df -> df.Rc .+ df.S, :G2)
+        performance = df -> df.G2
+        simulation = MonteCarlo(100)
+        grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
         nodes = [weather, grass, rain, sprinkler, grass2]
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, weather, [sprinkler, rain])
@@ -241,7 +245,6 @@
         performance = df -> df.G2
         simulation = MonteCarlo(100)
         grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
-
         nodes = [rain2, grass2]
         net = EnhancedBayesianNetwork(nodes)
         add_child!(net, [rain2], grass2)
@@ -414,7 +417,7 @@
         add_child!(net, weather, [sprinkler, rain, rain2, rain3])
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain2, sprinkler], grass2)
-        @test_throws ErrorException("Invalid SimulationTable: node G3 has node(s) '[:W, :S, :R]' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
+        @test_throws ErrorException("Invalid SimulationTable: node G3 has node(s) 'Any[:W, :S, :R]' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
 
         grass3 = ContinuousFunctionalNode(:G3, [:W], model)
         grass3[:W=>:sunny] = MonteCarlo(10)
@@ -510,9 +513,8 @@
         EnhancedBayesianNetworks.build_simulation_table!(net, grass2)
         node = first(filter(n -> n.name == :G2, net.nodes))
         @test isa(node.simulation, SimulationTable)
-        @test issetequal(Symbol.(names(node.simulation.data)), [:S, :sim])
+        @test issetequal(Symbol.(names(node.simulation.data)), [:W, :S, :sim])
         @test issetequal(Symbol.(node.simulation.data.S), [:on, :off])
         @test issetequal(node.simulation.data.sim, [MonteCarlo(100), MonteCarlo(100)])
-
     end
 end

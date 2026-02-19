@@ -21,23 +21,9 @@ end
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
 
 function ancestors(net::AbstractNetwork, name::Symbol)
-    visited = Set{Symbol}()
-    result = Set{Symbol}()
-    function dfs(current_name::Symbol)
-        if current_name ∈ visited
-            return
-        end
-        for p in parents(net, current_name)
-            node = first(filter(n -> n.name == p, net.nodes))
-            if isa(node, AbstractDiscreteNode)
-                push!(result, p)
-            elseif isa(node, AbstractContinuousNode)
-                dfs(p)
-            end
-        end
-    end
-    dfs(name)
-    return unique(collect(result))
+    R = transitive_closure(net.A)
+    nodes = filter(n -> isa(n, AbstractDiscreteNode), net.nodes[R[:, net.topology[name]]])
+    return getproperty.(nodes, :name)
 end
 
 ancestors(net::AbstractNetwork, node::AbstractNode) = ancestors(net, node.name)
