@@ -5,9 +5,8 @@ isconnected(net::AbstractNetwork) = isconnected(net.A)
 function parents(net::AbstractNetwork, name::Symbol)
     index = net.topology[name]
     parents_index = net.A[:, index].nzind
-    reverse_dict = Dict(value => key for (key, value) in net.topology)
-
-    return map(i -> reverse_dict[i], parents_index)
+    rev = Dict(v => k for (k, v) in net.topology)
+    return map(i -> rev[i], parents_index)
 end
 
 parents(net::AbstractNetwork, node::AbstractNode) = parents(net, node.name)
@@ -15,9 +14,8 @@ parents(net::AbstractNetwork, node::AbstractNode) = parents(net, node.name)
 function children(net::AbstractNetwork, name::Symbol)
     index = net.topology[name]
     children_index = net.A[index, :].nzind
-    reverse_dict = Dict(value => key for (key, value) in net.topology)
-
-    return map(i -> reverse_dict[i], children_index)
+    rev = Dict(v => k for (k, v) in net.topology)
+    return map(i -> rev[i], children_index)
 end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)

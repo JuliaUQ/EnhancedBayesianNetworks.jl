@@ -101,8 +101,8 @@ function order!(net::EnhancedBayesianNetwork)
         to_be_classified = setdiff(to_be_classified, new_root_indices)
     end
     ordered_indices = root_indices
-    reverse_dict = Dict(value => key for (key, value) in net.topology)
-    ordered_topology = Dict(map(i -> (reverse_dict[i[2]], i[1]), enumerate(ordered_indices)))
+    rev = Dict(v => k for (k, v) in net.topology)
+    ordered_topology = Dict(map(i -> (rev[i[2]], i[1]), enumerate(ordered_indices)))
     conversion = Dict(map(i -> (i[2], i[1]), enumerate(root_indices)))
     ordered_matrix = spzeros(Bool, net.A.n, net.A.n)
     for i in range(1, net.A.n)
