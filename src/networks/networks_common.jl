@@ -2,13 +2,6 @@ iscyclic(net::AbstractNetwork) = iscyclic(net.A)
 
 isconnected(net::AbstractNetwork) = isconnected(net.A)
 
-# function parents_old(net::AbstractNetwork, name::Symbol)
-#     index = net.topology[name]
-#     parents_index = net.A[:, index].nzind
-#     rev = Dict(v => k for (k, v) in net.topology)
-#     return map(i -> rev[i], parents_index)
-# end
-
 function parents(net::AbstractNetwork, name::Symbol)
     nodes = net.nodes[net.A[:, net.topology[name]]]
     return getproperty.(nodes, :name)
