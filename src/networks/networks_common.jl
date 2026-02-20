@@ -3,23 +3,27 @@ iscyclic(net::AbstractNetwork) = iscyclic(net.A)
 isconnected(net::AbstractNetwork) = isconnected(net.A)
 
 function parents(net::AbstractNetwork, name::Symbol)
-    nodes = net.nodes[net.A[:, net.topology[name]]]
-    return getproperty.(nodes, :name)
+    rev_topology = Dict(v => k for (k, v) in net.topology)
+    parents_idx = findnz(net.A[:, net.topology[name]])[1]
+    return map(idx -> rev_topology[idx], parents_idx)
 end
 
 parents(net::AbstractNetwork, node::AbstractNode) = parents(net, node.name)
 
 function children(net::AbstractNetwork, name::Symbol)
-    nodes = net.nodes[net.A[net.topology[name], :]]
-    return getproperty.(nodes, :name)
+    rev_topology = Dict(v => k for (k, v) in net.topology)
+    children_idx = findnz(net.A[net.topology[name], :])[1]
+    return map(idx -> rev_topology[idx], children_idx)
 end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
 
 function ancestors(net::AbstractNetwork, name::Symbol)
-    R = transitive_closure(net.A)
-    nodes = filter(n -> isa(n, AbstractDiscreteNode), net.nodes[R[:, net.topology[name]]])
-    return getproperty.(nodes, :name)
+    rev_topology = Dict(v => k for (k, v) in net.topology)
+    ancestors_idx = findnz(transitive_closure(net.A)[:, net.topology[name]])[1]
+    ancestors_node = filter(n -> n.name ∈ map(idx -> rev_topology[idx], ancestors_idx), net.nodes)
+    discrete_ancestors = filter(n -> isa(n, AbstractDiscreteNode), ancestors_node)
+    return getproperty.(discrete_ancestors, :name)
 end
 
 ancestors(net::AbstractNetwork, node::AbstractNode) = ancestors(net, node.name)
