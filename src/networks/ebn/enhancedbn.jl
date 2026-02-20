@@ -173,7 +173,7 @@ function verify_parents(net::EnhancedBayesianNetwork, node::ContinuousNode) ## v
     end
 end
 
-function verify_parents(net::EnhancedBayesianNetwork, node::FunctionalNode) ## verify if all the parents in the CPT have been added via add_child!
+function verify_parents(_::EnhancedBayesianNetwork, _::FunctionalNode) ## verify if all the parents in the CPT have been added via add_child!
     return nothing
 end
 
