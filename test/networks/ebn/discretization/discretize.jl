@@ -55,18 +55,18 @@
 
         dist = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
         probs = map(i -> EnhancedBayesianNetworks._discretize(dist, i), intervals)
-        check = [(0.022750131948179205, 0.15865525393145702), (0.1359051219832778, 0.341344746068543), (0.341344746068543, 0.34134474606854304), (0.15865525393145696, 0.5)]
-        @test all(isapprox.(probs[1], check[1], atol=0.001))
-        @test all(isapprox.(probs[2], check[2], atol=0.001))
-        @test all(isapprox.(probs[3], check[3], atol=0.001))
-        @test all(isapprox.(probs[4], check[4], atol=0.001))
+        check = [Interval(0.022750131948179205, 0.15865525393145702), Interval(0.1359051219832778, 0.341344746068543), Interval(0.341344746068543, 0.34134474606854304), Interval(0.15865525393145696, 0.5)]
+        @test probs[1] == check[1]
+        @test probs[2] == check[2]
+        @test probs[3] == check[3]
+        @test probs[4] == check[4]
 
         intervals = [[-1.0, 0.0], [0.0, 1.0]]
         dist = Interval(-1, 1)
         probs = map(i -> EnhancedBayesianNetworks._discretize(dist, i), intervals)
-        check = [(0, 1), (0, 1)]
-        @test all(isapprox.(probs[1], check[1], atol=0.001))
-        @test all(isapprox.(probs[2], check[2], atol=0.001))
+        check = [Interval(0, 1), Interval(0, 1)]
+        @test probs[1] == check[1]
+        @test probs[2] == check[2]
     end
 
     @testset "discretize node" begin
@@ -82,6 +82,17 @@
             @test Symbol.(names(discretized_node.cpt.data)) == [:x_d, :Π]
             @test discretized_node.cpt.data.x_d == discretized_states
             @test isapprox([discretized_node[discretized_node.name.=>i] for i in discretized_states], [0.15865525393145702, 0.341344746068543, 0.34134474606854304, 0.15865525393145696], atol=0.001)
+
+            node = ContinuousNode(:x, discretization)
+            node[] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+            discretized_node = @suppress EnhancedBayesianNetworks._discretize(node)
+            discretized_states = [Symbol("[-Inf, -1.0]"), Symbol("[-1.0, 0.0]"), Symbol("[0.0, 1.0]"), Symbol("[1.0, Inf]")]
+            @test discretized_node.name == Symbol(string(node.name) * "_d")
+            @test isempty(discretized_node.parameters)
+            @test isempty(discretized_node.results)
+            @test Symbol.(names(discretized_node.cpt.data)) == [:x_d, :Π]
+            @test discretized_node.cpt.data.x_d == discretized_states
+            @test [discretized_node[discretized_node.name.=>i] for i in discretized_states] == [Interval(0.022750131948179205, 0.15865525393145702), Interval(0.1359051219832778, 0.341344746068543), Interval(0.341344746068543, 0.34134474606854304), Interval(0.15865525393145696, 0.5)]
         end
 
         @testset "Child nodes" begin
@@ -89,7 +100,7 @@
             node = ContinuousNode(:x, [:y, :z], discretization)
             node[:y=>:y1, :z=>:z1] = Normal()
             node[:y=>:y1, :z=>:z2] = Normal(2, 2)
-            node[:y=>:y2, :z=>:z1] = Normal(3, 3)
+            node[:y=>:y2, :z=>:z1] = Interval(0, 3)
             node[:y=>:y2, :z=>:z2] = Normal(4, 4)
             discretized_states = [Symbol("[-Inf, -1.0]"), Symbol("[-1.0, 0.0]"), Symbol("[0.0, 1.0]"), Symbol("[1.0, Inf]")]
             discretized_node = @suppress EnhancedBayesianNetworks._discretize(node)
@@ -98,7 +109,7 @@
             @test isempty(discretized_node.results)
             @test Symbol.(names(discretized_node.cpt.data)) == [:y, :z, :x_d, :Π]
             @test unique(discretized_node.cpt.data.x_d) == discretized_states
-            @test all(isapprox.(discretized_node.cpt.data.Π, [0.15865525393145702, 0.06680720126885804, 0.09121121972586788, 0.10564977366685525, 0.341344746068543, 0.09184805266259898, 0.06744403420558914, 0.053005480264601765, 0.34134474606854304, 0.14988228479452986, 0.0938372836154659, 0.06797209844541116, 0.15865525393145696, 0.6914624612740131, 0.7475074624530771, 0.7733726476231318], atol=0.001))
+            @test discretized_node.cpt.data.Π == [0.15865525393145702, 0.06680720126885804, Interval(0, 1), 0.10564977366685525, 0.341344746068543, 0.09184805266259898, Interval(0, 1), 0.053005480264601765, 0.34134474606854304, 0.14988228479452986, Interval(0, 1), 0.06797209844541116, 0.15865525393145696, 0.6914624612740131, Interval(0, 1), 0.7733726476231318]
         end
     end
     # @testset "Root node" begin
