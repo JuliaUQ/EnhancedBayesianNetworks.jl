@@ -1,5 +1,5 @@
 function evaluate!(net::EnhancedBayesianNetwork, check::Bool=true, collect_samples::Bool=true)
-    _discretize!(net)
+    discretize!(net)
     _transfer_continuous!(net)
     functional_nodes = filter(x -> isa(x, FunctionalNode), net.nodes)
     while !isempty(functional_nodes)
@@ -25,7 +25,7 @@ function evaluate!(net::EnhancedBayesianNetwork, check::Bool=true, collect_sampl
         end
         index = findfirst(==(first_node), net.nodes)
         net.nodes[index] = evaluated_node
-        _discretize!(net)
+        discretize!(net)
         _transfer_continuous!(net)
         functional_nodes = filter(x -> isa(x, FunctionalNode), net.nodes)
     end

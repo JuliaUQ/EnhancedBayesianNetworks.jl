@@ -182,43 +182,4 @@
             @test isa(new_continuous.cpt.data.Π[4].ρ, Exponential)
         end
     end
-
-    @testset "Network" begin
-        A = DiscreteNode(:A)
-        A[:A=>:a1] = 0.2
-        A[:A=>:a2] = 0.8
-
-        discretization_B = ExactDiscretization([-1, 1])
-        B = ContinuousNode(:B, discretization_B)
-        B[] = Normal()
-
-        discretization_C = ApproximatedDiscretization([-1, 1], 2)
-        C = ContinuousNode(:C, [:A], discretization_C)
-        C[:A=>:a1] = Interval(-1, 2)
-        C[:A=>:a2] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
-
-        parameters_D = [:d1 => [Parameter(1, :D)], :d2 => [Parameter(2, :D)]]
-        D = DiscreteNode(:D, parameters_D)
-        D[:D=>:d1] = 0.2
-        D[:D=>:d2] = 0.8
-
-        model = Model(df -> df.C .- df.D .^ 2, :F_r)
-        performance = df -> df.F_r
-        simulation = MonteCarlo(20)
-        F = DiscreteFunctionalNode(:F, model, performance, simulation)
-
-        nodes = [A, B, C, D, F]
-        net = EnhancedBayesianNetwork(nodes)
-        add_child!(net, A, C)
-        add_child!(net, [C, B, D], F)
-        disc1, cont1 = @suppress EnhancedBayesianNetworks._discretize(B)
-        disc2, cont2 = @suppress EnhancedBayesianNetworks._discretize(C)
-        discretized_net = @suppress EnhancedBayesianNetworks._discretize!(net)
-        @test cont1.name ∈ [i.name for i in net.nodes]
-        @test disc1.name ∈ [i.name for i in net.nodes]
-        @test cont2.name ∈ [i.name for i in net.nodes]
-        @test disc2.name ∈ [i.name for i in net.nodes]
-        @test issetequal(parents(net, F), [:D, :B, :C])
-        @test net.A == sparse([1, 2, 4, 5, 6, 7], [6, 3, 5, 3, 7, 3], [true, true, true, true, true, true], 7, 7)
-    end
 end

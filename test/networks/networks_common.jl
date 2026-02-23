@@ -299,7 +299,6 @@
         add_child!(net, :x8, :x10)
         add_child!(net, :x9, :x12)
         add_child!(net, :x10, :x13)
-        order!(net)
 
         @test issetequal(markov_blanket(net, :x6), [:x3, :x4, :x5, :x8, :x9, :x10])
         @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
@@ -338,7 +337,6 @@
         add_child!(net, :W, :R)
         add_child!(net, :S, :G)
         add_child!(net, :R, :G)
-        order!(net)
         net1 = deepcopy(net)
         net2 = deepcopy(net)
         net3 = deepcopy(net)

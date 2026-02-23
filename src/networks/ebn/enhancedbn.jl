@@ -84,10 +84,12 @@ function order!(net::EnhancedBayesianNetwork)
     if iscyclic(net.A)
         error("Invalid eBN: network is cyclic!")
     end
-
     if !isconnected(net.A)
         error("Invalid eBN: network is not connected")
     end
+    discretize!(net)
+    continuous_functional_node = filter(x -> isa(x, ContinuousFunctionalNode), net.nodes)
+    map(n -> transfer_continuous_functional_node!(net, n), filter(x -> isempty(x.discretization), continuous_functional_node))
 
     all_indices = range(1, net.A.n)
     root_nodes = net.nodes[isroot.(net.nodes)]
@@ -123,6 +125,37 @@ function order!(net::EnhancedBayesianNetwork)
     map(n -> verify_scenarios(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
 
     return nothing
+end
+
+function discretize!(net::EnhancedBayesianNetwork)
+    continuous_nodes = filter(x -> isa(x, ContinuousNode), net.nodes)
+    evidence_nodes = filter(n -> !isempty(n.discretization), continuous_nodes)
+    discretization_tuples = map(n -> (n, parents(net, n), children(net, n), EnhancedBayesianNetworks._discretize(n)), evidence_nodes)
+    for tup in discretization_tuples
+        node = tup[1]
+        pars = tup[2]
+        chs = tup[3]
+        discretized_node = tup[4][1]
+        new_continuous = tup[4][2]
+        EnhancedBayesianNetworks.remove_node!(net, node)
+        EnhancedBayesianNetworks.add_node!(net, discretized_node)
+        EnhancedBayesianNetworks.add_node!(net, new_continuous)
+        add_child!(net, discretized_node, new_continuous)
+        map(p -> add_child!(net, p, discretized_node.name), pars)
+        map(c -> add_child!(net, new_continuous.name, c), chs)
+    end
+    return nothing
+end
+
+function transfer_continuous_functional_node!(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode)
+    node_children = filter(n -> n.name ∈ children(net, node), net.nodes)
+    if isempty(node.discretization) && !isempty(node_children)
+        node_parents = filter(n -> n.name ∈ parents(net, node), net.nodes)
+        map(ch -> prepend!(ch.models, node.models), node_children)
+        remove_node!(net, node)
+        add_child!(net, node_parents, node_children)
+        return order!(net)
+    end
 end
 
 function markov_envelope(net::EnhancedBayesianNetwork)
