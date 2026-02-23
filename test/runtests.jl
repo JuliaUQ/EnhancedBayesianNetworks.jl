@@ -19,6 +19,7 @@ include("utils/verify/cyclicality_and_connection.jl")
 include("networks/networks_common.jl")
 include("networks/ebn/enhancedbn.jl")
 include("networks/ebn/transmission/transmission.jl")
+include("networks/ebn/discretization/discretize.jl")
 
 # include("utils/verify_discrete.jl")
 # include("nodes/discretenodes.jl")

@@ -81,5 +81,5 @@ include("networks/networks.jl")
 # include("learning/learning.jl")
 
 # include("utils/base_show.jl")
-# include("utils/plots.jl")
+include("utils/plots.jl")
 end
