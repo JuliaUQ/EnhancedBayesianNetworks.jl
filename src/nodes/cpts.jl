@@ -1,4 +1,4 @@
-const ContinuousProbability = Union{UnivariateDistribution,ProbabilityBox,Interval}
+const ContinuousProbability = Union{UnivariateDistribution,ProbabilityBox,Interval,Vector{Pair{Symbol,EmpiricalDistribution}}}
 const DiscreteProbability = Union{Real,Interval}
 const Probability = Union{ContinuousProbability,DiscreteProbability}
 
