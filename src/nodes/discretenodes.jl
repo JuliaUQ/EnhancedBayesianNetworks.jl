@@ -2,13 +2,13 @@ struct DiscreteNode <: AbstractDiscreteNode
     name::Symbol
     cpt::ConditionalProbabilityTable{DiscreteProbability}
     parameters::Vector{Pair{Symbol,Vector{Parameter}}}
-    results::Dict{Vector{Symbol},Tuple}
+    results::Dict{Vector{Pair{Symbol,Symbol}},Tuple}
     ## DiscreteNode without CPT
     function DiscreteNode(
         name::Symbol,
         parents::Vector{Symbol}=Symbol[],
         parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}(),
-        results::Dict{Vector{Symbol},}=Dict{Vector{Symbol},Tuple}()
+        results::Dict{Vector{Pair{Symbol,Symbol}},}=Dict{Vector{Pair{Symbol,Symbol}},Tuple}()
     )
         if name == :Π
             error(":Π is not allowed as node name")
@@ -20,14 +20,14 @@ struct DiscreteNode <: AbstractDiscreteNode
     function DiscreteNode(
         cpt::ConditionalProbabilityTable{DiscreteProbability},
         parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}(),
-        results::Dict{Vector{Symbol},Tuple}=Dict{Vector{Symbol},Tuple}()
+        results::Dict{Vector{Pair{Symbol,Symbol}},Tuple}=Dict{Vector{Pair{Symbol,Symbol}},Tuple}()
     )
         name = Symbol(names(cpt.data)[end-1])
         return new(name, cpt, parameters, results)
     end
 end
 
-DiscreteNode(name::Symbol, parameters::Vector{Pair{Symbol,Vector{Parameter}}}) = DiscreteNode(name, Symbol[], parameters, Dict{Vector{Symbol},Tuple}())
+DiscreteNode(name::Symbol, parameters::Vector{Pair{Symbol,Vector{Parameter}}}) = DiscreteNode(name, Symbol[], parameters, Dict{Vector{Pair{Symbol,Symbol}},Tuple}())
 
 Base.setindex!(node::DiscreteNode, value, key...) = setindex!(node.cpt, value, key...)
 Base.getindex(node::DiscreteNode, key...) = getindex(node.cpt, key...)
