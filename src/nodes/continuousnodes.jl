@@ -42,7 +42,12 @@ parents(node::ContinuousNode) = Symbol.(names(node.cpt.data[:, Not("Π")]))
 
 function _inputs(node::ContinuousNode, evidence::Evidence)
     new_evidence = filter(((k, v),) -> k ∈ Symbol.(names(node.cpt.data)), evidence)
-    return RandomVariable(node.cpt[new_evidence...], node.name)
+    dist = node.cpt[new_evidence...]
+    if isa(dist, UnivariateDistribution) || isa(dist, ProbabilityBox)
+        return RandomVariable(dist, node.name)
+    elseif isa(dist, Interval)
+        return IntervalVariable(dist.lb, dist.ub, node.name)
+    end
 end
 
 function _distribution_bounds(node::ContinuousNode)
