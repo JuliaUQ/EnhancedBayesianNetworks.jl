@@ -42,7 +42,7 @@ parents(node::ContinuousNode) = Symbol.(names(node.cpt.data[:, Not("Π")]))
 
 function _inputs(node::ContinuousNode, evidence::Evidence)
     new_evidence = filter(((k, v),) -> k ∈ Symbol.(names(node.cpt.data)), evidence)
-    return node.cpt[new_evidence...]
+    return RandomVariable(node.cpt[new_evidence...], node.name)
 end
 
 function _distribution_bounds(node::ContinuousNode)
