@@ -94,23 +94,17 @@ end
 markov_blanket(net::AbstractNetwork, node::AbstractNode) = markov_blanket(net, node.name)
 
 function remove_node!(net::AbstractNetwork, node::AbstractNode)
-    A = net.A[1:end.!=net.topology[node.name], 1:end.!=net.topology[node.name]]
-    nodes = deleteat!(net.nodes, net.topology[node.name])
-    topology_vec = collect(net.topology)
-    function f(kv, i)
-        if kv[2] > i
-            return Pair(kv[1], kv[2] - 1)
-        elseif kv[2] != i
-            return kv
+    filter!(n -> n.name != node.name, net.nodes)
+    idx = net.topology[node.name]
+    keep = setdiff(1:size(net.A, 1), idx)
+    net.A = net.A[keep, keep]
+    delete!(net.topology, node.name)
+    # shift indices
+    for (k, v) in net.topology
+        if v > idx
+            net.topology[k] = v - 1
         end
     end
-    topology_vec = map(t -> f(t, net.topology[node.name]), topology_vec)
-    filter!(x -> !isnothing(x), topology_vec)
-    topology = Dict(topology_vec)
-    net.A = A
-    net.topology = topology
-    net.nodes = nodes
-    return nothing
 end
 
 remove_node!(net::AbstractNetwork, name::Symbol) = remove_node!(net, first(filter(n -> n.name == name, net.nodes)))
@@ -119,7 +113,7 @@ function add_node!(net::AbstractNetwork, node::AbstractNode)
     push!(net.nodes, node)
     net.topology[node.name] = length(net.nodes)
     n = size(net.A, 1)
-    net.A = hcat(net.A, spzeros(Bool, n, 1))
-    net.A = vcat(net.A, spzeros(Bool, 1, n + 1))
-    return nothing
+    Anew = spzeros(Bool, n + 1, n + 1)
+    Anew[1:n, 1:n] = net.A
+    net.A = Anew
 end
