@@ -28,6 +28,15 @@ end
 
 ancestors(net::AbstractNetwork, node::AbstractNode) = ancestors(net, node.name)
 
+function topologically_sort!(net::AbstractNetwork)
+    order = topologically_sort(net.A)
+    net.nodes = net.nodes[order]
+    net.A = net.A[order, order]
+    for (i, node) in enumerate(net.nodes)
+        net.topology[node.name] = i
+    end
+end
+
 function verify_parents(net::AbstractNetwork, node::DiscreteNode) ## verify if all the parents in the CPT have been added via add_child!
     if isa(node, FunctionalNode)
         return nothing

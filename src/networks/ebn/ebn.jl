@@ -1,5 +1,4 @@
-include("../../utils/require_unique.jl")
-include("../../utils/sum_intervals_and_float.jl")
+
 include("../../utils/verify/cyclicality_and_connection.jl")
 include("../../utils/verify/add_child.jl")
 include("discretization/discretize.jl")

@@ -1,5 +1,8 @@
 abstract type AbstractNetwork end
 
+include("../utils/topologically_sort.jl")
+include("../utils/require_unique.jl")
+include("../utils/sum_intervals_and_float.jl")
 include("networks_common.jl")
 include("ebn/ebn.jl")
 
