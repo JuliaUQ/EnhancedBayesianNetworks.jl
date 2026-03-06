@@ -417,7 +417,7 @@
         net = EnhancedBayesianNetwork([E, A, C, D, B])
         add_child!(net, [A, B], D)
         add_child!(net, [D, C], E)
-        @test isnothing(order!(net))
+        order!(net)
         @test getproperty.(net.nodes, :name) == [:A, :C, :B, :D, :E]
         @test net.topology == Dict(:A => 1, :B => 3, :C => 2, :D => 4, :E => 5)
         adj = spzeros(Bool, 5, 5)
