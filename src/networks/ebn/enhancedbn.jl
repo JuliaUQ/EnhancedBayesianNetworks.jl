@@ -80,53 +80,6 @@ function add_child!(
     add_child!(net, par_nodes, ch_nodes)
 end
 
-function order!(net::EnhancedBayesianNetwork)
-    if iscyclic(net.A)
-        error("Invalid eBN: network is cyclic!")
-    end
-    if !isconnected(net.A)
-        error("Invalid eBN: network is not connected")
-    end
-    discretize!(net)
-    continuous_functional_node = filter(x -> isa(x, ContinuousFunctionalNode), net.nodes)
-    map(n -> transfer_continuous_functional_node!(net, n), filter(x -> isempty(x.discretization), continuous_functional_node))
-
-    all_indices = range(1, net.A.n)
-    root_nodes = net.nodes[isroot.(net.nodes)]
-    root_indices = map(rn -> net.topology[rn.name], root_nodes)
-    to_be_classified = setdiff(all_indices, root_indices)
-    while !isempty(to_be_classified)
-        par_list_indices = map(r -> net.A[:, r].nzind, to_be_classified)
-        new_root_indices = findall(map(p -> all(p .∈ [root_indices]), par_list_indices))
-        new_root_indices = map(i -> to_be_classified[i], new_root_indices)
-        append!(root_indices, new_root_indices)
-        to_be_classified = setdiff(to_be_classified, new_root_indices)
-    end
-    ordered_indices = root_indices
-    rev = Dict(v => k for (k, v) in net.topology)
-    ordered_topology = Dict(map(i -> (rev[i[2]], i[1]), enumerate(ordered_indices)))
-    conversion = Dict(map(i -> (i[2], i[1]), enumerate(root_indices)))
-    ordered_matrix = spzeros(Bool, net.A.n, net.A.n)
-    for i in range(1, net.A.n)
-        for j in range(1, net.A.n)
-            if net.A[i, j] == true
-                ordered_matrix[conversion[i], conversion[j]] = true
-            end
-        end
-    end
-    net.A = ordered_matrix
-    net.topology = ordered_topology
-    map(n -> verify_parents(net, n), net.nodes)
-    map(n -> verify_scenarios(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
-    map(n -> verify_exhaustiveness(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
-    map(n -> verify_functional_parents(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
-    map(n -> build_simulation_table!(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
-    map(n -> verify_ancestors(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
-    map(n -> verify_scenarios(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
-
-    return nothing
-end
-
 function discretize!(net::EnhancedBayesianNetwork)
     continuous_nodes = filter(x -> isa(x, ContinuousNode), net.nodes)
     evidence_nodes = filter(n -> !isempty(n.discretization), continuous_nodes)

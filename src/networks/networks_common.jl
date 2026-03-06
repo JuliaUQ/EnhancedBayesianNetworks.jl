@@ -28,6 +28,20 @@ end
 
 ancestors(net::AbstractNetwork, node::AbstractNode) = ancestors(net, node.name)
 
+function order!(net::AbstractNetwork)
+    if iscyclic(net.A)
+        error("Invalid eBN: network is cyclic!")
+    end
+    if !isconnected(net.A)
+        error("Invalid eBN: network is not connected")
+    end
+    topologically_sort!(net)
+    map(n -> verify_parents(net, n), net.nodes)
+    map(n -> verify_scenarios(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
+    map(n -> verify_exhaustiveness(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
+    return nothing
+end
+
 function topologically_sort!(net::AbstractNetwork)
     order = topologically_sort(net.A)
     net.nodes = net.nodes[order]

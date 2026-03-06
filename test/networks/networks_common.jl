@@ -363,4 +363,96 @@
         net4.topology == Dict(:W => 1, :R => 3, :S => 2, :G => 4)
         isnothing(EnhancedBayesianNetworks.add_node!(net5, grass))
     end
+
+    @testset "Sorting and Checks" begin
+        A = DiscreteNode(:A, [:B])
+        A[:B=>:b1, :A=>:a1] = 0.05
+        A[:B=>:b1, :A=>:a2] = 0.95
+        A[:B=>:b2, :A=>:a1] = 0.7
+        A[:B=>:b2, :A=>:a2] = 0.3
+        B = DiscreteNode(:B, [:A])
+        B[:B=>:b1, :A=>:a1] = 0.05
+        B[:B=>:b1, :A=>:a2] = 0.95
+        B[:B=>:b2, :A=>:a1] = 0.7
+        B[:B=>:b2, :A=>:a2] = 0.3
+        net = EnhancedBayesianNetwork([A, B, weather])
+        add_child!(net, A, B)
+        add_child!(net, B, A)
+        @test_throws ErrorException("Invalid eBN: network is cyclic!") order!(net)
+
+        A = DiscreteNode(:A)
+        A[:A=>:a1] = 0.3
+        A[:A=>:a2] = 0.7
+        B = DiscreteNode(:B)
+        B[:B=>:b1] = 0.3
+        B[:B=>:b2] = 0.7
+        C = ContinuousNode(:C)
+        C[] = Normal()
+        D = DiscreteNode(:D, [:A, :B])
+        D[:A=>:a1, :B=>:b1, :D=>:d1] = 0.2
+        D[:A=>:a1, :B=>:b1, :D=>:d2] = 0.8
+        D[:A=>:a1, :B=>:b2, :D=>:d1] = 0.2
+        D[:A=>:a1, :B=>:b2, :D=>:d2] = 0.8
+        D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.2
+        D[:A=>:a2, :B=>:b1, :D=>:d2] = 0.8
+        D[:A=>:a2, :B=>:b2, :D=>:d1] = 0.2
+        D[:A=>:a2, :B=>:b2, :D=>:d2] = 0.8
+        model = Model(df -> df.C .+ df.D, :E)
+        performance = df -> df.E
+        sim = MonteCarlo(100)
+        E = DiscreteFunctionalNode(:E, model, performance, sim)
+        net = EnhancedBayesianNetwork([E, A, C, D, B])
+        add_child!(net, [A, B], D)
+        add_child!(net, [D, C], E)
+        EnhancedBayesianNetworks.topologically_sort!(net)
+        @test getproperty.(net.nodes, :name) == [:A, :C, :B, :D, :E]
+        @test net.topology == Dict(:A => 1, :B => 3, :C => 2, :D => 4, :E => 5)
+        adj = spzeros(Bool, 5, 5)
+        adj[1, 4] = true
+        adj[2, 5] = true
+        adj[3, 4] = true
+        adj[4, 5] = true
+        @test net.A == adj
+
+        net = EnhancedBayesianNetwork([E, A, C, D, B])
+        add_child!(net, [A, B], D)
+        add_child!(net, [D, C], E)
+        @test isnothing(order!(net))
+        @test getproperty.(net.nodes, :name) == [:A, :C, :B, :D, :E]
+        @test net.topology == Dict(:A => 1, :B => 3, :C => 2, :D => 4, :E => 5)
+        adj = spzeros(Bool, 5, 5)
+        adj[1, 4] = true
+        adj[2, 5] = true
+        adj[3, 4] = true
+        adj[4, 5] = true
+        @test net.A == adj
+
+        net = EnhancedBayesianNetwork([C, D, B, A])
+        add_child!(net, [A, B], D)
+        @test_throws ErrorException("Invalid eBN: network is not connected") order!(net)
+
+        net = EnhancedBayesianNetwork([E, A, C, D, B])
+        add_child!(net, B, D)
+        add_child!(net, [A, D, C], E)
+        @test_throws ErrorException("Invalid CPT: node D has node(s) '[:A]' defined in the CPT only, but they have not been added via add_child!") order!(net)
+
+        D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.1
+        net = EnhancedBayesianNetwork([E, A, C, D, B])
+        add_child!(net, [A, B], D)
+        add_child!(net, [D, C], E)
+        @test_throws ErrorException("Invalid CPT: node D has CPT values 'Union{Real, Interval}[0.1, 0.8]' not exhaustive and mutually exclusive for the scenario [:A => :a2, :B => :b1]") order!(net)
+
+        D = DiscreteNode(:D, [:A, :B])
+        D[:A=>:a1, :B=>:b1, :D=>:d1] = 0.2
+        D[:A=>:a1, :B=>:b1, :D=>:d2] = 0.8
+        D[:A=>:a1, :B=>:b2, :D=>:d1] = 0.2
+        D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.2
+        D[:A=>:a2, :B=>:b1, :D=>:d2] = 0.8
+        D[:A=>:a2, :B=>:b2, :D=>:d1] = 0.2
+        D[:A=>:a2, :B=>:b2, :D=>:d2] = 0.8
+        net = EnhancedBayesianNetwork([E, A, C, D, B])
+        add_child!(net, [A, B], D)
+        add_child!(net, [D, C], E)
+        @test_throws ErrorException("Invalid CPT: node D is missing the following scenario [:A => :a1, :B => :b2, :D => :d2]") order!(net)
+    end
 end
