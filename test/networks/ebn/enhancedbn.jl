@@ -196,7 +196,7 @@
         models = [model]
         simulation = MonteCarlo(200)
         performance = df -> df.y5
-        parameter = Dict(:fail_y5 => [Parameter(1, :y5)], :fail_y5 => [Parameter(0, :y5)])
+        parameter = [:fail_y5 => [Parameter(1, :y5)], :fail_y5 => [Parameter(0, :y5)]]
         Y5 = DiscreteFunctionalNode(:y5, models, performance, simulation, parameter)
 
         model = Model(df -> df.y3, :x4)
