@@ -57,14 +57,14 @@ mutable struct DiscreteFunctionalNode <: AbstractDiscreteNode
     models::AbstractVector{<:UQModel}
     performance::Function
     simulation::Union{DiscreteSimulation,SimulationTable{DiscreteSimulation}}
-    parameters::Dict{Symbol,Vector{Parameter}}
+    parameters::Vector{Pair{Symbol,Vector{Parameter}}}
 
     function DiscreteFunctionalNode(
         name::Symbol,
         models::Union{Vector{<:UQModel},<:UQModel},
         performance::Function,
         simulation::Union{DiscreteSimulation,SimulationTable{DiscreteSimulation}},
-        parameters::Dict{Symbol,Vector{Parameter}}=Dict{Symbol,Vector{Parameter}}()
+        parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}()
     )
         if name == :Π
             error(":Π is not allowed as node name")
@@ -81,7 +81,7 @@ function DiscreteFunctionalNode(
     ancestors::Vector{Symbol},
     models::Union{Vector{<:UQModel},<:UQModel},
     performance::Function,
-    parameters::Dict{Symbol,Vector{Parameter}}=Dict{Symbol,Vector{Parameter}}()
+    parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}()
 )
     st = SimulationTable{DiscreteSimulation}(ancestors)
     DiscreteFunctionalNode(name, models, performance, st, parameters)
