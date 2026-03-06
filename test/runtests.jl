@@ -6,6 +6,7 @@ using CSV
 
 include("utils/wrap.jl")
 include("utils/flat.jl")
+include("utils/topologically_sort.jl")
 include("nodes/cpts.jl")
 include("nodes/st.jl")
 include("nodes/nodes.jl")
