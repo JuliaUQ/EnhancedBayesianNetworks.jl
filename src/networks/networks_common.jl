@@ -39,7 +39,6 @@ function order!(net::AbstractNetwork)
     map(n -> verify_parents(net, n), net.nodes)
     map(n -> verify_scenarios(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
     map(n -> verify_exhaustiveness(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
-    return nothing
 end
 
 function topologically_sort!(net::AbstractNetwork)

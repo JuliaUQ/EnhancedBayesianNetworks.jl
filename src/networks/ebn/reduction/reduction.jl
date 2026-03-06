@@ -5,7 +5,6 @@ function reduce!(net::EnhancedBayesianNetwork, check::Bool=true, collect_samples
     end
     cont_nodes = filter(x -> isa(x, ContinuousNode), net.nodes)
     map(x -> _eliminate_continuous_node!(net, x), cont_nodes)
-    return nothing
 end
 
 function _eliminate_continuous_node!(net::EnhancedBayesianNetwork, node::ContinuousNode)

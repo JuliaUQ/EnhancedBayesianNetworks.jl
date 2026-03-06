@@ -1,10 +1,3 @@
-function simulation_inputs(net::EnhancedBayesianNetwork, node::FunctionalNode, sc::Vector{Pair{Symbol,Symbol}})
-    par_names = parents(net, node)
-    par_nodes = filter(n -> n.name ∈ par_names, net.nodes)
-    uqinputs = mapreduce(p -> EnhancedBayesianNetworks._inputs(p, Dict(sc)), vcat, par_nodes)
-    return uqinputs
-end
-
 function evaluate!(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode; nbins::Int=0)
     scs = map(row -> [Symbol(col) => row[col] for col in names(node.simulation.data[:, Not("sim")])], eachrow(node.simulation.data[:, Not("sim")]))
     inputs_vector = map(sc -> (sc, simulation_inputs(net, node, sc)), scs)
@@ -46,4 +39,11 @@ function evaluate!(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode)
         new_discrete.results[scenario] = res[2:end]
     end
     return new_discrete
+end
+
+function simulation_inputs(net::EnhancedBayesianNetwork, node::FunctionalNode, sc::Vector{Pair{Symbol,Symbol}})
+    par_names = parents(net, node)
+    par_nodes = filter(n -> n.name ∈ par_names, net.nodes)
+    uqinputs = mapreduce(p -> EnhancedBayesianNetworks._inputs(p, Dict(sc)), vcat, par_nodes)
+    return uqinputs
 end

@@ -8,7 +8,7 @@ struct ConditionalProbabilityTable{T<:Union{ContinuousProbability,DiscreteProbab
         columns = wrap(columns)
         data = DataFrame([col => Symbol[] for col in columns])
         data[:, :Π] = T[]
-        return new{T}(data)
+        new{T}(data)
     end
 end
 
@@ -28,7 +28,6 @@ function Base.setindex!(cpt::ConditionalProbabilityTable{DiscreteProbability}, v
     else
         error("Cannot set index with $evidence_nodes into a CPT initialized with $cpt_nodes")
     end
-    return nothing
 end
 
 function Base.setindex!(cpt::ConditionalProbabilityTable{ContinuousProbability}, value, key...)
@@ -46,7 +45,6 @@ function Base.setindex!(cpt::ConditionalProbabilityTable{ContinuousProbability},
     else
         error("Cannot set index with $evidence_nodes into a CPT initialized with $cpt_nodes")
     end
-    return nothing
 end
 
 function Base.getindex(cpt::ConditionalProbabilityTable, key...)
@@ -69,14 +67,12 @@ function verify_probability_value(value::Real)
     if !(0 <= value <= 1)
         throw(ArgumentError("probability $value must be >= 0 and <= 1"))
     end
-    return nothing
 end
 
 function verify_probability_value(value::Interval)
     if !all(0 .<= UncertaintyQuantification.bounds(value) .<= 1)
         throw(ArgumentError("probability $value must be >= 0 and <= 1"))
     end
-    return nothing
 end
 
 function verify_probability_value(_::UnivariateDistribution)

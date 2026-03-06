@@ -8,7 +8,7 @@ struct SimulationTable{T<:Union{ContinuousSimulation,DiscreteSimulation}}
         columns = wrap(columns)
         data = DataFrame([col => Symbol[] for col in columns])
         data[:, :sim] = T[]
-        return new{T}(data)
+        new{T}(data)
     end
 end
 
@@ -27,7 +27,6 @@ function Base.setindex!(st::SimulationTable, value, key...)
     else
         error("Cannot set index with $evidence_nodes into a SimulationTable initialized with $st_nodes")
     end
-    return nothing
 end
 
 function Base.getindex(st::SimulationTable, key...)

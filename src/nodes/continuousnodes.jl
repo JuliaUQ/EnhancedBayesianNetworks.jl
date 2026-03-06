@@ -23,7 +23,7 @@ struct ContinuousNode <: AbstractContinuousNode
         end
 
         cpt = ConditionalProbabilityTable{ContinuousProbability}(parents)
-        return new(name, cpt, discretization, results)
+        new(name, cpt, discretization, results)
     end
 end
 

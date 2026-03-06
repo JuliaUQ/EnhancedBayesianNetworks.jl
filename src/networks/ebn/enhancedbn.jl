@@ -32,7 +32,7 @@ function EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode})
         topology[n.name] = i
     end
     A = spzeros(Bool, n, n)
-    return EnhancedBayesianNetwork(nodes, topology, A)
+    EnhancedBayesianNetwork(nodes, topology, A)
 end
 
 function add_child!(
@@ -97,7 +97,6 @@ function discretize!(net::EnhancedBayesianNetwork)
         map(p -> add_child!(net, p, discretized_node.name), pars)
         map(c -> add_child!(net, new_continuous.name, c), chs)
     end
-    return nothing
 end
 
 function transfer_continuous_functional_node!(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode)

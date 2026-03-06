@@ -14,7 +14,7 @@ struct DiscreteNode <: AbstractDiscreteNode
             error(":Π is not allowed as node name")
         end
         cpt = ConditionalProbabilityTable{DiscreteProbability}([parents..., name])
-        return new(name, cpt, parameters, results)
+        new(name, cpt, parameters, results)
     end
     ## DiscreteNode with CPT
     function DiscreteNode(
@@ -23,7 +23,7 @@ struct DiscreteNode <: AbstractDiscreteNode
         results::Dict{Vector{Pair{Symbol,Symbol}},Tuple}=Dict{Vector{Pair{Symbol,Symbol}},Tuple}()
     )
         name = Symbol(names(cpt.data)[end-1])
-        return new(name, cpt, parameters, results)
+        new(name, cpt, parameters, results)
     end
 end
 
