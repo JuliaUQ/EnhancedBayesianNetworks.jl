@@ -20,17 +20,32 @@
         @test isa(node.discretization, ApproximatedDiscretization)
         @test node.discretization.intervals == Real[]
         @test node.discretization.sigma == 0
+        @test node.nbins == 0
+
         discretization = ApproximatedDiscretization([-2, -1, 0, 1, 2], 2)
         node = ContinuousFunctionalNode(name, models, simulation, discretization)
         @test isa(node.discretization, ApproximatedDiscretization)
         @test node.discretization.intervals == [-2, -1, 0, 1, 2]
         @test node.discretization.sigma == 2
+        @test node.nbins == 0
         @test_throws ErrorException(":Π is not allowed as node name") ContinuousFunctionalNode(:Π, models, simulation)
         @test_throws ErrorException(":sim is not allowed as node name") ContinuousFunctionalNode(:sim, models, simulation)
 
         @test_throws MethodError ContinuousFunctionalNode(name, models, DoubleLoop(MonteCarlo(100)))
         @test_throws MethodError ContinuousFunctionalNode(name, models, RandomSlicing(MonteCarlo(100)))
         @test_throws MethodError ContinuousFunctionalNode(name, models, SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+
+        nbins = 100
+        node = ContinuousFunctionalNode(name, models, simulation, discretization, nbins)
+        @test isa(node.discretization, ApproximatedDiscretization)
+        @test node.discretization.intervals == [-2, -1, 0, 1, 2]
+        @test node.discretization.sigma == 2
+        @test node.nbins == nbins
+
+        node = ContinuousFunctionalNode(name, models, simulation, nbins)
+        @test isa(node.discretization, ApproximatedDiscretization)
+        @test isempty(node.discretization.intervals)
+        @test node.nbins == nbins
 
         ancestors = [:x1, :x2, :y1]
         node = ContinuousFunctionalNode(name, ancestors, models)
@@ -53,9 +68,19 @@
         @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] == MonteCarlo(20)
         @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] == MonteCarlo(200)
         @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] == MonteCarlo(200)
+        @test node.nbins == 0
 
         node = ContinuousFunctionalNode(name, ancestors, models, discretization)
         @test node.discretization == discretization
+        @test node.nbins == 0
+
+        node = ContinuousFunctionalNode(name, ancestors, models, discretization, nbins)
+        @test node.discretization == discretization
+        @test node.nbins == nbins
+
+        node = ContinuousFunctionalNode(name, ancestors, models, nbins)
+        @test isempty(node.discretization)
+        @test node.nbins == nbins
     end
 
     @testset "Discrete" begin

@@ -3,19 +3,22 @@ mutable struct ContinuousFunctionalNode <: AbstractContinuousNode
     models::AbstractVector{<:UQModel}
     simulation::Union{AbstractMonteCarlo,SimulationTable{ContinuousSimulation}}
     discretization::ApproximatedDiscretization
+    nbins::Int
 
     function ContinuousFunctionalNode(
         name::Symbol,
         models::Union{Vector{<:UQModel},<:UQModel},
         simulation::Union{AbstractMonteCarlo,SimulationTable{ContinuousSimulation}},
-        discretization::ApproximatedDiscretization=ApproximatedDiscretization(),)
+        discretization::ApproximatedDiscretization=ApproximatedDiscretization(),
+        nbins::Int=0,
+    )
         if name == :Π
             error(":Π is not allowed as node name")
         end
         if name == :sim
             error(":sim is not allowed as node name")
         end
-        new(name, wrap(models), simulation, discretization)
+        new(name, wrap(models), simulation, discretization, nbins)
     end
 end
 
@@ -24,12 +27,30 @@ function ContinuousFunctionalNode(
     ancestors::Vector{Symbol},
     models::Union{Vector{<:UQModel},<:UQModel},
     discretization::ApproximatedDiscretization=ApproximatedDiscretization(),
+    nbins::Int=0,
 )
-    st = SimulationTable{ContinuousSimulation}(ancestors)
-    return ContinuousFunctionalNode(name, models, st, discretization)
+    ContinuousFunctionalNode(name, models, SimulationTable{ContinuousSimulation}(ancestors), discretization, nbins)
 end
 
-Base.setindex!(node::ContinuousFunctionalNode, value, key...) = setindex!(node.simulation, value, key...)
+function ContinuousFunctionalNode(
+    name::Symbol,
+    models::Union{Vector{<:UQModel},<:UQModel},
+    simulation::Union{AbstractMonteCarlo,SimulationTable{ContinuousSimulation}},
+    nbins::Int
+)
+    ContinuousFunctionalNode(name, models, simulation, ApproximatedDiscretization(), nbins)
+end
+
+function ContinuousFunctionalNode(
+    name::Symbol,
+    ancestors::Vector{Symbol},
+    models::Union{Vector{<:UQModel},<:UQModel},
+    nbins::Int
+)
+    ContinuousFunctionalNode(name, ancestors, models, ApproximatedDiscretization(), nbins)
+end
+
+Base.setindex!(node::ContinuousFunctionalNode, value, key...) = Base.setindex!(node.simulation, value, key...)
 
 mutable struct DiscreteFunctionalNode <: AbstractDiscreteNode
     name::Symbol
@@ -63,10 +84,10 @@ function DiscreteFunctionalNode(
     parameters::Dict{Symbol,Vector{Parameter}}=Dict{Symbol,Vector{Parameter}}()
 )
     st = SimulationTable{DiscreteSimulation}(ancestors)
-    return DiscreteFunctionalNode(name, models, performance, st, parameters)
+    DiscreteFunctionalNode(name, models, performance, st, parameters)
 end
 
-Base.setindex!(node::DiscreteFunctionalNode, value, key...) = setindex!(node.simulation, value, key...)
+Base.setindex!(node::DiscreteFunctionalNode, value, key...) = Base.setindex!(node.simulation, value, key...)
 
 isroot(FunctionalNode) = false
 
