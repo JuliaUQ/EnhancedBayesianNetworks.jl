@@ -164,8 +164,8 @@ end
 
 function verify_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode) ## Discrete Parents must have a non empty parameters attribute
     par = filter(n -> n.name ∈ parents(net, node), net.nodes)
-    discrete_par = filter(x -> isa(x, DiscreteNode), par)
-    cont_par = filter(x -> isa(x, ContinuousNode), par)
+    discrete_par = filter(x -> isa(x, AbstractDiscreteNode), par)
+    cont_par = filter(x -> isa(x, AbstractContinuousNode), par)
 
     for dp in discrete_par
         if isempty(dp.parameters)
