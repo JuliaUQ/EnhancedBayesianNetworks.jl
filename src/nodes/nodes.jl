@@ -84,7 +84,7 @@ function Base.getindex(rt::ResultTable, key...)
         error("index not find in the SimlationTable $st")
     else
         @assert size(cp, 1) == 1
-        return cp.sim[1]
+        return cp.res[1]
     end
 end
 
