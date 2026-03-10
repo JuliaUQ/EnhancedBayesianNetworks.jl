@@ -60,7 +60,7 @@ struct ResultTable
     end
 end
 
-function Base.setindex!(rt::ResultTable, value, key...)
+function Base.setindex!(rt::ResultTable, value, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     evidence_nodes = collect(map(p -> p[1], key))
     rt_nodes = Symbol.(filter(i -> i != "res", names(rt.data)))
@@ -77,7 +77,7 @@ function Base.setindex!(rt::ResultTable, value, key...)
     end
 end
 
-function Base.getindex(rt::ResultTable, key...)
+function Base.getindex(rt::ResultTable, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     cp = subset(rt.data, selector, view=true)
     if isempty(cp)
@@ -88,7 +88,7 @@ function Base.getindex(rt::ResultTable, key...)
     end
 end
 
-function Base.filter(st::ResultTable, key...)
+function Base.filter(st::ResultTable, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     return subset(st.data, selector, view=true)
 end

@@ -12,7 +12,7 @@ struct SimulationTable{T<:Union{ContinuousSimulation,DiscreteSimulation}}
     end
 end
 
-function Base.setindex!(st::SimulationTable, value, key...)
+function Base.setindex!(st::SimulationTable, value::Simulation, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     evidence_nodes = collect(map(p -> p[1], key))
     st_nodes = Symbol.(filter(i -> i != "sim", names(st.data)))
@@ -29,7 +29,7 @@ function Base.setindex!(st::SimulationTable, value, key...)
     end
 end
 
-function Base.getindex(st::SimulationTable, key...)
+function Base.getindex(st::SimulationTable, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     cp = subset(st.data, selector, view=true)
     if isempty(cp)
@@ -40,7 +40,7 @@ function Base.getindex(st::SimulationTable, key...)
     end
 end
 
-function Base.filter(st::SimulationTable, key...)
+function Base.filter(st::SimulationTable, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     return subset(st.data, selector, view=true)
 end
