@@ -159,7 +159,7 @@ function verify_parents(net::EnhancedBayesianNetwork, node::ContinuousNode) ## v
 end
 
 function verify_parents(_::EnhancedBayesianNetwork, _::FunctionalNode) ## verify if all the parents in the CPT have been added via add_child!
-    return nothing
+    return
 end
 
 function verify_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode) ## Discrete Parents must have a non empty parameters attribute
@@ -181,9 +181,7 @@ function verify_functional_parents(net::EnhancedBayesianNetwork, node::Functiona
 end
 
 function build_simulation_table!(net::EnhancedBayesianNetwork, node::FunctionalNode)
-    if isa(node.simulation, SimulationTable)
-        return nothing
-    else
+    if !isa(node.simulation, SimulationTable)
         anc = Symbol[]
         anc_nodes = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
         append!(anc, [i.name for i in anc_nodes])

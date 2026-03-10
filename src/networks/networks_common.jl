@@ -67,9 +67,13 @@ function order!(net::AbstractNetwork)
         error("Invalid eBN: network is not connected")
     end
     topologically_sort!(net)
-    map(n -> verify_parents(net, n), net.nodes)
-    map(n -> verify_scenarios(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
-    map(n -> verify_exhaustiveness(net, n), filter(x -> isa(x, DiscreteNode), net.nodes))
+    foreach(n -> verify_parents(net, n), net.nodes)
+    foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
+        verify_scenarios(net, n)
+    end
+    foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
+        verify_exhaustiveness(net, n)
+    end
 end
 
 function topologically_sort!(net::AbstractNetwork)
@@ -82,9 +86,7 @@ function topologically_sort!(net::AbstractNetwork)
 end
 
 function verify_parents(net::AbstractNetwork, node::DiscreteNode) ## verify if all the parents in the CPT have been added via add_child!
-    if isa(node, FunctionalNode)
-        return nothing
-    else
+    if !isa(node, FunctionalNode)
         cpt_parents = parents(node)
         net_parents = parents(net, node.name)
         only_in_cpt = setdiff(cpt_parents, net_parents)
