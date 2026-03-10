@@ -185,9 +185,8 @@ function build_simulation_table!(net::EnhancedBayesianNetwork, node::FunctionalN
         return nothing
     else
         anc = Symbol[]
-        anc_nodes = filter(n -> n.name ∈ ancestors(net, node), net.nodes)
+        anc_nodes = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
         append!(anc, [i.name for i in anc_nodes])
-        # anc = filter(n -> n.name ∈ ancestors(net, node), net.nodes)
         if isa(node, AbstractContinuousNode)
             st = SimulationTable{ContinuousSimulation}(anc)
         else
@@ -201,7 +200,7 @@ end
 
 function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ## verify if all the ancestors in the ST have been added via add_child!
     st_ancestors = Symbol.(names(node.simulation.data[:, Not(:sim)]))
-    net_ancestors = ancestors(net, node)
+    net_ancestors = discrete_ancestors(net, node)
     only_in_st = setdiff(st_ancestors, net_ancestors)
     if !isempty(only_in_st)
         error("Invalid SimulationTable: node $(node.name) has node(s) '$only_in_st' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN")
@@ -213,7 +212,7 @@ function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ##
 end
 
 function verify_scenarios(net::EnhancedBayesianNetwork, node::FunctionalNode)
-    anc = filter(n -> n.name ∈ ancestors(net, node), net.nodes)
+    anc = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
     theoretical_scenarios = vec(collect(Iterators.product(states.(anc)...)))
     filtering_elements = map(th_s -> ([i.name for i in anc] .=> th_s), theoretical_scenarios)
     for filtering_element in filtering_elements

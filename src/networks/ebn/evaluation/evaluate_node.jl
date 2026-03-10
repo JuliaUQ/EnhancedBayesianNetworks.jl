@@ -1,7 +1,7 @@
 function evaluate!(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode; nbins::Int=0)
     scs = map(row -> [Symbol(col) => row[col] for col in names(node.simulation.data[:, Not("sim")])], eachrow(node.simulation.data[:, Not("sim")]))
     inputs_vector = map(sc -> (sc, simulation_inputs(net, node, sc)), scs)
-    new_continuous = ContinuousNode(node.name, ancestors(net, node))
+    new_continuous = ContinuousNode(node.name, discrete_ancestors(net, node), node.discretization)
     for i in inputs_vector
         scenario = i[1]
         uqinputs = i[2]
@@ -25,7 +25,7 @@ end
 function evaluate!(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode)
     scs = map(row -> [Symbol(col) => row[col] for col in names(node.simulation.data[:, Not("sim")])], eachrow(node.simulation.data[:, Not("sim")]))
     inputs_vector = map(sc -> (sc, simulation_inputs(net, node, sc)), scs)
-    new_discrete = DiscreteNode(node.name, ancestors(net, node))
+    new_discrete = DiscreteNode(node.name, discrete_ancestors(net, node), node.parameters)
     for i in inputs_vector
         scenario = i[1]
         uqinputs = i[2]

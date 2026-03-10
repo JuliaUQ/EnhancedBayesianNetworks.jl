@@ -28,6 +28,37 @@ end
 
 ancestors(net::AbstractNetwork, node::AbstractNode) = ancestors(net, node.name)
 
+function discrete_ancestors(net::AbstractNetwork, name::Symbol)
+    rev_topology = Dict(v => k for (k, v) in net.topology)
+    start_idx = net.topology[name]
+    visited = Set{Int}()
+    result = Set{Symbol}()
+    stack = [start_idx]
+    while !isempty(stack)
+        current = pop!(stack)
+        # parents of current node
+        parent_idx = findnz(net.A[:, current])[1]
+        for p in parent_idx
+            if p ∉ visited
+                push!(visited, p)
+                node_name = rev_topology[p]
+                node = findfirst(n -> n.name == node_name, net.nodes)
+                node = net.nodes[node]
+                push!(result, node_name)
+                # only continue traversal if node is continuous
+                if !(node isa AbstractDiscreteNode)
+                    push!(stack, p)
+                end
+            end
+        end
+    end
+    ancestors_node = filter(n -> n.name ∈ collect(result), net.nodes)
+    filter!(n -> isa(n, AbstractDiscreteNode), ancestors_node)
+    return getproperty.(ancestors_node, :name)
+end
+
+discrete_ancestors(net::AbstractNetwork, node::AbstractNode) = discrete_ancestors(net, node.name)
+
 function order!(net::AbstractNetwork)
     if iscyclic(net.A)
         error("Invalid eBN: network is cyclic!")
