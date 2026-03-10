@@ -7,13 +7,13 @@
         @test isa(node_a.cpt, ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability})
         @test names(node_a.cpt.data) == ["a", "Π"]
         @test isa(node_a.parameters, Vector{Pair{Symbol,Vector{Parameter}}})
-        @test isa(node_a.results, Dict{Vector{Pair{Symbol,Symbol}},Tuple})
+        @test isnothing(node_a.results)
         node_c = DiscreteNode(:c, [:a])
         @test isa(node_c, DiscreteNode)
         @test isa(node_c.cpt, ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability})
         @test names(node_c.cpt.data) == ["a", "c", "Π"]
         @test isa(node_c.parameters, Vector{Pair{Symbol,Vector{Parameter}}})
-        @test isa(node_c.results, Dict{Vector{Pair{Symbol,Symbol}},Tuple})
+        @test isnothing(node_c.results)
 
         node_a[:a=>:a1] = Interval(0.1, 0.3)
         node_a[:a=>:a2] = Interval(0.6, 0.8)
@@ -38,7 +38,6 @@
 
         ## tests for parameters    
         parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)]]
-        results = Dict{Vector{Pair{Symbol,Symbol}},Tuple}()
         node_a = DiscreteNode(:a, parameters)
         node_a[:a=>:a1] = 0.2
         @test node_a.cpt.data.a == [:a1]
@@ -56,31 +55,21 @@
         cpt_a[:a=>:a1] = 0.2
         cpt_a[:a=>:a2] = 0.8
         parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)]]
-        results = Dict{Vector{Pair{Symbol,Symbol}},Tuple}()
         node_a = DiscreteNode(cpt_a)
         @test node_a.cpt == cpt_a
         node_a = DiscreteNode(cpt_a, parameters)
         @test node_a.cpt == cpt_a
         @test node_a.parameters == parameters
-        node_a = DiscreteNode(cpt_a, parameters, results)
-        @test node_a.cpt == cpt_a
-        @test node_a.parameters == parameters
-        @test node_a.results == results
 
         cpt_c = ConditionalProbabilityTable{EnhancedBayesianNetworks.DiscreteProbability}([:a, :c])
         cpt_c[:a=>:a1, :c=>:c1] = 0.2
         cpt_c[:a=>:a1, :c=>:c2] = 0.8
         parameters = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(0, :C)]]
-        results = Dict{Vector{Pair{Symbol,Symbol}},Tuple}()
         node_c = DiscreteNode(cpt_c)
         @test node_c.cpt == cpt_c
         node_c = DiscreteNode(cpt_c, parameters)
         @test node_c.cpt == cpt_c
         @test node_c.parameters == parameters
-        node_c = DiscreteNode(cpt_c, parameters, results)
-        @test node_c.cpt == cpt_c
-        @test node_c.parameters == parameters
-        @test node_c.results == results
     end
 
     @testset "main functions" begin

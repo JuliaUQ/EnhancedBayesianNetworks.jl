@@ -2,13 +2,13 @@ struct ContinuousNode <: AbstractContinuousNode
     name::Symbol
     cpt::ConditionalProbabilityTable{ContinuousProbability}
     discretization::AbstractDiscretization
-    results::Dict{Vector{Symbol},Tuple}
+    results::Union{ResultTable,Nothing}
 
     function ContinuousNode(
         name::Symbol,
         parents::Vector{Symbol}=Symbol[],
         discretization::AbstractDiscretization=ExactDiscretization(),
-        results::Dict{Vector{Symbol},Tuple}=Dict{Vector{Symbol},Tuple}()
+        results::Union{ResultTable,Nothing}=nothing
     )
         if name == :Π
             error(":Π is not allowed as node name")
@@ -27,7 +27,7 @@ struct ContinuousNode <: AbstractContinuousNode
     end
 end
 
-ContinuousNode(name::Symbol, discretization::AbstractDiscretization) = ContinuousNode(name, Symbol[], discretization, Dict{Vector{Symbol},Tuple}())
+ContinuousNode(name::Symbol, discretization::AbstractDiscretization) = ContinuousNode(name, Symbol[], discretization, nothing)
 
 Base.setindex!(node::ContinuousNode, value, key...) = setindex!(node.cpt, value, key...)
 Base.getindex(node::ContinuousNode, key...) = getindex(node.cpt, key...)

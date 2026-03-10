@@ -7,13 +7,13 @@
         @test isa(node_a.cpt, ConditionalProbabilityTable{EnhancedBayesianNetworks.ContinuousProbability})
         @test names(node_a.cpt.data) == ["Π"]
         @test isa(node_a.discretization, ExactDiscretization)
-        @test isa(node_a.results, Dict{Vector{Symbol},Tuple})
+        @test isnothing(node_a.results)
         node_c = ContinuousNode(:c, [:a])
         @test isa(node_c, ContinuousNode)
         @test isa(node_c.cpt, ConditionalProbabilityTable{EnhancedBayesianNetworks.ContinuousProbability})
         @test names(node_c.cpt.data) == ["a", "Π"]
         @test isa(node_c.discretization, ApproximatedDiscretization)
-        @test isa(node_c.results, Dict{Vector{Symbol},Tuple})
+        @test isnothing(node_c.results)
         node_a[] = Normal()
         @test node_a.cpt.data.Π[1] == Normal()
         node_c[:a=>:a1] = Normal()

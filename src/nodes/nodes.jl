@@ -50,6 +50,48 @@ Base.isempty(d::AbstractDiscretization) = isempty(d.intervals)
 
 ApproximatedDiscretization() = ApproximatedDiscretization(Vector{Real}(), 0)
 
+struct ResultTable
+    data::DataFrame
+    function ResultTable(columns::Union{Symbol,Vector{Symbol}})
+        columns = wrap(columns)
+        data = DataFrame([col => Symbol[] for col in columns])
+        data[:, :res] = []
+        new(data)
+    end
+end
+
+function Base.setindex!(rt::ResultTable, value, key...)
+    selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
+    evidence_nodes = collect(map(p -> p[1], key))
+    rt_nodes = Symbol.(filter(i -> i != "res", names(rt.data)))
+    if issetequal(evidence_nodes, rt_nodes)
+        cp = subset(rt.data, selector, view=true)
+        if isempty(cp)
+            push!(rt.data, (key..., res=value))
+        else
+            @assert size(cp, 1) == 1
+            cp.res[1] = value
+        end
+    else
+        error("Cannot set index with $evidence_nodes into a ResultTable initialized with $rt_nodes")
+    end
+end
+
+function Base.getindex(rt::ResultTable, key...)
+    selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
+    cp = subset(rt.data, selector, view=true)
+    if isempty(cp)
+        error("index not find in the SimlationTable $st")
+    else
+        @assert size(cp, 1) == 1
+        return cp.sim[1]
+    end
+end
+
+function Base.filter(st::ResultTable, key...)
+    selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
+    return subset(st.data, selector, view=true)
+end
 
 include("../utils/wrap.jl")
 include("../utils/flat.jl")

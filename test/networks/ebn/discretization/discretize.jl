@@ -95,7 +95,7 @@
             discretized_states = [Symbol("[-Inf, -1.0]"), Symbol("[-1.0, 0.0]"), Symbol("[0.0, 1.0]"), Symbol("[1.0, Inf]")]
             @test discretized_node.name == Symbol(string(node.name) * "_d")
             @test isempty(discretized_node.parameters)
-            @test isempty(discretized_node.results)
+            @test isnothing(discretized_node.results)
             @test Symbol.(names(discretized_node.cpt.data)) == [:x_d, :Π]
             @test discretized_node.cpt.data.x_d == discretized_states
             @test isapprox([discretized_node[discretized_node.name.=>i] for i in discretized_states], [0.15865525393145702, 0.341344746068543, 0.34134474606854304, 0.15865525393145696], atol=0.001)
@@ -116,7 +116,7 @@
             discretized_states = [Symbol("[-Inf, -1.0]"), Symbol("[-1.0, 0.0]"), Symbol("[0.0, 1.0]"), Symbol("[1.0, Inf]")]
             @test discretized_node.name == Symbol(string(node.name) * "_d")
             @test isempty(discretized_node.parameters)
-            @test isempty(discretized_node.results)
+            @test isnothing(discretized_node.results)
             @test Symbol.(names(discretized_node.cpt.data)) == [:x_d, :Π]
             @test discretized_node.cpt.data.x_d == discretized_states
             @test [discretized_node[discretized_node.name.=>i] for i in discretized_states] == [
@@ -150,7 +150,7 @@
             discretized_node, new_continuous = @suppress EnhancedBayesianNetworks._discretize(node)
             @test discretized_node.name == Symbol(string(node.name) * "_d")
             @test isempty(discretized_node.parameters)
-            @test isempty(discretized_node.results)
+            @test isnothing(discretized_node.results)
             @test Symbol.(names(discretized_node.cpt.data)) == [:y, :z, :x_d, :Π]
             @test unique(discretized_node.cpt.data.x_d) == discretized_states
             @test discretized_node.cpt.data.Π == [
