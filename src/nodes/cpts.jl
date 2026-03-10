@@ -12,8 +12,10 @@ struct ConditionalProbabilityTable{T<:Union{ContinuousProbability,DiscreteProbab
     end
 end
 
-function Base.setindex!(cpt::ConditionalProbabilityTable{DiscreteProbability}, value, key...)
-    verify_probability_value(value)
+function Base.setindex!(cpt::ConditionalProbabilityTable{T}, value::T, key::Pair{Symbol,Symbol}...) where T<:Probability
+    if T == DiscreteProbability
+        verify_probability_value(value)
+    end
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     evidence_nodes = collect(map(p -> p[1], key))
     cpt_nodes = Symbol.(filter(i -> i != "Π", names(cpt.data)))
@@ -30,24 +32,7 @@ function Base.setindex!(cpt::ConditionalProbabilityTable{DiscreteProbability}, v
     end
 end
 
-function Base.setindex!(cpt::ConditionalProbabilityTable{ContinuousProbability}, value, key...)
-    selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
-    evidence_nodes = collect(map(p -> p[1], key))
-    cpt_nodes = Symbol.(filter(i -> i != "Π", names(cpt.data)))
-    if issetequal(evidence_nodes, cpt_nodes)
-        cp = subset(cpt.data, selector, view=true)
-        if isempty(cp)
-            push!(cpt.data, (key..., Π=value))
-        else
-            @assert size(cp, 1) == 1
-            cp.Π[1] = value
-        end
-    else
-        error("Cannot set index with $evidence_nodes into a CPT initialized with $cpt_nodes")
-    end
-end
-
-function Base.getindex(cpt::ConditionalProbabilityTable, key...)
+function Base.getindex(cpt::ConditionalProbabilityTable, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     cp = subset(cpt.data, selector, view=true)
     if isempty(cp)
@@ -58,7 +43,7 @@ function Base.getindex(cpt::ConditionalProbabilityTable, key...)
     end
 end
 
-function Base.filter(cpt::ConditionalProbabilityTable, key...)
+function Base.filter(cpt::ConditionalProbabilityTable, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     return subset(cpt.data, selector, view=true)
 end
@@ -73,12 +58,4 @@ function verify_probability_value(value::Interval)
     if !all(0 .<= UncertaintyQuantification.bounds(value) .<= 1)
         throw(ArgumentError("probability $value must be >= 0 and <= 1"))
     end
-end
-
-function verify_probability_value(_::UnivariateDistribution)
-    return nothing
-end
-
-function verify_probability_value(_::ProbabilityBox)
-    return nothing
 end
