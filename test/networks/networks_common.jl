@@ -75,6 +75,8 @@
         add_child!(net, [rain2, sprinkler], grass2)
         @test issetequal(EnhancedBayesianNetworks.ancestors(net, grass2), [:W, :S])
         @test issetequal(EnhancedBayesianNetworks.ancestors(net, :G2), [:W, :S])
+        @test issetequal(discrete_ancestors(net, grass2), [:W, :S])
+        @test issetequal(discrete_ancestors(net, :G2), [:W, :S])
     end
 
     @testset "verify parents, scenarios, exhaustiveness and functional" begin
