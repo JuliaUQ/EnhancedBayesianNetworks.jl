@@ -29,7 +29,32 @@ end
 
 ContinuousNode(name::Symbol, discretization::AbstractDiscretization) = ContinuousNode(name, Symbol[], discretization, nothing)
 
+function ContinuousNode(name::Symbol, dist::ContinuousProbability)
+    n = ContinuousNode(name, Symbol[], ExactDiscretization(), nothing)
+    n[] = dist
+    return n
+end
+
+function ContinuousNode(name::Symbol, dist::ContinuousProbability, discretization::ExactDiscretization)
+    n = ContinuousNode(name, Symbol[], discretization, nothing)
+    n[] = dist
+    return n
+end
+
+function ContinuousNode(name::Symbol, dist::ContinuousProbability, results::Union{ScenariosTable{Any},Nothing})
+    n = ContinuousNode(name, Symbol[], ExactDiscretization(), results)
+    n[] = dist
+    return n
+end
+
+function ContinuousNode(name::Symbol, dist::ContinuousProbability, discretization::ExactDiscretization, results::Union{ScenariosTable{Any},Nothing})
+    n = ContinuousNode(name, Symbol[], discretization, results)
+    n[] = dist
+    return n
+end
+
 Base.setindex!(node::ContinuousNode, value, key...) = setindex!(node.cpt, value, key...)
+
 Base.getindex(node::ContinuousNode, key...) = getindex(node.cpt, key...)
 
 scenarios(node::ContinuousNode) = map(row -> [Symbol(col) => row[col] for col in names(node.cpt.data[:, Not("Π")])], eachrow(node.cpt.data[:, Not("Π")]))

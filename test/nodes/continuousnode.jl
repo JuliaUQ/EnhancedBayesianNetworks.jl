@@ -115,4 +115,31 @@
         @test res.lb == 0
         @test res.ub == 1
     end
+
+    @testset "Convenience functions" begin
+        dist = Interval(0, 1)
+        discretization = ExactDiscretization([-1, 0, 1])
+        results = EnhancedBayesianNetworks.ScenariosTable{Any}(:A, :res)
+        results[:A=>:a1] = :results
+        n = ContinuousNode(:N, dist)
+        @test n.name == :N
+        @test n.cpt.data.Π == [Interval(0, 1)]
+        @test isempty(n.discretization)
+        @test isnothing(n.results)
+        n = ContinuousNode(:N, dist, discretization)
+        @test n.name == :N
+        @test n.cpt.data.Π == [Interval(0, 1)]
+        @test n.discretization == discretization
+        @test isnothing(n.results)
+        n = ContinuousNode(:N, dist, results)
+        @test n.name == :N
+        @test n.cpt.data.Π == [Interval(0, 1)]
+        @test isempty(n.discretization)
+        @test n.results == results
+        n = ContinuousNode(:N, dist, discretization, results)
+        @test n.name == :N
+        @test n.cpt.data.Π == [Interval(0, 1)]
+        @test n.discretization == discretization
+        @test n.results == results
+    end
 end
