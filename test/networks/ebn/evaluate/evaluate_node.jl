@@ -40,15 +40,65 @@
     add_child!(net, [A, D, C, B], H)
     order!(net)
 
-    EnhancedBayesianNetworks.build_simulation_table!(net, E)
-    @time evaluated_E = EnhancedBayesianNetworks.evaluate(net, E)
+    @testset "simulation inputs" begin
+        uqi = EnhancedBayesianNetworks.simulation_inputs(net, E, [:A => :a1, :C => :c1])
+        @test isa(uqi, Vector{UQInput})
+        @test issetequal(uqi, [Parameter(1, :A), Parameter(1, :C), RandomVariable(Normal(), :D)])
+    end
 
-    EnhancedBayesianNetworks.build_simulation_table!(net, F)
-    @time evaluated_F = EnhancedBayesianNetworks.evaluate(net, F)
+    @testset "Continuous Precise" begin
+        EnhancedBayesianNetworks.build_simulations!(net, E)
+        evaluated_E = EnhancedBayesianNetworks.evaluate(net, E)
+        @test evaluated_E.name == E.name
+        @test all(isa.(evaluated_E.cpt.data.Π, EmpiricalDistribution))
+        @test isempty(evaluated_E.discretization)
+        @test isa(evaluated_E.results, EnhancedBayesianNetworks.ScenariosTable{Any})
+        evaluated_E = EnhancedBayesianNetworks.evaluate(net, E, false)
+        @test evaluated_E.name == E.name
+        @test all(isa.(evaluated_E.cpt.data.Π, EmpiricalDistribution))
+        @test isempty(evaluated_E.discretization)
+        @test isnothing(evaluated_E.results)
+    end
 
-    EnhancedBayesianNetworks.build_simulation_table!(net, G)
-    @time evaluated_G = EnhancedBayesianNetworks.evaluate(net, G)
+    @testset "Continuous Imprecise" begin
+        EnhancedBayesianNetworks.build_simulations!(net, F)
+        evaluated_F = EnhancedBayesianNetworks.evaluate(net, F)
+        @test evaluated_F.name == F.name
+        @test all(isa.(evaluated_F.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
+        @test isempty(evaluated_F.discretization)
+        @test isa(evaluated_F.results, EnhancedBayesianNetworks.ScenariosTable{Any})
+        evaluated_F = EnhancedBayesianNetworks.evaluate(net, F, false)
+        @test evaluated_F.name == F.name
+        @test all(isa.(evaluated_F.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
+        @test isempty(evaluated_F.discretization)
+        @test isnothing(evaluated_F.results)
+    end
 
-    EnhancedBayesianNetworks.build_simulation_table!(net, H)
-    @time evaluated_H = EnhancedBayesianNetworks.evaluate(net, H)
+    @testset "Discrete Precise" begin
+        EnhancedBayesianNetworks.build_simulations!(net, G)
+        evaluated_G = EnhancedBayesianNetworks.evaluate(net, G)
+        @test evaluated_G.name == G.name
+        @test all(isa.(evaluated_G.cpt.data.Π, Real))
+        @test isempty(evaluated_G.parameters)
+        @test isa(evaluated_G.results, EnhancedBayesianNetworks.ScenariosTable{Any})
+        evaluated_G = EnhancedBayesianNetworks.evaluate(net, G, false)
+        @test evaluated_G.name == G.name
+        @test all(isa.(evaluated_G.cpt.data.Π, Real))
+        @test isempty(evaluated_G.parameters)
+        @test isnothing(evaluated_G.results)
+    end
+
+    @testset "Discrete Imprecise" begin
+        EnhancedBayesianNetworks.build_simulations!(net, H)
+        evaluated_H = EnhancedBayesianNetworks.evaluate(net, H)
+        @test evaluated_H.name == H.name
+        @test all(isa.(evaluated_H.cpt.data.Π, Interval))
+        @test isempty(evaluated_H.parameters)
+        @test isa(evaluated_H.results, EnhancedBayesianNetworks.ScenariosTable{Any})
+        evaluated_H = EnhancedBayesianNetworks.evaluate(net, H, false)
+        @test evaluated_H.name == H.name
+        @test all(isa.(evaluated_H.cpt.data.Π, Interval))
+        @test isempty(evaluated_H.parameters)
+        @test isnothing(evaluated_H.results)
+    end
 end
