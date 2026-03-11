@@ -180,15 +180,15 @@ function verify_functional_parents(net::EnhancedBayesianNetwork, node::Functiona
     end
 end
 
-function build_simulation_table!(net::EnhancedBayesianNetwork, node::FunctionalNode)
-    if !isa(node.simulation, SimulationTable)
+function build_simulations!(net::EnhancedBayesianNetwork, node::FunctionalNode)
+    if !isa(node.simulation, ScenariosTable{Simulation})
         anc = Symbol[]
         anc_nodes = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
         append!(anc, [i.name for i in anc_nodes])
         if isa(node, AbstractContinuousNode)
-            st = SimulationTable{ContinuousSimulation}(anc)
+            st = EnhancedBayesianNetworks.ScenariosTable{ContinuousSimulation}(anc, :sim)
         else
-            st = SimulationTable{DiscreteSimulation}(anc)
+            st = EnhancedBayesianNetworks.ScenariosTable{DiscreteSimulation}(anc, :sim)
         end
         theoretical_scenarios = vec(collect(Iterators.product(states.(anc_nodes)...)))
         map(th_s -> st[([i.name for i in anc_nodes] .=> th_s)...] = node.simulation, theoretical_scenarios)

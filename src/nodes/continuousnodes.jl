@@ -1,14 +1,14 @@
 struct ContinuousNode <: AbstractContinuousNode
     name::Symbol
-    cpt::ConditionalProbabilityTable{ContinuousProbability}
+    cpt::EnhancedBayesianNetworks.ScenariosTable{ContinuousProbability}
     discretization::AbstractDiscretization
-    results::Union{ResultTable,Nothing}
+    results::Union{ScenariosTable{Any},Nothing}
 
     function ContinuousNode(
         name::Symbol,
         parents::Vector{Symbol}=Symbol[],
         discretization::AbstractDiscretization=ExactDiscretization(),
-        results::Union{ResultTable,Nothing}=nothing
+        results::Union{ScenariosTable{Any},Nothing}=nothing
     )
         if name == :Π
             error(":Π is not allowed as node name")
@@ -22,7 +22,7 @@ struct ContinuousNode <: AbstractContinuousNode
             error("Invalid eBN: node $name, is a child node and the discretization must be an ApproximatedDiscretization")
         end
 
-        cpt = ConditionalProbabilityTable{ContinuousProbability}(parents)
+        cpt = EnhancedBayesianNetworks.ScenariosTable{ContinuousProbability}(parents, :Π)
         new(name, cpt, discretization, results)
     end
 end

@@ -1,14 +1,14 @@
 mutable struct ContinuousFunctionalNode <: AbstractContinuousNode
     name::Symbol
     models::AbstractVector{<:UQModel}
-    simulation::Union{AbstractMonteCarlo,SimulationTable{ContinuousSimulation}}
+    simulation::Union{AbstractMonteCarlo,ScenariosTable{ContinuousSimulation}}
     discretization::ApproximatedDiscretization
     nbins::Int
 
     function ContinuousFunctionalNode(
         name::Symbol,
         models::Union{Vector{<:UQModel},<:UQModel},
-        simulation::Union{AbstractMonteCarlo,SimulationTable{ContinuousSimulation}},
+        simulation::Union{AbstractMonteCarlo,ScenariosTable{ContinuousSimulation}},
         discretization::ApproximatedDiscretization=ApproximatedDiscretization(),
         nbins::Int=0,
     )
@@ -29,13 +29,13 @@ function ContinuousFunctionalNode(
     discretization::ApproximatedDiscretization=ApproximatedDiscretization(),
     nbins::Int=0,
 )
-    ContinuousFunctionalNode(name, models, SimulationTable{ContinuousSimulation}(ancestors), discretization, nbins)
+    ContinuousFunctionalNode(name, models, ScenariosTable{ContinuousSimulation}(ancestors, :sim), discretization, nbins)
 end
 
 function ContinuousFunctionalNode(
     name::Symbol,
     models::Union{Vector{<:UQModel},<:UQModel},
-    simulation::Union{AbstractMonteCarlo,SimulationTable{ContinuousSimulation}},
+    simulation::Union{AbstractMonteCarlo,ScenariosTable{ContinuousSimulation}},
     nbins::Int
 )
     ContinuousFunctionalNode(name, models, simulation, ApproximatedDiscretization(), nbins)
@@ -56,14 +56,14 @@ mutable struct DiscreteFunctionalNode <: AbstractDiscreteNode
     name::Symbol
     models::AbstractVector{<:UQModel}
     performance::Function
-    simulation::Union{DiscreteSimulation,SimulationTable{DiscreteSimulation}}
+    simulation::Union{DiscreteSimulation,ScenariosTable{DiscreteSimulation}}
     parameters::Vector{Pair{Symbol,Vector{Parameter}}}
 
     function DiscreteFunctionalNode(
         name::Symbol,
         models::Union{Vector{<:UQModel},<:UQModel},
         performance::Function,
-        simulation::Union{DiscreteSimulation,SimulationTable{DiscreteSimulation}},
+        simulation::Union{DiscreteSimulation,ScenariosTable{DiscreteSimulation}},
         parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}()
     )
         if name == :Π
@@ -83,7 +83,7 @@ function DiscreteFunctionalNode(
     performance::Function,
     parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}()
 )
-    st = SimulationTable{DiscreteSimulation}(ancestors)
+    st = ScenariosTable{DiscreteSimulation}(ancestors, :sim)
     DiscreteFunctionalNode(name, models, performance, st, parameters)
 end
 

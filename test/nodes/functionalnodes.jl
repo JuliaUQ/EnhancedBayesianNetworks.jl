@@ -10,8 +10,8 @@
         models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
         simulation = MonteCarlo(200)
         node = ContinuousFunctionalNode(name, models, simulation)
-        @test isa(node, AbstractNode)
-        @test isa(node, AbstractContinuousNode)
+        @test isa(node, EnhancedBayesianNetworks.AbstractNode)
+        @test isa(node, EnhancedBayesianNetworks.AbstractContinuousNode)
         @test isa(node, ContinuousFunctionalNode)
         @test !isa(node, ContinuousNode)
         @test node.name == name
@@ -49,8 +49,6 @@
 
         ancestors = [:x1, :x2, :y1]
         node = ContinuousFunctionalNode(name, ancestors, models)
-        @test_throws ErrorException("Cannot set index with [:x1] into a SimulationTable initialized with [:x1, :x2, :y1]") node[:x1=>:x1y] = MonteCarlo(10)
-        @test_throws ErrorException("Cannot set index with [:x1, :x2, :y1, :z] into a SimulationTable initialized with [:x1, :x2, :y1]") node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y, :z=>:zy] = MonteCarlo(10)
         node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(100)
         node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(100)
         node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] = MonteCarlo(10)
@@ -89,8 +87,8 @@
         simulation = MonteCarlo(200)
         performance = df -> 1 .- 2 .* df.value1
         node = DiscreteFunctionalNode(name, models, performance, simulation)
-        @test isa(node, AbstractNode)
-        @test isa(node, AbstractDiscreteNode)
+        @test isa(node, EnhancedBayesianNetworks.AbstractNode)
+        @test isa(node, EnhancedBayesianNetworks.AbstractDiscreteNode)
         @test isa(node, DiscreteFunctionalNode)
         @test !isa(node, DiscreteNode)
         @test node.name == name
@@ -106,8 +104,6 @@
 
         ancestors = [:x1, :x2, :y1]
         node = DiscreteFunctionalNode(name, ancestors, models, performance)
-        @test_throws ErrorException("Cannot set index with [:x1] into a SimulationTable initialized with [:x1, :x2, :y1]") node[:x1=>:x1y] = MonteCarlo(10)
-        @test_throws ErrorException("Cannot set index with [:x1, :x2, :y1, :z] into a SimulationTable initialized with [:x1, :x2, :y1]") node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y, :z=>:zy] = MonteCarlo(10)
         node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(100)
         node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(100)
         node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] = SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))

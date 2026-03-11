@@ -20,20 +20,10 @@ using Polyhedra: HalfSpace, doubledescription
 import Base: *, sum, reduce
 
 # Types
-export AbstractContinuousNode
-export AbstractDiscreteNode
-export AbstractDiscretization
-export AbstractInferenceState
-export AbstractNetwork
-export AbstractNode
 export ApproximatedDiscretization
-export BayesianNetwork
-export BayesianNetwork2be
-export ConditionalProbabilityTable
 export ContinuousFunctionalNode
 export ContinuousInput
 export ContinuousNode
-export CredalNetwork
 export DiscreteFunctionalNode
 export DiscreteNode
 export ExactDiscretization
@@ -43,7 +33,6 @@ export Factor
 export FunctionalNode
 export ImpreciseInferenceState
 export PreciseInferenceState
-export SimulationTable
 
 # export Factor
 
@@ -52,12 +41,12 @@ const Evidence = Dict{Symbol,Symbol}
 
 ## Functions
 export add_child!
+export ancestors
 export children
 export discrete_ancestors
-export dispatch
+# export dispatch
 export distributions
 export evaluate!
-export evaluate_with_envelopes
 export factorize
 export gplot
 export infer
@@ -79,7 +68,6 @@ include("nodes/nodes.jl")
 include("networks/networks.jl")
 # include("inference/inference.jl")
 # include("learning/learning.jl")
-
 # include("utils/base_show.jl")
-include("utils/plots.jl")
+# include("utils/plots.jl")
 end

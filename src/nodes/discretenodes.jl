@@ -1,26 +1,26 @@
 struct DiscreteNode <: AbstractDiscreteNode
     name::Symbol
-    cpt::ConditionalProbabilityTable{DiscreteProbability}
+    cpt::ScenariosTable{DiscreteProbability}
     parameters::Vector{Pair{Symbol,Vector{Parameter}}}
-    results::Union{ResultTable,Nothing}
+    results::Union{ScenariosTable{Any},Nothing}
     ## DiscreteNode without CPT
     function DiscreteNode(
         name::Symbol,
         parents::Vector{Symbol}=Symbol[],
         parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}(),
-        results::Union{ResultTable,Nothing}=nothing
+        results::Union{ScenariosTable{Any},Nothing}=nothing
     )
         if name == :Π
             error(":Π is not allowed as node name")
         end
-        cpt = ConditionalProbabilityTable{DiscreteProbability}([parents..., name])
+        cpt = ScenariosTable{DiscreteProbability}([parents..., name], :Π)
         new(name, cpt, parameters, results)
     end
     ## DiscreteNode with CPT
     function DiscreteNode(
-        cpt::ConditionalProbabilityTable{DiscreteProbability},
+        cpt::ScenariosTable{DiscreteProbability},
         parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}(),
-        results::Union{ResultTable,Nothing}=nothing
+        results::Union{ScenariosTable{Any},Nothing}=nothing
     )
         name = Symbol(names(cpt.data)[end-1])
         new(name, cpt, parameters, results)

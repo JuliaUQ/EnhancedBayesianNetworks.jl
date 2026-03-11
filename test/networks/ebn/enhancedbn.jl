@@ -400,9 +400,9 @@
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain2, sprinkler], grass2)
 
-        EnhancedBayesianNetworks.build_simulation_table!(net, grass2)
+        EnhancedBayesianNetworks.build_simulations!(net, grass2)
         node = first(filter(n -> n.name == :G2, net.nodes))
-        @test isa(node.simulation, SimulationTable)
+        @test isa(node.simulation, EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteSimulation})
         @test issetequal(Symbol.(names(node.simulation.data)), [:S, :sim])
         @test issetequal(Symbol.(node.simulation.data.S), [:on, :off])
         @test issetequal(node.simulation.data.sim, [MonteCarlo(100), MonteCarlo(100)])
