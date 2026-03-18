@@ -33,7 +33,9 @@ function evaluate!(net::EnhancedBayesianNetwork, collect::Bool=true)
         add_child!(net, evaluated.name, chs)
         functional_nodes = filter(n -> isa(n, FunctionalNode), net.nodes)
     end
-    order!(net)
+    if size(net.A) != (1, 1)
+        order!(net)
+    end
 end
 
 function has_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode)

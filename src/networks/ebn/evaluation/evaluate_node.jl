@@ -1,5 +1,5 @@
 function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, collect::Bool=true)
-    scs = map(row -> [Symbol(col) => row[col] for col in names(node.simulation.data[:, Not("sim")])], eachrow(node.simulation.data[:, Not("sim")]))
+    scs = simulation_scenarios(node)
     inputs_vector = map(sc -> (sc, simulation_inputs(net, node, sc)), scs)
     if collect
         rt = ScenariosTable{Any}(discrete_ancestors(net, node), :res)
@@ -34,8 +34,8 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
 end
 
 function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, collect::Bool=true)
-    scs = map(row -> [Symbol(col) => row[col] for col in names(node.simulation.data[:, Not("sim")])], eachrow(node.simulation.data[:, Not("sim")]))
-    inputs_vector = map(sc -> (sc, simulation_inputs(net, node, sc)), scs)
+    scs = simulation_scenarios(node)
+    inputs_vector = map(sc -> (sc, EnhancedBayesianNetworks.simulation_inputs(net, node, sc)), scs)
     if collect
         rt = ScenariosTable{Any}(discrete_ancestors(net, node), :res)
     else
@@ -49,19 +49,28 @@ function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, co
         if collect
             new_discrete.results[scenario...] = res[2:end]
         end
-        new_discrete[vcat(scenario, node.name => Symbol(string(node.name) * "_failed"))...] = res[1]
+        new_discrete[(scenario..., node.name => Symbol(string(node.name) * "_failed"))...] = res[1]
         if isa(res[1], Interval)
-            new_discrete[vcat(scenario, node.name => Symbol(string(node.name) * "_safe"))...] = Interval(1 - res[1].ub, 1 - res[1].lb)
+            new_discrete[(scenario..., node.name => Symbol(string(node.name) * "_safe"))...] = Interval(1 - res[1].ub, 1 - res[1].lb)
         else
-            new_discrete[vcat(scenario, node.name => Symbol(string(node.name) * "_safe"))...] = 1 - res[1]
+            new_discrete[(scenario..., node.name => Symbol(string(node.name) * "_safe"))...] = 1 - res[1]
         end
     end
     return new_discrete
 end
 
-function simulation_inputs(net::EnhancedBayesianNetwork, node::FunctionalNode, sc::Vector{Pair{Symbol,Symbol}})
+function simulation_scenarios(node::FunctionalNode)
+    df = node.simulation.data[:, Not("sim")]
+    cols = Symbol.(names(df))
+    scs = map(row -> Dict(col => row[col] for col in cols), eachrow(df))
+    if isempty(scs)
+        scs = [Evidence()]
+    end
+    return scs
+end
+
+function simulation_inputs(net::EnhancedBayesianNetwork, node::FunctionalNode, sc::Evidence)
     par_names = parents(net, node)
     par_nodes = filter(n -> n.name ∈ par_names, net.nodes)
-    uqinputs = mapreduce(p -> _inputs(p, Dict(sc)), vcat, par_nodes)
-    return uqinputs
+    return mapreduce(p -> _inputs(p, Dict(sc)), vcat, par_nodes)
 end
