@@ -307,7 +307,7 @@
         add_child!(net, weather, [sprinkler, rain, rain2, rain3])
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain2, sprinkler], grass2)
-        @test_throws ErrorException("Invalid SimulationTable: node G3 has node(s) 'Any[:W, :S, :R]' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
+        @test_throws ErrorException("Invalid SimulationTable: node G3 has node(s) '[:W, :S, :R]' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
 
         grass3 = ContinuousFunctionalNode(:G3, [:W], model)
         grass3[:W=>:sunny] = MonteCarlo(10)

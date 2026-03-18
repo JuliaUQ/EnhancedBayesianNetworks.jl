@@ -41,7 +41,7 @@
     order!(net)
 
     @testset "simulation inputs" begin
-        uqi = EnhancedBayesianNetworks.simulation_inputs(net, E, [:A => :a1, :C => :c1])
+        uqi = EnhancedBayesianNetworks.simulation_inputs(net, E, Dict(:A => :a1, :C => :c1))
         @test isa(uqi, Vector{UQInput})
         @test issetequal(uqi, [Parameter(1, :A), Parameter(1, :C), RandomVariable(Normal(), :D)])
     end
