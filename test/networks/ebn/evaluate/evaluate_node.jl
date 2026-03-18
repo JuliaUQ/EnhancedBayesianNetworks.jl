@@ -46,8 +46,14 @@
         @test issetequal(uqi, [Parameter(1, :A), Parameter(1, :C), RandomVariable(Normal(), :D)])
     end
 
-    @testset "Continuous Precise" begin
+    @testset "simulation scenarios" begin
         EnhancedBayesianNetworks.build_simulations!(net, E)
+        scs = EnhancedBayesianNetworks.simulation_scenarios(E)
+        @test isa(scs, Vector{Evidence})
+        @test issetequal(scs, [Evidence(:A => :a1, :C => :c1), Evidence(:A => :a2, :C => :c1), Evidence(:A => :a1, :C => :c2), Evidence(:A => :a2, :C => :c2)])
+    end
+
+    @testset "Continuous Precise" begin
         evaluated_E = EnhancedBayesianNetworks.evaluate(net, E)
         @test evaluated_E.name == E.name
         @test all(isa.(evaluated_E.cpt.data.Π, EmpiricalDistribution))
