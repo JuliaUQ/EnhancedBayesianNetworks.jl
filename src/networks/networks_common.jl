@@ -18,16 +18,6 @@ end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
 
-function ancestors(net::AbstractNetwork, name::Symbol)
-    rev_topology = Dict(v => k for (k, v) in net.topology)
-    ancestors_idx = findnz(transitive_closure(net.A)[:, net.topology[name]])[1]
-    ancestors_node = filter(n -> n.name ∈ map(idx -> rev_topology[idx], ancestors_idx), net.nodes)
-    discrete_ancestors = filter(n -> isa(n, AbstractDiscreteNode), ancestors_node)
-    return getproperty.(discrete_ancestors, :name)
-end
-
-ancestors(net::AbstractNetwork, node::AbstractNode) = ancestors(net, node.name)
-
 function discrete_ancestors(net::AbstractNetwork, name::Symbol)
     rev_topology = Dict(v => k for (k, v) in net.topology)
     start_idx = net.topology[name]
@@ -36,25 +26,20 @@ function discrete_ancestors(net::AbstractNetwork, name::Symbol)
     stack = [start_idx]
     while !isempty(stack)
         current = pop!(stack)
-        # parents of current node
-        parent_idx = findnz(net.A[:, current])[1]
-        for p in parent_idx
+        for p in findnz(net.A[:, current])[1]
             if p ∉ visited
                 push!(visited, p)
                 node_name = rev_topology[p]
-                node = findfirst(n -> n.name == node_name, net.nodes)
-                node = net.nodes[node]
-                push!(result, node_name)
-                # only continue traversal if node is continuous
-                if !(node isa AbstractDiscreteNode)
+                node = net.nodes[findfirst(n -> n.name == node_name, net.nodes)]
+                if node isa AbstractDiscreteNode
+                    push!(result, node_name)
+                else
                     push!(stack, p)
                 end
             end
         end
     end
-    ancestors_node = filter(n -> n.name ∈ collect(result), net.nodes)
-    filter!(n -> isa(n, AbstractDiscreteNode), ancestors_node)
-    return getproperty.(ancestors_node, :name)
+    return Symbol[n for n in result]
 end
 
 discrete_ancestors(net::AbstractNetwork, node::AbstractNode) = discrete_ancestors(net, node.name)

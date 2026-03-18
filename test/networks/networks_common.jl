@@ -73,8 +73,6 @@
         add_child!(net, weather, [sprinkler, rain, rain2])
         add_child!(net, [rain, sprinkler], grass)
         add_child!(net, [rain2, sprinkler], grass2)
-        @test issetequal(EnhancedBayesianNetworks.ancestors(net, grass2), [:W, :S])
-        @test issetequal(EnhancedBayesianNetworks.ancestors(net, :G2), [:W, :S])
         @test issetequal(discrete_ancestors(net, grass2), [:W, :S])
         @test issetequal(discrete_ancestors(net, :G2), [:W, :S])
     end
