@@ -1,5 +1,5 @@
 mutable struct BayesianNetwork <: AbstractNetwork
-    nodes::AbstractVector{<:AbstractNode}
+    nodes::AbstractVector{DiscreteNode}
     topology::Dict
     A::SparseMatrixCSC
 
@@ -31,52 +31,6 @@ function BayesianNetwork(nodes::AbstractVector{DiscreteNode})
     A = spzeros(Bool, n, n)
     return BayesianNetwork(nodes, topology, A)
 end
-
-function add_child!(
-    net::BayesianNetwork,
-    par::Union{DiscreteNode,Vector{DiscreteNode}},
-    ch::Union{DiscreteNode,Vector{DiscreteNode}}
-)
-    parents = wrap(par)
-    children = wrap(ch)
-    all_nodes = vcat(parents, children)
-    missing_nodes = setdiff([i.name for i in all_nodes], [i.name for i in net.nodes])
-    if !isempty(missing_nodes)
-        error("node(s) $missing_nodes is (are) not defined in the BN")
-    end
-    ## verify No recursion
-    map(p -> verify_no_recursion(p, children), parents)
-    ## verify Discrete parent nodes
-    map(dp -> verify_discrete(dp, children), parents)
-    pidx = getindex.(Ref(net.topology), getfield.(parents, :name))
-    cidx = getindex.(Ref(net.topology), getfield.(children, :name))
-    net.A[pidx, cidx] .= true
-end
-
-function add_child!(
-    net::BayesianNetwork,
-    par::Union{Symbol,Vector{Symbol}},
-    ch::Union{Symbol,Vector{Symbol}}
-)
-    parents = wrap(par)
-    children = wrap(ch)
-    all_nodes = vcat(parents, children)
-    missing_nodes = setdiff(all_nodes, [i.name for i in net.nodes])
-    if !isempty(missing_nodes)
-        error("node(s) $missing_nodes is (are) not defined in the BN")
-    end
-    par_nodes = filter(x -> x.name ∈ parents, net.nodes)
-    ch_nodes = filter(x -> x.name ∈ children, net.nodes)
-    add_child!(net, par_nodes, ch_nodes)
-end
-
-# function BayesianNetwork(net::EnhancedBayesianNetwork)
-#     order!(net)
-#     nodes = net.nodes
-#     topology = net.topology
-#     A = net.A
-#     return BayesianNetwork(nodes, topology, A)
-# end
 
 # function joint_probability(bn::BayesianNetwork, scenario::Evidence)
 #     th_keys = [i.name for i in bn.nodes]
