@@ -27,7 +27,7 @@ end
 
 function EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode})
     n = length(nodes)
-    topology = Dict()
+    topology = Dict{Symbol,Int}()
     for (i, n) in enumerate(nodes)
         topology[n.name] = i
     end
@@ -47,9 +47,13 @@ function add_child!(
     if !isempty(missing_nodes)
         error("node(s) $missing_nodes is (are) not defined in the eBN")
     end
-    ## verify No recursion
-    map(p -> verify_no_recursion(p, children), parents)
-    ## verify Discrete parent nodes
+    ## verify No loop
+    loop = intersect(parents, children)
+    if !isempty(loop)
+        error("Invalid eBN: node '$(getproperty.(loop, :name))' have recursion")
+    end
+    # map(p -> verify_no_recursion(p, children), parents)
+    # ## verify Discrete parent nodes
     discrete_par = filter(x -> isa(x, DiscreteNode), parents)
     map(dp -> verify_discrete(dp, children), discrete_par)
     ## verify Continuous and Functional parent nodes

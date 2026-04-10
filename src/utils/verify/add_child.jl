@@ -1,10 +1,3 @@
-# verify that none of the node has a loop on itself
-function verify_no_recursion(node::AbstractNode, ch::AbstractVector{<:AbstractNode})
-    if node ∈ ch
-        error("Invalid Network: node '$(node.name)' have recursion")
-    end
-end
-
 # verify that each child of a discrete node have the node name in its CPT
 function verify_discrete(node::DiscreteNode, ch::AbstractVector{<:AbstractNode})
     not_functional_children = filter(x -> !isa(x, FunctionalNode), ch)

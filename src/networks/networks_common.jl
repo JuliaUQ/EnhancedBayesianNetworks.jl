@@ -170,8 +170,11 @@ function add_child!(
     if !isempty(missing_nodes)
         error("node(s) $missing_nodes is (are) not defined in the BN")
     end
-    ## verify No recursion
-    map(p -> verify_no_recursion(p, children), parents)
+    ## verify No loop
+    loop = intersect(parents, children)
+    if !isempty(loop)
+        error("Invalid eBN: node '$(getproperty.(loop, :name))' have recursion")
+    end
     ## verify Discrete parent nodes
     map(dp -> verify_discrete(dp, children), parents)
     pidx = getindex.(Ref(net.topology), getfield.(parents, :name))
