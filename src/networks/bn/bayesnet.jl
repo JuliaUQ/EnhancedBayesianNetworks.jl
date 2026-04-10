@@ -24,7 +24,7 @@ end
 
 function BayesianNetwork(nodes::AbstractVector{DiscreteNode})
     n = length(nodes)
-    topology = Dict()
+    topology = Dict{Symbol,Int}()
     for (i, n) in enumerate(nodes)
         topology[n.name] = i
     end
