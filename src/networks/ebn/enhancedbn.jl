@@ -52,7 +52,6 @@ function add_child!(
     if !isempty(loop)
         error("Invalid eBN: node '$(getproperty.(loop, :name))' have recursion")
     end
-    # map(p -> verify_no_recursion(p, children), parents)
     # ## verify Discrete parent nodes
     discrete_par = filter(x -> isa(x, DiscreteNode), parents)
     map(dp -> verify_discrete(dp, children), discrete_par)
