@@ -36,7 +36,7 @@ function EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode})
 end
 
 function add_child!(
-    net::AbstractNetwork,
+    net::EnhancedBayesianNetwork,
     par::Union{<:AbstractNode,Vector{<:AbstractNode}},
     ch::Union{<:AbstractNode,Vector{<:AbstractNode}}
 )
