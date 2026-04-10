@@ -1,4 +1,4 @@
-function evaluate!(net::EnhancedBayesianNetwork, collect::Bool=true)
+function reduce!(net::EnhancedBayesianNetwork, collect::Bool=true)
     order!(net)
     discretize!(net)
     continuous_functional_node = filter(x -> isa(x, ContinuousFunctionalNode), net.nodes)

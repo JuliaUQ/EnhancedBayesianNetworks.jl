@@ -19,8 +19,8 @@ include("utils/verify/add_child.jl")
 include("utils/verify/cyclicality_and_connection.jl")
 include("networks/ebn/discretization/discretize.jl")
 include("networks/ebn/enhancedbn.jl")
-include("networks/ebn/evaluate/evaluate_node.jl")
-include("networks/ebn/evaluate/evaluate_net.jl")
+include("networks/ebn/reduction/evaluate_node.jl")
+include("networks/ebn/reduction/reduce_net.jl")
 
 
 # include("utils/verify_discrete.jl")
@@ -34,6 +34,7 @@ include("networks/ebn/evaluate/evaluate_net.jl")
 # include("networks/ebn/discretization/discretize.jl")
 # include("networks/ebn/evaluate/evaluate_node.jl")
 # include("networks/ebn/evaluate/evaluate_net.jl")
+
 # include("networks/ebn/reduction/reduction.jl")
 # include("networks/bn/bayesnet.jl")
 # include("networks/bn/bayesnet2be.jl")
