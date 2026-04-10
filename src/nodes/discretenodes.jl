@@ -30,6 +30,7 @@ end
 DiscreteNode(name::Symbol, parameters::Vector{Pair{Symbol,Vector{Parameter}}}) = DiscreteNode(name, Symbol[], parameters, nothing)
 
 Base.setindex!(node::DiscreteNode, value, key...) = setindex!(node.cpt, value, key...)
+
 Base.getindex(node::DiscreteNode, key...) = getindex(node.cpt, key...)
 
 states(node::DiscreteNode) = unique(node.cpt.data[:, node.name])

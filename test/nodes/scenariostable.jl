@@ -42,13 +42,13 @@
         @test_throws ErrorException("Index [:x => :x1, :y => :y3] not found in the ScenariosTable $st") st[:x=>:x1, :y=>:y3]
 
         st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:x], :Π)
-        @test_throws ArgumentError("probability -0.2 must be >= 0 and <= 1") st[:x=>:yesx] = -0.2
+        @test_throws ArgumentError("Probability -0.2 must be >= 0 and <= 1") st[:x=>:yesx] = -0.2
         st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:x], :Π)
-        @test_throws ArgumentError("probability 2 must be >= 0 and <= 1") st[:x=>:yesx] = 2
+        @test_throws ArgumentError("Probability 2 must be >= 0 and <= 1") st[:x=>:yesx] = 2
         st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:x], :Π)
-        @test_throws ArgumentError("probability [0.1, 1.1] must be >= 0 and <= 1") st[:x=>:yesx] = Interval(0.1, 1.1)
+        @test_throws ArgumentError("Probability [0.1, 1.1] must be >= 0 and <= 1") st[:x=>:yesx] = Interval(0.1, 1.1)
         st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:x], :Π)
-        @test_throws ArgumentError("probability [-0.1, 0.9] must be >= 0 and <= 1") st[:x=>:yesx] = Interval(-0.1, 0.9)
+        @test_throws ArgumentError("Probability [-0.1, 0.9] must be >= 0 and <= 1") st[:x=>:yesx] = Interval(-0.1, 0.9)
 
         st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:x, :y], :Π)
         st[:x=>:x1, :y=>:y1] = 0.1

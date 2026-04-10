@@ -76,12 +76,12 @@
 
         exact = ExactDiscretization([-1, 0, 1])
         approx = ApproximatedDiscretization([-1, 0, 1], 2)
-        @test_throws ErrorException("Invalid eBN: node e, is a root node and the discretization must be an ExactDiscretization") ContinuousNode(:e, approx)
+        @test_throws ErrorException("Invalid Network: node e, is a root node and the discretization must be an ExactDiscretization") ContinuousNode(:e, approx)
         node_e = ContinuousNode(:e, [:a], approx)
         @test node_e.name == :e
         @test issetequal(Symbol.(names(node_e.cpt.data)), [:a, :Π])
         @test node_e.discretization == approx
-        @test_throws ErrorException("Invalid eBN: node e, is a child node and the discretization must be an ApproximatedDiscretization") ContinuousNode(:e, [:a], exact)
+        @test_throws ErrorException("Invalid Network: node e, is a child node and the discretization must be an ApproximatedDiscretization") ContinuousNode(:e, [:a], exact)
         node_e = ContinuousNode(:e, exact)
         @test node_e.name == :e
         @test issetequal(Symbol.(names(node_e.cpt.data)), [:Π])

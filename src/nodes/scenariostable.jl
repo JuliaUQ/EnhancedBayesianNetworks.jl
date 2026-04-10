@@ -6,6 +6,7 @@ const ContinuousSimulation = AbstractMonteCarlo
 const DiscreteSimulation = Union{AbstractSimulation,DoubleLoop,RandomSlicing}
 const Simulation = Union{ContinuousSimulation,DiscreteSimulation}
 
+# ScenarioTable is the basic constructur for ConditionalProbabilityTable and SimulationTable
 struct ScenariosTable{T<:Union{<:Probability,<:Simulation,Any}}
     data::DataFrame
     n::Symbol
@@ -55,12 +56,12 @@ end
 
 function verify_probability_value(value::Real)
     if !(0 <= value <= 1)
-        throw(ArgumentError("probability $value must be >= 0 and <= 1"))
+        throw(ArgumentError("Probability $value must be >= 0 and <= 1"))
     end
 end
 
 function verify_probability_value(value::Interval)
     if !all(0 .<= UncertaintyQuantification.bounds(value) .<= 1)
-        throw(ArgumentError("probability $value must be >= 0 and <= 1"))
+        throw(ArgumentError("Probability $value must be >= 0 and <= 1"))
     end
 end
