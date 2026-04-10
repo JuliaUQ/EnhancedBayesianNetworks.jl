@@ -1,3 +1,20 @@
+function _discretize(node::ContinuousNode)
+    intervals = _format_interval(node)
+    name_discrete = Symbol(string(node.name) * "_d")
+    discretized_node = DiscreteNode(name_discrete, parents(node))
+    new_continuous = ContinuousNode(node.name, [name_discrete])
+    if isroot(node)
+        map(i -> discretized_node[(name_discrete.=>Symbol(i))] = _discretize(node[], i), intervals)
+        map(i -> new_continuous[(name_discrete.=>Symbol(i))] = _truncate(node[], Tuple(i)), intervals)
+    else
+        for i in intervals
+            map((sc) -> discretized_node[(vcat(first.(sc), name_discrete) .=> vcat(last.(sc), Symbol(i)))...] = _discretize(node[(sc)...], i), scenarios(node))
+        end
+        map(i -> new_continuous[(name_discrete.=>Symbol(i))] = _approximate(i, node.discretization.sigma), intervals)
+    end
+    return (discretized_node, new_continuous)
+end
+
 function _format_interval(node::ContinuousNode)
     intervals = node.discretization.intervals
     intervals = convert(Vector{Float64}, intervals)
@@ -49,21 +66,4 @@ end
 
 function _discretize(_::Interval, _::Vector{<:Real})
     return Interval(0, 1)
-end
-
-function _discretize(node::ContinuousNode)
-    intervals = _format_interval(node)
-    name_discrete = Symbol(string(node.name) * "_d")
-    discretized_node = DiscreteNode(name_discrete, parents(node))
-    new_continuous = ContinuousNode(node.name, [name_discrete])
-    if isroot(node)
-        map(i -> discretized_node[(name_discrete.=>Symbol(i))] = _discretize(node[], i), intervals)
-        map(i -> new_continuous[(name_discrete.=>Symbol(i))] = _truncate(node[], Tuple(i)), intervals)
-    else
-        for i in intervals
-            map((sc) -> discretized_node[(vcat(first.(sc), name_discrete) .=> vcat(last.(sc), Symbol(i)))...] = _discretize(node[(sc)...], i), scenarios(node))
-        end
-        map(i -> new_continuous[(name_discrete.=>Symbol(i))] = _approximate(i, node.discretization.sigma), intervals)
-    end
-    return (discretized_node, new_continuous)
 end

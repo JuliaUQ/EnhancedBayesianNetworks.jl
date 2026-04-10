@@ -173,10 +173,10 @@ function verify_functional_parents(net::EnhancedBayesianNetwork, node::Functiona
         end
     end
     if isempty(cont_par)
-        @warn "node $(node.name) is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean"
+        @warn "Node $(node.name) is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean"
     end
     if isempty(discrete_par)
-        @warn "node $(node.name) is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis"
+        @warn "Node $(node.name) is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis"
     end
 end
 
