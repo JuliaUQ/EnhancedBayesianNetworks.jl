@@ -21,6 +21,7 @@ import Base: *, sum, reduce
 
 # Types
 export ApproximatedDiscretization
+export BayesianNetwork
 export ContinuousFunctionalNode
 export ContinuousInput
 export ContinuousNode
