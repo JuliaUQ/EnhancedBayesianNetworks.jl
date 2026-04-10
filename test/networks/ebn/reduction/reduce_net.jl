@@ -57,7 +57,7 @@
             order!(ebn)
 
             ebn1 = deepcopy(ebn)
-            @suppress evaluate!(ebn1)
+            @suppress reduce!(ebn1)
             @test size(ebn1.A) == (1, 1)
             @test ebn1.topology == Dict(:E => 1)
             @test isa(ebn1.nodes[1], DiscreteNode)
@@ -67,7 +67,7 @@
             @test !isnothing(ebn1.nodes[1].results)
 
             ebn2 = deepcopy(ebn)
-            @suppress evaluate!(ebn2, false)
+            @suppress reduce!(ebn2, false)
             @test size(ebn2.A) == (1, 1)
             @test ebn2.topology == Dict(:E => 1)
             @test isa(ebn2.nodes[1], DiscreteNode)
@@ -96,7 +96,7 @@
             order!(ebn)
 
             ebn1 = deepcopy(ebn)
-            @suppress evaluate!(ebn1)
+            @suppress reduce!(ebn1)
             @test size(ebn1.A) == (1, 1)
             @test ebn1.topology == Dict(:E => 1)
             @test isa(ebn1.nodes[1], DiscreteNode)
@@ -109,7 +109,7 @@
             @test !isnothing(ebn1.nodes[1].results)
 
             ebn2 = deepcopy(ebn)
-            @suppress evaluate!(ebn2, false)
+            @suppress reduce!(ebn2, false)
             @test size(ebn2.A) == (1, 1)
             @test ebn2.topology == Dict(:E => 1)
             @test isa(ebn2.nodes[1], DiscreteNode)
@@ -172,7 +172,7 @@
             order!(ebn)
 
             ebn1 = deepcopy(ebn)
-            @suppress evaluate!(ebn1)
+            @suppress reduce!(ebn1)
             @test size(ebn1.A) == (4, 4)
             @test ebn1.topology == Dict(:M => 1, :L => 2, :E => 3, :E2 => 4)
             @test isa(ebn1.nodes[3], DiscreteNode)
@@ -195,7 +195,7 @@
             @test !isnothing(ebn1.nodes[4].results)
 
             ebn2 = deepcopy(ebn)
-            @suppress evaluate!(ebn2, false)
+            @suppress reduce!(ebn2, false)
             @test size(ebn2.A) == (4, 4)
             @test ebn2.topology == Dict(:M => 1, :L => 2, :E => 3, :E2 => 4)
             @test isa(ebn2.nodes[3], DiscreteNode)
