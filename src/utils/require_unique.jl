@@ -1,3 +1,4 @@
+# get all the duplicate elements inside a vector``
 function not_unique_elements(v::AbstractVector)
     seen = Set{eltype(v)}()
     dups = Set{eltype(v)}()

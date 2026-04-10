@@ -42,17 +42,17 @@
     net = EnhancedBayesianNetwork(nodes)
     par = weather
     ch = weather
-    @test_throws ErrorException("Invalid eBN: node 'W' have recursion") EnhancedBayesianNetworks.verify_no_recursion(par, [ch])
+    @test_throws ErrorException("Invalid Network: node 'W' have recursion") EnhancedBayesianNetworks.verify_no_recursion(par, [ch])
 
     par = weather
     ch = [sprinkler, storm, grass]
-    @test_throws ErrorException("Invalid eBN: node G does not have the node(s) W in its CPT") EnhancedBayesianNetworks.verify_discrete(par, ch)
+    @test_throws ErrorException("Invalid Network: node G does not have the node(s) W in its CPT") EnhancedBayesianNetworks.verify_discrete(par, ch)
 
     par = storm
     ch = [sprinkler]
-    @test_throws ErrorException("Invalid eBN: node(s) [:S] are not functional node(s) and cannot be children of the continuous/functional node St") EnhancedBayesianNetworks.verify_continuous_and_functional(par, ch)
+    @test_throws ErrorException("Invalid Network: node(s) [:S] are not functional node(s) and cannot be children of the continuous/functional node St") EnhancedBayesianNetworks.verify_continuous_and_functional(par, ch)
 
     par = bush
     ch = [sprinkler]
-    @test_throws ErrorException("Invalid eBN: node(s) [:S] are not functional node(s) and cannot be children of the continuous/functional node B") EnhancedBayesianNetworks.verify_continuous_and_functional(par, ch)
+    @test_throws ErrorException("Invalid Network: node(s) [:S] are not functional node(s) and cannot be children of the continuous/functional node B") EnhancedBayesianNetworks.verify_continuous_and_functional(par, ch)
 end

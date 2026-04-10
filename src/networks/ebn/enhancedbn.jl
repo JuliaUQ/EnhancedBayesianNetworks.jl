@@ -169,7 +169,7 @@ function verify_functional_parents(net::EnhancedBayesianNetwork, node::Functiona
 
     for dp in discrete_par
         if isempty(dp.parameters)
-            error("Invalid network: node $(dp.name) is a parent for the FuctionalNode $(node.name) and cannot have an empty parameters attribute")
+            error("Invalid Network: node $(dp.name) is a parent for the FuctionalNode $(node.name) and cannot have an empty parameters attribute")
         end
     end
     if isempty(cont_par)
