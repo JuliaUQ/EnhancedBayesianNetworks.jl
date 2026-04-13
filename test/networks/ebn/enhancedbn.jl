@@ -54,7 +54,7 @@
     @testset "add_child!" begin
         nodes = [weather, grass, rain, sprinkler, rain2, grass2]
         net = EnhancedBayesianNetwork(nodes)
-        @test_throws ErrorException("Invalid Network: node 'W' have recursion") add_child!(net, weather, weather)
+        @test_throws ErrorException("Invalid eBN: node '[:W]' have recursion") add_child!(net, weather, weather)
         @test_throws ErrorException("Invalid Network: node G does not have the node(s) W in its CPT") add_child!(net, weather, grass)
         @test_throws ErrorException("Invalid Network: node(s) [:G] are not functional node(s) and cannot be children of the continuous/functional node G2") add_child!(net, grass2, grass)
         @test_throws ErrorException("Invalid Network: node(s) [:G] are not functional node(s) and cannot be children of the continuous/functional node Rc") add_child!(net, rain2, grass)

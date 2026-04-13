@@ -41,10 +41,6 @@
     nodes = [weather, grass, rain, sprinkler, storm, bush, tree]
     net = EnhancedBayesianNetwork(nodes)
     par = weather
-    ch = weather
-    @test_throws ErrorException("Invalid Network: node 'W' have recursion") EnhancedBayesianNetworks.verify_no_recursion(par, [ch])
-
-    par = weather
     ch = [sprinkler, storm, grass]
     @test_throws ErrorException("Invalid Network: node G does not have the node(s) W in its CPT") EnhancedBayesianNetworks.verify_discrete(par, ch)
 
