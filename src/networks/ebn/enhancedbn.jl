@@ -50,7 +50,7 @@ function add_child!(
     ## verify No loop
     loop = intersect(parents, children)
     if !isempty(loop)
-        error("Invalid eBN: node '$(getproperty.(loop, :name))' have recursion")
+        error("Invalid eBN: node '$(getproperty.(loop, :name))' has a loop")
     end
     # ## verify Discrete parent nodes
     discrete_par = filter(x -> isa(x, DiscreteNode), parents)

@@ -48,7 +48,7 @@
     @test bn.topology == Dict(:V => 1, :S => 2, :T => 3, :L => 4)
     @test bn.A == spzeros(Bool, 4, 4)
 
-    @test_throws ErrorException("Invalid eBN: node '[:V]' have recursion") add_child!(bn, v, v)
+    @test_throws ErrorException("Invalid eBN: node '[:V]' has a loop") add_child!(bn, v, v)
 
     @test_throws ErrorException("Invalid Network: node T does not have the node(s) S in its CPT") add_child!(bn, s, t)
 
