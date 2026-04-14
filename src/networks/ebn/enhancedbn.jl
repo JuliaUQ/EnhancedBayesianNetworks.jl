@@ -152,19 +152,6 @@ function markov_continuous_group(net::EnhancedBayesianNetwork, node::Union{Conti
     return Xm_group_new
 end
 
-function verify_parents(net::EnhancedBayesianNetwork, node::ContinuousNode) ## verify if all the parents in the CPT have been added via add_child!
-    cpt_parents = parents(node)
-    net_parents = parents(net, node.name)
-    only_in_cpt = setdiff(cpt_parents, net_parents)
-    if !isempty(only_in_cpt)
-        error("Invalid CPT: node $(node.name) has node(s) '$only_in_cpt' defined in the CPT only, but they have not been added via add_child!")
-    end
-end
-
-function verify_parents(_::EnhancedBayesianNetwork, _::FunctionalNode) ## verify if all the parents in the CPT have been added via add_child!
-    return
-end
-
 function verify_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode) ## Discrete Parents must have a non empty parameters attribute
     par = filter(n -> n.name ∈ parents(net, node), net.nodes)
     discrete_par = filter(x -> isa(x, AbstractDiscreteNode), par)

@@ -70,14 +70,16 @@ function topologically_sort!(net::AbstractNetwork)
     end
 end
 
-function verify_parents(net::AbstractNetwork, node::DiscreteNode) ## verify if all the parents in the CPT have been added via add_child!
-    if !isa(node, FunctionalNode)
-        cpt_parents = parents(node)
-        net_parents = parents(net, node.name)
-        only_in_cpt = setdiff(cpt_parents, net_parents)
-        if !isempty(only_in_cpt)
-            error("Invalid CPT: node $(node.name) has node(s) '$only_in_cpt' defined in the CPT only, but they have not been added via add_child!")
-        end
+function verify_parents(_::AbstractNetwork, _::AbstractNode) ## verify if all the parents in the CPT have been added via add_child!
+    return
+end
+
+function verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,ContinuousNode}) ## verify if all the parents in the CPT have been added via add_child!
+    cpt_parents = parents(node)
+    net_parents = parents(net, node.name)
+    only_in_cpt = setdiff(cpt_parents, net_parents)
+    if !isempty(only_in_cpt)
+        error("Invalid CPT: node $(node.name) has node(s) '$only_in_cpt' defined in the CPT only, but they have not been added via add_child!")
     end
 end
 

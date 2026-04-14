@@ -78,7 +78,7 @@
         end
 
         @testset "No Discrete Parents - Imprecise" begin
-            n = 10^3
+            n = 10^4
             Uᵣ = ContinuousNode(:Uᵣ, Interval(-1, 1))
             R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(n))
             R2 = ContinuousFunctionalNode(:R2, [model2], MonteCarlo(n))
