@@ -51,7 +51,7 @@ export gplot
 # export infer
 export isprecise
 export isroot
-# export joint_probability
+export joint_probability
 # export learn_parameters_EM
 # export learn_parameters_MLE
 export markov_blanket
