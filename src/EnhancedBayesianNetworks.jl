@@ -25,6 +25,7 @@ export BayesianNetwork
 export ContinuousFunctionalNode
 export ContinuousInput
 export ContinuousNode
+export CredalNetwork
 export DiscreteFunctionalNode
 export DiscreteNode
 export ExactDiscretization
@@ -32,8 +33,7 @@ export EnhancedBayesianNetwork
 export Evidence
 export Factor
 export FunctionalNode
-export ImpreciseInferenceState
-export PreciseInferenceState
+export InferenceState
 
 # export Factor
 
@@ -65,7 +65,7 @@ export states
 
 include("nodes/nodes.jl")
 include("networks/networks.jl")
-# include("inference/inference.jl")
+include("inference/inference.jl")
 # include("learning/learning.jl")
 # include("utils/base_show.jl")
 include("utils/plots.jl")

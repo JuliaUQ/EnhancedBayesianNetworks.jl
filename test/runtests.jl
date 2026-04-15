@@ -22,6 +22,9 @@ include("networks/ebn/enhancedbn.jl")
 include("networks/ebn/reduction/evaluate_node.jl")
 include("networks/ebn/reduction/reduce_net.jl")
 include("networks/bn/bayesnet.jl")
+include("networks/cn/credalnet.jl")
+include("inference/inferencestate.jl")
+
 
 
 # include("utils/verify_discrete.jl")
@@ -38,10 +41,8 @@ include("networks/bn/bayesnet.jl")
 
 # include("networks/ebn/reduction/reduction.jl")
 # include("networks/bn/bayesnet2be.jl")
-# include("networks/cn/credalnet.jl")
 # include("networks/dispatch.jl")
 # include("utils/verify_evidence.jl")
-# include("inference/inferencestate.jl")
 # include("inference/factors.jl")
 # include("inference/variableselimination.jl")
 # include("learning/parameters_learning/mle.jl")

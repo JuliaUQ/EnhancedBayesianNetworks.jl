@@ -16,7 +16,7 @@ mutable struct CredalNetwork <: AbstractNetwork
         end
         imprecise_nodes = nodes[.!isprecise.(nodes)]
         if isempty(imprecise_nodes)
-            @warn("All the nodes in the defined CN are precise. Use BayesianNetwork constructor instead")
+            error("Invalid CN: all the nodes are precise; BayesianNetwork structure is required")
         end
         new(nodes, topology, A)
     end

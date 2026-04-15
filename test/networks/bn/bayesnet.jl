@@ -52,7 +52,6 @@
 
     @test_throws ErrorException("Invalid Network: node T does not have the node(s) S in its CPT") add_child!(bn, s, t)
 
-
     @test_throws ErrorException("node(s) [:G] is (are) not defined in the BN") add_child!(bn, v, g)
 
     @test_throws ErrorException("node(s) [:G] is (are) not defined in the BN") add_child!(bn, :V, :G)
