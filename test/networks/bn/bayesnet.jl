@@ -100,7 +100,7 @@
         @test_throws ErrorException("Node(s) [:R, :S] are not defined in the scenario Dict(:G => :Wet, :W => :Cloudy). Use Inference instead") joint_probability(bn, scenario1)
 
         scenario2 = Evidence(:W => :Cloudy, :G => :Wet, :R => :Yes, :S => :On, :N => :nothing)
-        @test_logs (:warn, "nodes N is not part of the BN, therefore is useless for the scenario probability evaluation") joint_probability(bn, scenario2)
+        @test_logs (:warn, "Defined scenario contains Set([:N]) that are not defined in the BN. Therefore is useless for the scenario probability evaluation") joint_probability(bn, scenario2)
 
         scenario3 = Evidence(:W => :Cloudy, :G => :Mild, :R => :Yes, :S => :On)
         @test_throws ErrorException("Scenario defined state Mild for node G that does not belongs to its possible states [:Wet, :Dry]") joint_probability(bn, scenario3)
