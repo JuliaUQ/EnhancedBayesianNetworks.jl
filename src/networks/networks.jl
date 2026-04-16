@@ -7,7 +7,4 @@ include("bn/bayesnet.jl")
 include("cn/credalnet.jl")
 include("networks_common.jl")
 include("ebn/ebn.jl")
-
-# include("bn/bayesnet2be.jl")
-# include("cn/credalnet.jl")
-# include("dispatch.jl")
+include("dispatch.jl")

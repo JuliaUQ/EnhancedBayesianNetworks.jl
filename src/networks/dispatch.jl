@@ -1,18 +1,26 @@
-function dispatch(net::EnhancedBayesianNetwork)
-    ## If any ContinuousNode is present -> evaluate -> reduce
-    if !isempty(filter(x -> isa(x, ContinuousNode), net.nodes))
-        reduce!(net)
-    end
-    if isempty(filter(x -> isa(x, ContinuousNode), net.nodes))
-        if all(isprecise.(net.nodes))
-            return BayesianNetwork(net.nodes, net.topology, net.A)
-        else
-            return CredalNetwork(net.nodes, net.topology, net.A)
-        end
+function dispatch(ebn::EnhancedBayesianNetwork)
+    if any(isa.(ebn.nodes, EnhancedBayesianNetworks.AbstractContinuousNode))
+        return ebn
     else
+        nodes = Vector{DiscreteNode}(ebn.nodes)
+        if all(isprecise.(ebn.nodes))
+            net = BayesianNetwork(nodes)
+        else
+            net = CredalNetwork(nodes)
+        end
+        net.A = ebn.A
+        net.topology = ebn.topology
         return net
     end
 end
 
-dispatch(net::BayesianNetwork) = net
-dispatch(net::CredalNetwork) = net
+function dispatch(cn::CredalNetwork)
+    if all(isprecise.(cn.nodes))
+        bn = BayesianNetwork(Vector{DiscreteNode}(cn.nodes))
+        bn.A = cn.A
+        bn.topology = cn.topology
+        return bn
+    else
+        return cn
+    end
+end

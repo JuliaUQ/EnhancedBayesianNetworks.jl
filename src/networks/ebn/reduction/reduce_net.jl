@@ -1,4 +1,4 @@
-function reduce!(net::EnhancedBayesianNetwork, collect::Bool=true)
+function reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
     order!(net)
     discretize!(net)
     continuous_functional_node = filter(x -> isa(x, ContinuousFunctionalNode), net.nodes)
@@ -36,6 +36,7 @@ function reduce!(net::EnhancedBayesianNetwork, collect::Bool=true)
     if size(net.A) != (1, 1)
         order!(net)
     end
+    return dispatch(net)
 end
 
 function has_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode)

@@ -58,7 +58,7 @@ export markov_blanket
 export markov_envelope
 export order!
 export parents
-export reduce!
+export reduce
 export saveplot
 export scenarios
 export states

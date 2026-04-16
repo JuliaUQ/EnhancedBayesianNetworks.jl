@@ -42,7 +42,7 @@
     @test_throws MethodError CredalNetwork(nodes)
 
     nodes = [v, s, t, l]
-    @test_throws ErrorException("Invalid CN: all the nodes are precise; BayesianNetwork structure is required") CredalNetwork(nodes)
+    @test_logs (:warn, "All the nodes are precise; BayesianNetwork structure should be used instead") CredalNetwork(nodes)
 
     nodes = [v, s, t, l, g]
     cn = CredalNetwork(nodes)
