@@ -1,4 +1,4 @@
-@testset "Wrap functions" begin
+@testitem "Wrap functions" begin
     x = :a
     @test EnhancedBayesianNetworks.wrap(x) == [x]
     x = [:a]
