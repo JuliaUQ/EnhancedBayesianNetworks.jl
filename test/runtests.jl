@@ -1,8 +1,12 @@
 using Test
+using TestItems
+using TestItemRunner
 
 using EnhancedBayesianNetworks
 using Suppressor
 using CSV
+
+@run_package_tests()
 
 include("utils/wrap.jl")
 include("utils/flat.jl")
