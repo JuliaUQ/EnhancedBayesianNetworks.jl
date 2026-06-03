@@ -44,12 +44,13 @@ isroot(node::DiscreteNode) = size(node.cpt.data, 2) == 2
 parents(node::DiscreteNode) = Symbol.(names(node.cpt.data[:, Not(node.name, "Π")]))
 
 function _inputs(node::DiscreteNode, evidence::Evidence)
+    evstr = join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ")
     if node.name ∉ keys(evidence)
-        error("evidence `$evidence` does not contain the node `$(node.name)`")
+        error("Invalid Evidence: evidence [$evstr] does not contain the node $(repr(node.name))")
     elseif values(evidence[node.name]) ∉ states(node)
-        error("evidence `$evidence` contains a not existing state `$(evidence[node.name])` for node `$(node.name)`")
+        error("Invalid Evidence: evidence [$evstr] contains a not existing state $(repr(evidence[node.name])) for node $(repr(node.name))")
     elseif isempty(node.parameters)
-        error("node `$(node.name)` dose not contain any parameters dictionary")
+        error("Invalid Node: node $(repr(node.name)) has am empty parameters dictionary")
     else
         idx = findfirst(p -> p.first == evidence[node.name], node.parameters)
         return node.parameters[idx].second

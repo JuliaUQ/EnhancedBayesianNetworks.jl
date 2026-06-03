@@ -59,7 +59,7 @@
 
     @test_throws ErrorException("Invalid Network: node '[:V]' has a loop") add_child!(bn, v, v)
 
-    @test_throws ErrorException("Invalid Network: node T does not have the nodes S in its CPT") add_child!(bn, s, t)
+    @test_throws ErrorException("Invalid Network: node :T does not have the node :S in its CPT") add_child!(bn, s, t)
 
     @test_throws ErrorException("Nodes [:G] are not defined in the BN") add_child!(bn, v, g)
 
