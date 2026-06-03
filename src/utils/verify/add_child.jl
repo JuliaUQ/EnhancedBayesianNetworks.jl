@@ -4,7 +4,7 @@ function verify_discrete(node::DiscreteNode, ch::AbstractVector{<:AbstractNode})
     for child in not_functional_children
         cols = Symbol.(Set(names(child.cpt.data)))
         if node.name ∉ cols
-            error("Invalid Network: node $(child.name) does not have the node(s) $(node.name) in its CPT")
+            error("Invalid Network: node $(child.name) does not have the nodes $(node.name) in its CPT")
         end
     end
 end
@@ -13,6 +13,6 @@ end
 function verify_continuous_and_functional(node::Union{ContinuousNode,FunctionalNode}, ch::AbstractVector{<:AbstractNode})
     not_functional_children = filter(x -> !isa(x, FunctionalNode), ch)
     if !isempty(not_functional_children)
-        error("Invalid Network: node(s) $([i.name for i in not_functional_children]) are not functional node(s) and cannot be children of the continuous/functional node $(node.name)")
+        error("Invalid Network: nodes $([i.name for i in not_functional_children]) are not functional nodes and cannot be children of the continuous/functional node $(node.name)")
     end
 end

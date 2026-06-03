@@ -79,7 +79,7 @@ function verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,Continuou
     net_parents = parents(net, node.name)
     only_in_cpt = setdiff(cpt_parents, net_parents)
     if !isempty(only_in_cpt)
-        error("Invalid CPT: node $(node.name) has node(s) '$only_in_cpt' defined in the CPT only, but they have not been added via add_child!")
+        error("Invalid CPT: node $(node.name) has nodes $only_in_cpt defined in the CPT only, but they have not been added via add_child!")
     end
 end
 
@@ -170,7 +170,7 @@ function add_child!(
     all_nodes = vcat(parents, children)
     missing_nodes = setdiff([i.name for i in all_nodes], [i.name for i in net.nodes])
     if !isempty(missing_nodes)
-        error("node(s) $missing_nodes is (are) not defined in the BN")
+        error("Nodes $missing_nodes are not defined in the BN")
     end
     ## verify No loop
     loop = intersect(parents, children)
@@ -194,7 +194,7 @@ function add_child!(
     all_nodes = vcat(parents, children)
     missing_nodes = setdiff(all_nodes, [i.name for i in net.nodes])
     if !isempty(missing_nodes)
-        error("node(s) $missing_nodes is (are) not defined in the BN")
+        error("Nodes $missing_nodes are not defined in the BN")
     end
     par_nodes = filter(x -> x.name ∈ parents, net.nodes)
     ch_nodes = filter(x -> x.name ∈ children, net.nodes)

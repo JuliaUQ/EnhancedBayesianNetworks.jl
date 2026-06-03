@@ -83,7 +83,7 @@
         add_child!(net, weather, [sprinkler, rain])
         add_child!(net, [sprinkler, rain2], grass2)
         add_child!(net, sprinkler, grass)
-        @test_throws ErrorException("Invalid CPT: node G has node(s) '[:R]' defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks.verify_parents(net, grass)
+        @test_throws ErrorException("Invalid CPT: node G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks.verify_parents(net, grass)
         add_child!(net, rain, grass)
         @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass))
         @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass2))
@@ -434,7 +434,7 @@
         net = EnhancedBayesianNetwork([E, A, C, D, B])
         add_child!(net, B, D)
         add_child!(net, [A, D, C], E)
-        @test_throws ErrorException("Invalid CPT: node D has node(s) '[:A]' defined in the CPT only, but they have not been added via add_child!") order!(net)
+        @test_throws ErrorException("Invalid CPT: node D has nodes [:A] defined in the CPT only, but they have not been added via add_child!") order!(net)
 
         D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.1
         net = EnhancedBayesianNetwork([E, A, C, D, B])

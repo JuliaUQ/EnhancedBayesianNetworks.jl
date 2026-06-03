@@ -37,6 +37,15 @@
     nodes = [f1, v, s, t]
     @test_throws MethodError BayesianNetwork(nodes)
 
+    nodes = [v, v, s]
+    @test_throws ErrorException("Invalid BN: duplicate node names [:V]") BayesianNetwork(nodes)
+
+    h = DiscreteNode(:H)
+    h[:H=>:yesV] = 0.1
+    h[:H=>:noH] = 0.9
+    nodes = [v, h]
+    @test_throws ErrorException("Invalid BN: duplicate node states [:yesV]") BayesianNetwork(nodes)
+
     nodes = [v, s, g]
     @test_throws ErrorException("Invalid BN: node/s [:G] are imprecise; CrealNetwork structure is required") BayesianNetwork(nodes)
 
@@ -50,11 +59,11 @@
 
     @test_throws ErrorException("Invalid Network: node '[:V]' has a loop") add_child!(bn, v, v)
 
-    @test_throws ErrorException("Invalid Network: node T does not have the node(s) S in its CPT") add_child!(bn, s, t)
+    @test_throws ErrorException("Invalid Network: node T does not have the nodes S in its CPT") add_child!(bn, s, t)
 
-    @test_throws ErrorException("node(s) [:G] is (are) not defined in the BN") add_child!(bn, v, g)
+    @test_throws ErrorException("Nodes [:G] are not defined in the BN") add_child!(bn, v, g)
 
-    @test_throws ErrorException("node(s) [:G] is (are) not defined in the BN") add_child!(bn, :V, :G)
+    @test_throws ErrorException("Nodes [:G] are not defined in the BN") add_child!(bn, :V, :G)
 
     add_child!(bn, v, t)
     @test bn.A == sparse([1], [3], [true], 4, 4)
