@@ -175,7 +175,7 @@ function add_child!(
     ## verify No loop
     loop = intersect(parents, children)
     if !isempty(loop)
-        error("Invalid net: node '$(getproperty.(loop, :name))' has a loop")
+        error("Invalid Network: node '$(getproperty.(loop, :name))' has a loop")
     end
     ## verify Discrete parent nodes
     map(dp -> verify_discrete(dp, children), parents)

@@ -1,4 +1,4 @@
-@testset "Bayesian Networks" begin
+@testitem "Bayesian Networks" begin
     r = ContinuousNode(:R, Normal())
 
     v = DiscreteNode(:V)
@@ -48,7 +48,7 @@
     @test bn.topology == Dict(:V => 1, :S => 2, :T => 3, :L => 4)
     @test bn.A == spzeros(Bool, 4, 4)
 
-    @test_throws ErrorException("Invalid net: node '[:V]' has a loop") add_child!(bn, v, v)
+    @test_throws ErrorException("Invalid Network: node '[:V]' has a loop") add_child!(bn, v, v)
 
     @test_throws ErrorException("Invalid Network: node T does not have the node(s) S in its CPT") add_child!(bn, s, t)
 
@@ -61,55 +61,53 @@
     add_child!(bn, :S, :L)
     @test bn.A == sparse([1, 2], [3, 4], [true, true], 4, 4)
 
-    @testset "joint probability" begin
 
-        weather = DiscreteNode(:W)
-        weather[:W=>:Cloudy] = 0.5
-        weather[:W=>:Sunny] = 0.5
+    weather = DiscreteNode(:W)
+    weather[:W=>:Cloudy] = 0.5
+    weather[:W=>:Sunny] = 0.5
 
-        rain = DiscreteNode(:R, [:W])
-        rain[:W=>:Cloudy, :R=>:Yes] = 0.8
-        rain[:W=>:Cloudy, :R=>:No] = 0.2
-        rain[:W=>:Sunny, :R=>:Yes] = 0.1
-        rain[:W=>:Sunny, :R=>:No] = 0.9
+    rain = DiscreteNode(:R, [:W])
+    rain[:W=>:Cloudy, :R=>:Yes] = 0.8
+    rain[:W=>:Cloudy, :R=>:No] = 0.2
+    rain[:W=>:Sunny, :R=>:Yes] = 0.1
+    rain[:W=>:Sunny, :R=>:No] = 0.9
 
-        sprinkler = DiscreteNode(:S, [:W])
-        sprinkler[:W=>:Cloudy, :S=>:On] = 0.4
-        sprinkler[:W=>:Cloudy, :S=>:Off] = 0.6
-        sprinkler[:W=>:Sunny, :S=>:On] = 0.7
-        sprinkler[:W=>:Sunny, :S=>:Off] = 0.3
+    sprinkler = DiscreteNode(:S, [:W])
+    sprinkler[:W=>:Cloudy, :S=>:On] = 0.4
+    sprinkler[:W=>:Cloudy, :S=>:Off] = 0.6
+    sprinkler[:W=>:Sunny, :S=>:On] = 0.7
+    sprinkler[:W=>:Sunny, :S=>:Off] = 0.3
 
-        grass = DiscreteNode(:G, [:S, :R])
-        grass[:R=>:Yes, :S=>:On, :G=>:Wet] = 0.99
-        grass[:R=>:Yes, :S=>:On, :G=>:Dry] = 0.01
-        grass[:R=>:Yes, :S=>:Off, :G=>:Wet] = 0.9
-        grass[:R=>:Yes, :S=>:Off, :G=>:Dry] = 0.1
-        grass[:R=>:No, :S=>:On, :G=>:Wet] = 0.9
-        grass[:R=>:No, :S=>:On, :G=>:Dry] = 0.1
-        grass[:R=>:No, :S=>:Off, :G=>:Wet] = 0.1
-        grass[:R=>:No, :S=>:Off, :G=>:Dry] = 0.9
+    grass = DiscreteNode(:G, [:S, :R])
+    grass[:R=>:Yes, :S=>:On, :G=>:Wet] = 0.99
+    grass[:R=>:Yes, :S=>:On, :G=>:Dry] = 0.01
+    grass[:R=>:Yes, :S=>:Off, :G=>:Wet] = 0.9
+    grass[:R=>:Yes, :S=>:Off, :G=>:Dry] = 0.1
+    grass[:R=>:No, :S=>:On, :G=>:Wet] = 0.9
+    grass[:R=>:No, :S=>:On, :G=>:Dry] = 0.1
+    grass[:R=>:No, :S=>:Off, :G=>:Wet] = 0.1
+    grass[:R=>:No, :S=>:Off, :G=>:Dry] = 0.9
 
-        nodes = [weather, rain, sprinkler, grass]
-        bn = BayesianNetwork(nodes)
-        add_child!(bn, :W, :R)
-        add_child!(bn, :W, :S)
-        add_child!(bn, :R, :G)
-        add_child!(bn, :S, :G)
+    nodes = [weather, rain, sprinkler, grass]
+    bn = BayesianNetwork(nodes)
+    add_child!(bn, :W, :R)
+    add_child!(bn, :W, :S)
+    add_child!(bn, :R, :G)
+    add_child!(bn, :S, :G)
 
-        scenario1 = Evidence(:W => :Cloudy, :G => :Wet)
-        @test_throws ErrorException("Node(s) [:R, :S] are not defined in the scenario Dict(:G => :Wet, :W => :Cloudy). Use Inference instead") joint_probability(bn, scenario1)
+    scenario1 = Evidence(:W => :Cloudy, :G => :Wet)
+    @test_throws ErrorException("Node(s) [:R, :S] are not defined in the scenario Dict(:G => :Wet, :W => :Cloudy). Use Inference instead") joint_probability(bn, scenario1)
 
-        scenario2 = Evidence(:W => :Cloudy, :G => :Wet, :R => :Yes, :S => :On, :N => :nothing)
-        @test_logs (:warn, "Defined scenario contains Set([:N]) that are not defined in the BN. Therefore is useless for the scenario probability evaluation") joint_probability(bn, scenario2)
+    scenario2 = Evidence(:W => :Cloudy, :G => :Wet, :R => :Yes, :S => :On, :N => :nothing)
+    @test_logs (:warn, "Defined scenario contains Set([:N]) that are not defined in the BN. Therefore is useless for the scenario probability evaluation") joint_probability(bn, scenario2)
 
-        scenario3 = Evidence(:W => :Cloudy, :G => :Mild, :R => :Yes, :S => :On)
-        @test_throws ErrorException("Scenario defined state Mild for node G that does not belongs to its possible states [:Wet, :Dry]") joint_probability(bn, scenario3)
+    scenario3 = Evidence(:W => :Cloudy, :G => :Mild, :R => :Yes, :S => :On)
+    @test_throws ErrorException("Scenario defined state Mild for node G that does not belongs to its possible states [:Wet, :Dry]") joint_probability(bn, scenario3)
 
-        scenario4 = Evidence(:W => :Cloudy, :G => :Wet, :R => :Yes, :S => :On)
-        @test isapprox(joint_probability(bn, scenario4), 0.1584)
+    scenario4 = Evidence(:W => :Cloudy, :G => :Wet, :R => :Yes, :S => :On)
+    @test isapprox(joint_probability(bn, scenario4), 0.1584)
 
-        scenario5 = Evidence(:W => :Cloudy, :G => :Dry, :R => :Yes, :S => :On)
-        @test isapprox(joint_probability(bn, scenario5), 0.0016)
-    end
+    scenario5 = Evidence(:W => :Cloudy, :G => :Dry, :R => :Yes, :S => :On)
+    @test isapprox(joint_probability(bn, scenario5), 0.0016)
 end
 

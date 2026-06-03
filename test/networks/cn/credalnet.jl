@@ -52,7 +52,7 @@
     @test cn.topology == Dict(:V => 1, :S => 2, :T => 3, :L => 4, :G => 5)
     @test cn.A == spzeros(Bool, 5, 5)
 
-    @test_throws ErrorException("Invalid net: node '[:V]' has a loop") add_child!(cn, v, v)
+    @test_throws ErrorException("Invalid Network: node '[:V]' has a loop") add_child!(cn, v, v)
 
     @test_throws ErrorException("Invalid Network: node T does not have the node(s) S in its CPT") add_child!(cn, s, t)
 
