@@ -1,4 +1,4 @@
-@testset "Verify add_child!" begin
+@testitem "Verify add_child!" begin
     weather = DiscreteNode(:W)
     weather[:W=>:sunny] = 0.5
     weather[:W=>:cloudy] = 0.5
