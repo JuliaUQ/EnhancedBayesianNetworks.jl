@@ -47,7 +47,7 @@
     @test_throws ErrorException("Invalid BN: duplicate node states [:yesV]") BayesianNetwork(nodes)
 
     nodes = [v, s, g]
-    @test_throws ErrorException("Invalid BN: node/s [:G] are imprecise; CrealNetwork structure is required") BayesianNetwork(nodes)
+    @test_throws ErrorException("Invalid BN: node/s [:G] are imprecise; CredalNetwork structure is required") BayesianNetwork(nodes)
 
     nodes = [v, s, t, l]
     bn = BayesianNetwork(nodes)

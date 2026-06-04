@@ -16,7 +16,7 @@ mutable struct BayesianNetwork <: AbstractNetwork
         end
         imprecise_nodes = nodes[.!isprecise.(nodes)]
         if !isempty(imprecise_nodes)
-            error("Invalid BN: node/s $(getproperty.(imprecise_nodes, :name)) are imprecise; CrealNetwork structure is required")
+            error("Invalid BN: node/s $(getproperty.(imprecise_nodes, :name)) are imprecise; CredalNetwork structure is required")
         end
         new(nodes, topology, A)
     end
