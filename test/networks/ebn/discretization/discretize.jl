@@ -12,25 +12,25 @@
         root = ContinuousNode(:z1, discretization)
         root[] = truncated(Normal(), -10, 10)
 
-        @test_logs (:warn, "node z1 has minimum intervals value -9 > support lower bound -10.0. Lower bound will be used as intervals start") EnhancedBayesianNetworks._format_interval(root)
+        @test_logs (:warn, "node :z1 has minimum intervals value -9 > support lower bound -10.0. Lower bound will be used as intervals start") EnhancedBayesianNetworks._format_interval(root)
 
         discretization = ExactDiscretization([-11, 10])
         root = ContinuousNode(:z1, discretization)
         root[] = truncated(Normal(), -10, 10)
 
-        @test_logs (:warn, "node z1 has minimum intervals value -11 < support lower bound -10.0. Lower bound will be used as intervals start") EnhancedBayesianNetworks._format_interval(root)
+        @test_logs (:warn, "node :z1 has minimum intervals value -11 < support lower bound -10.0. Lower bound will be used as intervals start") EnhancedBayesianNetworks._format_interval(root)
 
         discretization = ExactDiscretization([-10, 9])
         root = ContinuousNode(:z1, discretization)
         root[] = truncated(Normal(), -10, 10)
 
-        @test_logs (:warn, "node z1 has maximum intervals value 9 < support upper bound 10.0. Upper bound will be used as intervals end") EnhancedBayesianNetworks._format_interval(root)
+        @test_logs (:warn, "node :z1 has maximum intervals value 9 < support upper bound 10.0. Upper bound will be used as intervals end") EnhancedBayesianNetworks._format_interval(root)
 
         discretization = ExactDiscretization([-10, 11])
         root = ContinuousNode(:z1, discretization)
         root[] = truncated(Normal(), -10, 10)
 
-        @test_logs (:warn, "node z1 has maximum intervals value 11 > support upper bound 10.0. Upper bound will be used as intervals end") EnhancedBayesianNetworks._format_interval(root)
+        @test_logs (:warn, "node :z1 has maximum intervals value 11 > support upper bound 10.0. Upper bound will be used as intervals end") EnhancedBayesianNetworks._format_interval(root)
 
         intervals = [[-Inf, -1.0], [-1.0, 0.0], [0.0, 1.0], [1.0, Inf]]
         λ = 2

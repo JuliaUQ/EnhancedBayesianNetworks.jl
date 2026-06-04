@@ -22,20 +22,20 @@ function _format_interval(node::ContinuousNode)
     max = node.discretization.intervals[end]
     lower_bound, upper_bound = _distribution_bounds(node)
     if minimum(min) > lower_bound
-        @warn "node $(node.name) has minimum intervals value $min > support lower bound $lower_bound. Lower bound will be used as intervals start"
+        @warn "node $(repr(node.name)) has minimum intervals value $min > support lower bound $lower_bound. Lower bound will be used as intervals start"
         insert!(intervals, 1, lower_bound)
     end
     if minimum(min) < lower_bound
-        @warn "node $(node.name) has minimum intervals value $min < support lower bound $lower_bound. Lower bound will be used as intervals start"
+        @warn "node $(repr(node.name)) has minimum intervals value $min < support lower bound $lower_bound. Lower bound will be used as intervals start"
         deleteat!(intervals, intervals .<= lower_bound)
         insert!(intervals, 1, lower_bound)
     end
     if maximum(max) < upper_bound
-        @warn "node $(node.name) has maximum intervals value $max < support upper bound $upper_bound. Upper bound will be used as intervals end"
+        @warn "node $(repr(node.name)) has maximum intervals value $max < support upper bound $upper_bound. Upper bound will be used as intervals end"
         push!(intervals, upper_bound)
     end
     if maximum(max) > upper_bound
-        @warn "node $(node.name) has maximum intervals value $max > support upper bound $upper_bound. Upper bound will be used as intervals end"
+        @warn "node $(repr(node.name)) has maximum intervals value $max > support upper bound $upper_bound. Upper bound will be used as intervals end"
         deleteat!(intervals, intervals .>= upper_bound)
         push!(intervals, upper_bound)
     end

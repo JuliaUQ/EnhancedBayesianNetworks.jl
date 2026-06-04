@@ -50,7 +50,7 @@ function _inputs(node::DiscreteNode, evidence::Evidence)
     elseif values(evidence[node.name]) ∉ states(node)
         error("Invalid Evidence: evidence [$evstr] contains a not existing state $(repr(evidence[node.name])) for node $(repr(node.name))")
     elseif isempty(node.parameters)
-        error("Invalid Node: node $(repr(node.name)) has am empty parameters dictionary")
+        error("Invalid Node: node $(repr(node.name)) has an empty parameters dictionary")
     else
         idx = findfirst(p -> p.first == evidence[node.name], node.parameters)
         return node.parameters[idx].second

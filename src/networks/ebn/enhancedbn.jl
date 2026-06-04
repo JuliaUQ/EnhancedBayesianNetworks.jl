@@ -159,14 +159,14 @@ function verify_functional_parents(net::EnhancedBayesianNetwork, node::Functiona
 
     for dp in discrete_par
         if isempty(dp.parameters)
-            error("Invalid Network: node $(dp.name) is a parent for the FuctionalNode $(node.name) and cannot have an empty parameters attribute")
+            error("Invalid Network: node $(repr(dp.name)) is a parent for the FunctionalNode $(repr(node.name)) and cannot have an empty parameters attribute")
         end
     end
     if isempty(cont_par)
-        @warn "Node $(node.name) is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean"
+        @warn "Node $(repr(node.name)) is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean"
     end
     if isempty(discrete_par)
-        @warn "Node $(node.name) is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis"
+        @warn "Node $(repr(node.name)) is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis"
     end
 end
 
@@ -191,11 +191,11 @@ function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ##
     net_ancestors = discrete_ancestors(net, node)
     only_in_st = setdiff(st_ancestors, net_ancestors)
     if !isempty(only_in_st)
-        error("Invalid SimulationTable: node $(node.name) has nodes '$only_in_st' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN")
+        error("Invalid SimulationTable: node $(repr(node.name)) has nodes '$only_in_st' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN")
     end
     only_in_net = setdiff(net_ancestors, st_ancestors)
     if !isempty(only_in_net)
-        error("Invalid SimulationTable: node $(node.name) has ancestors(s) '$only_in_net' defined in the eBN only, but they are not present in its SimulationTable")
+        error("Invalid SimulationTable: node $(repr(node.name)) has ancestors(s) '$only_in_net' defined in the eBN only, but they are not present in its SimulationTable")
     end
 end
 
@@ -205,7 +205,7 @@ function verify_scenarios(net::EnhancedBayesianNetwork, node::FunctionalNode)
     filtering_elements = map(th_s -> ([i.name for i in anc] .=> th_s), theoretical_scenarios)
     for filtering_element in filtering_elements
         if isempty(filter(node.simulation, filtering_element...))
-            error("Invalid SimulationTable: node $(node.name) is missing the following scenario $(filtering_element)")
+            error("Invalid SimulationTable: node $(repr(node.name)) is missing the following scenario $(filtering_element)")
         end
     end
 end

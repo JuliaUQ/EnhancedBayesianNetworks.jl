@@ -49,6 +49,6 @@ function eliminate_node!(net::EnhancedBayesianNetwork, node::ContinuousNode)
     remove_node!(net, node)
     add_child!(net, par, chs)
     if iscyclic(net)
-        error("Error during node elimination: elimination of node $(node.name) leads to a cyclic network")
+        error("Error during node elimination: elimination of node $(repr(node.name)) leads to a cyclic network")
     end
 end

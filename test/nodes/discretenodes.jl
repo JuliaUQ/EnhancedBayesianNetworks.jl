@@ -119,7 +119,7 @@ end
     evidence = Evidence(:a => :a4)
     @test_throws ErrorException("Invalid Evidence: evidence [:a => :a4] contains a not existing state :a4 for node :a") EnhancedBayesianNetworks._inputs(node_a, evidence)
     evidence = Evidence(:b => :b1)
-    @test_throws ErrorException("Invalid Node: node :b has am empty parameters dictionary") EnhancedBayesianNetworks._inputs(node_b, evidence)
+    @test_throws ErrorException("Invalid Node: node :b has an empty parameters dictionary") EnhancedBayesianNetworks._inputs(node_b, evidence)
     evidence = Evidence(:a => :a1)
     @test EnhancedBayesianNetworks._inputs(node_a, evidence) == [Parameter(1, :A)]
     evidence = Evidence(:a => :a2, :b => :b1)

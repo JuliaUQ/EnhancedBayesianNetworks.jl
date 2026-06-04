@@ -4,7 +4,7 @@
     states_mapping::Dict{Symbol,Dict{Symbol,Int}}
 
     function Factor(dims::Vector{Symbol}, potential::Array, states_mapping::Dict{Symbol,Dict{Symbol,Int}})
-        _ckeck_dims_unique(dims)
+        _check_dims_unique(dims)
         (length(dims) != ndims(potential)) && error("potential must have as many dimensions as length of dimensions")
         (:potential in dims) && error("Having a dimension called potential will cause problems")
         Set(dims) != Set(keys(states_mapping)) && error("states mapping keys have to be coherent with defined dimensions")
@@ -41,7 +41,7 @@ function _check_dims_valid(dims::Vector{Symbol}, ϕ::Factor)
     return _check_dims_valid(dims[2:end], ϕ)
 end
 # dims are unique
-_ckeck_dims_unique(dims::Vector{Symbol}) = allunique(dims) || error("Dimensions must be unique")
+_check_dims_unique(dims::Vector{Symbol}) = allunique(dims) || error("Dimensions must be unique")
 
 # ## Create a factor for a node, given some evidence.
 function Factor(node::AbstractNode, e::Evidence=Evidence())
@@ -121,7 +121,7 @@ function Base.broadcast!(f, ϕ::Factor, dims::Union{Symbol,Vector{Symbol}}, valu
         dims = [dims]
         values = [values]
     end
-    _ckeck_dims_unique(dims)
+    _check_dims_unique(dims)
     _check_dims_valid(dims, ϕ)
 
     (length(dims) != length(values)) &&
