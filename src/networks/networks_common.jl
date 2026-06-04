@@ -46,10 +46,10 @@ discrete_ancestors(net::AbstractNetwork, node::AbstractNode) = discrete_ancestor
 
 function order!(net::AbstractNetwork)
     if iscyclic(net.A)
-        error("Invalid eBN: network is cyclic!")
+        error("Invalid Network: network is cyclic!")
     end
     if !isconnected(net.A)
-        error("Invalid eBN: network is not connected")
+        error("Invalid Network: network is not connected")
     end
     topologically_sort!(net)
     foreach(n -> verify_parents(net, n), net.nodes)
@@ -79,7 +79,7 @@ function verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,Continuou
     net_parents = parents(net, node.name)
     only_in_cpt = setdiff(cpt_parents, net_parents)
     if !isempty(only_in_cpt)
-        error("Invalid CPT: node $(node.name) has nodes $only_in_cpt defined in the CPT only, but they have not been added via add_child!")
+        error("Invalid CPT: node $(repr(node.name)) has nodes $only_in_cpt defined in the CPT only, but they have not been added via add_child!")
     end
 end
 
@@ -90,7 +90,7 @@ function verify_scenarios(net::AbstractNetwork, node::DiscreteNode)
     filtering_elements = map(th_s -> ([i.name for i in v] .=> th_s), theoretical_scenarios)
     for filtering_element in filtering_elements
         if isempty(filter(node.cpt, filtering_element...))
-            error("Invalid CPT: node $(node.name) is missing the following scenario $(filtering_element)")
+            error("Invalid CPT: node $(repr(node.name)) is missing the following scenario $(filtering_element)")
         end
     end
 end
@@ -104,10 +104,14 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
             cumulative_prob = sum(filter(node.cpt, filtering_element...).Π)
             if cumulative_prob != 1
                 if isapprox(cumulative_prob, 1, atol=0.01)
-                    @warn "node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element and will be normalized!"
+                    vals = filter(node.cpt, filtering_element...).Π
+                    valstr = "[" * join(string.(vals), ", ") * "]"
+                    @warn "Node $(repr(node.name)) has CPT values $valstr for the scenario $filtering_element and will be normalized!"
                     filter(node.cpt, filtering_element...)[!, :Π] ./= cumulative_prob
                 else
-                    error("Invalid CPT: node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' not exhaustive and mutually exclusive for the scenario $filtering_element")
+                    vals = filter(node.cpt, filtering_element...).Π
+                    valstr = "[" * join(string.(vals), ", ") * "]"
+                    error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr not exhaustive and mutually exclusive for the scenario $filtering_element")
                 end
             end
         end
@@ -115,9 +119,13 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
         for filtering_element in filtering_elements
             lb_sum, ub_sum = EnhancedBayesianNetworks.sum_intervals_and_float(filter(node.cpt, filtering_element...).Π...)
             if lb_sum > 1
-                error("Invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of lower bound values must be less than 1")
+                vals = filter(node.cpt, filtering_element...).Π
+                valstr = "[" * join(string.(vals), ", ") * "]"
+                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr for the scenario $filtering_element, the sum of lower bound values must be less than 1")
             elseif ub_sum < 1
-                error("Invalid CPT:  node $(node.name) has CPT values '$(filter(node.cpt, filtering_element...).Π)' for the scenario $filtering_element, the sum of upper bound values must be greater than 1")
+                vals = filter(node.cpt, filtering_element...).Π
+                valstr = "[" * join(string.(vals), ", ") * "]"
+                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr for the scenario $filtering_element, the sum of upper bound values must be greater than 1")
             end
         end
     end
@@ -170,7 +178,7 @@ function add_child!(
     all_nodes = vcat(parents, children)
     missing_nodes = setdiff([i.name for i in all_nodes], [i.name for i in net.nodes])
     if !isempty(missing_nodes)
-        error("Nodes $missing_nodes are not defined in the BN")
+        error("Invalid Network: nodes $missing_nodes are not defined in the network")
     end
     ## verify No loop
     loop = intersect(parents, children)
@@ -194,7 +202,7 @@ function add_child!(
     all_nodes = vcat(parents, children)
     missing_nodes = setdiff(all_nodes, [i.name for i in net.nodes])
     if !isempty(missing_nodes)
-        error("Nodes $missing_nodes are not defined in the BN")
+        error("Invalid Network: nodes $missing_nodes are not defined in the network")
     end
     par_nodes = filter(x -> x.name ∈ parents, net.nodes)
     ch_nodes = filter(x -> x.name ∈ children, net.nodes)

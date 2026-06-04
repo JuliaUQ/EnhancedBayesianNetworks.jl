@@ -1,4 +1,6 @@
-@testset "Dispatch" begin
+@testitem "Dispatch Function" begin
+    using Suppressor
+
     r = ContinuousNode(:R, Normal())
 
     v = DiscreteNode(:V)

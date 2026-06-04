@@ -1,4 +1,4 @@
-@testset "Credal Networks" begin
+@testitem "Credal Network" begin
     r = ContinuousNode(:R, Normal())
 
     v = DiscreteNode(:V)
@@ -44,6 +44,15 @@
     nodes = [v, s, t, l]
     @test_logs (:warn, "All the nodes are precise; BayesianNetwork structure should be used instead") CredalNetwork(nodes)
 
+    nodes = [v, g, g]
+    @test_throws ErrorException("Invalid CN: duplicate node names [:G]") CredalNetwork(nodes)
+
+    i = DiscreteNode(:I)
+    i[:I=>:g1] = Interval(0.2, 0.3)
+    i[:I=>:i2] = Interval(0.7, 0.8)
+    nodes = [v, g, i]
+    @test_throws ErrorException("Invalid CN: duplicate node states [:g1]") CredalNetwork(nodes)
+
     nodes = [v, s, t, l, g]
     cn = CredalNetwork(nodes)
     @test isa(cn, CredalNetwork)
@@ -56,9 +65,9 @@
 
     @test_throws ErrorException("Invalid Network: node :T does not have the node :S in its CPT") add_child!(cn, s, t)
 
-    @test_throws ErrorException("Nodes [:H] are not defined in the BN") add_child!(cn, v, h)
+    @test_throws ErrorException("Invalid Network: nodes [:H] are not defined in the network") add_child!(cn, v, h)
 
-    @test_throws ErrorException("Nodes [:H] are not defined in the BN") add_child!(cn, :V, :H)
+    @test_throws ErrorException("Invalid Network: nodes [:H] are not defined in the network") add_child!(cn, :V, :H)
 
     add_child!(cn, v, t)
     @test cn.A == sparse([1], [3], [true], 5, 5)

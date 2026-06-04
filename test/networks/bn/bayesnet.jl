@@ -1,4 +1,4 @@
-@testitem "Bayesian Networks" begin
+@testitem "Bayesian Network" begin
     r = ContinuousNode(:R, Normal())
 
     v = DiscreteNode(:V)
@@ -61,9 +61,9 @@
 
     @test_throws ErrorException("Invalid Network: node :T does not have the node :S in its CPT") add_child!(bn, s, t)
 
-    @test_throws ErrorException("Nodes [:G] are not defined in the BN") add_child!(bn, v, g)
+    @test_throws ErrorException("Invalid Network: nodes [:G] are not defined in the network") add_child!(bn, v, g)
 
-    @test_throws ErrorException("Nodes [:G] are not defined in the BN") add_child!(bn, :V, :G)
+    @test_throws ErrorException("Invalid Network: nodes [:G] are not defined in the network") add_child!(bn, :V, :G)
 
     add_child!(bn, v, t)
     @test bn.A == sparse([1], [3], [true], 4, 4)
