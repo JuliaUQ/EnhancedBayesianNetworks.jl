@@ -15,7 +15,7 @@ struct ExactDiscretization <: AbstractDiscretization
 
     function ExactDiscretization(intervals::Vector{<:Real})
         if !issorted(intervals)
-            error("interval values $intervals are not sorted")
+            error("Invalid ExactDiscretization: interval values $intervals are not sorted")
         end
         new(intervals)
     end
@@ -27,7 +27,7 @@ ExactDiscretization() = ExactDiscretization(Vector{Real}())
 
     Used for continuous Non-Root nodes whenever evidence can be available on them.
         intervals: vector of Float64 that discretize initial distribution support
-        sigma: variance of the normal distribution used for appriximate initial continuous distribution
+        sigma: variance of the normal distribution used for approximate initial continuous distribution
 
 """
 struct ApproximatedDiscretization <: AbstractDiscretization
@@ -36,11 +36,11 @@ struct ApproximatedDiscretization <: AbstractDiscretization
 
     function ApproximatedDiscretization(intervals::Vector{<:Real}, sigma::Real)
         if !issorted(intervals)
-            error("interval values $intervals are not sorted")
+            error("Invalid ApproximatedDiscretization: interval values $intervals are not sorted")
         elseif sigma < 0
-            error("variance must be positive")
+            error("Invalid ApproximatedDiscretization: variance must be positive")
         elseif sigma > 2
-            @warn "Selected variance values $sigma can be too big, and the approximation not realistic"
+            @warn "Selected variance values $sigma could be too large for a realistic tails approximation"
         end
         new(intervals, sigma)
     end
