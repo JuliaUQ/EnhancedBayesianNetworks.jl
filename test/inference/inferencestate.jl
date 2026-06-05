@@ -24,21 +24,21 @@
     query = [:L]
 
     evidence = Evidence(:V => :yesV, :T => :yesT, :G => :g1)
-    @test_throws ErrorException("Evidence Dict(:T => :yesT, :G => :g1, :V => :yesV) contains Symbol(s) Set([:G]) that are names of the nodes of the network") InferenceState(bn, query, evidence)
-    @test_throws ErrorException("Evidence Dict(:T => :yesT, :G => :g1, :V => :yesV) contains Symbol(s) Set([:G]) that are names of the nodes of the network") EnhancedBayesianNetworks.verify_evidence(evidence, bn)
+    @test_throws ErrorException("Invalid Evidence: evidence [:T => :yesT, :G => :g1, :V => :yesV] contains Symbols [:G] that are not associated to any node of the network") InferenceState(bn, query, evidence)
+    @test_throws ErrorException("Invalid Evidence: evidence [:T => :yesT, :G => :g1, :V => :yesV] contains Symbols [:G] that are not associated to any node of the network") EnhancedBayesianNetworks.verify_evidence(evidence, bn)
 
     evidence = Evidence(:V => :yesV, :T => :T1)
-    @test_throws ErrorException("Evidence defined state T1 for node T that does not belongs to its possible states [:yesT, :noT]") InferenceState(bn, query, evidence)
-    @test_throws ErrorException("Evidence defined state T1 for node T that does not belongs to its possible states [:yesT, :noT]") EnhancedBayesianNetworks.verify_evidence(evidence, bn)
+    @test_throws ErrorException("Invalid Evidence: evidence [:T => :T1, :V => :yesV] defines state :T1 for node :T that does not belong to its possible states [:yesT, :noT]") InferenceState(bn, query, evidence)
+    @test_throws ErrorException("Invalid Evidence: evidence [:T => :T1, :V => :yesV] defines state :T1 for node :T that does not belong to its possible states [:yesT, :noT]") EnhancedBayesianNetworks.verify_evidence(evidence, bn)
 
     evidence = Evidence(:V => :yesV, :T => :yesT)
     query = [:L, :R]
-    @test_throws ErrorException("Query [:L, :R] contains Symbol(s) [:R] that are names of the nodes of the network") InferenceState(bn, query, evidence)
-    @test_throws ErrorException("Query [:L, :R] contains Symbol(s) [:R] that are names of the nodes of the network") EnhancedBayesianNetworks.verify_query(query, bn, evidence)
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:L, :R] contains Symbols [:R] that are not associated to any node of the network") InferenceState(bn, query, evidence)
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:L, :R] contains Symbols [:R] that are not associated to any node of the network") EnhancedBayesianNetworks.verify_query(query, bn, evidence)
 
     query = [:L, :T]
-    @test_throws ErrorException("Query [:L, :T] contains Symbol(s) [:T] that are already part of the evidence Dict(:T => :yesT, :V => :yesV)") InferenceState(bn, query, evidence)
-    @test_throws ErrorException("Query [:L, :T] contains Symbol(s) [:T] that are already part of the evidence Dict(:T => :yesT, :V => :yesV)") EnhancedBayesianNetworks.verify_query(query, bn, evidence)
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:L, :T] contains Symbols [:T] that are already part of the evidence [:T => :yesT, :V => :yesV]") InferenceState(bn, query, evidence)
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:L, :T] contains Symbols [:T] that are already part of the evidence [:T => :yesT, :V => :yesV]") EnhancedBayesianNetworks.verify_query(query, bn, evidence)
 end
 
 @testitem "Credal Networks" begin
@@ -73,15 +73,15 @@ end
     query = [:L]
 
     evidence = Evidence(:V => :yesV, :T => :yesT, :M => :g1)
-    @test_throws ErrorException("Evidence Dict(:T => :yesT, :M => :g1, :V => :yesV) contains Symbol(s) Set([:M]) that are names of the nodes of the network") InferenceState(cn, query, evidence)
+    @test_throws ErrorException("Invalid Evidence: evidence [:T => :yesT, :M => :g1, :V => :yesV] contains Symbols [:M] that are not associated to any node of the network") InferenceState(cn, query, evidence)
 
     evidence = Evidence(:V => :yesV, :T => :T1)
-    @test_throws ErrorException("Evidence defined state T1 for node T that does not belongs to its possible states [:yesT, :noT]") InferenceState(cn, query, evidence)
+    @test_throws ErrorException("Invalid Evidence: evidence [:T => :T1, :V => :yesV] defines state :T1 for node :T that does not belong to its possible states [:yesT, :noT]") InferenceState(cn, query, evidence)
 
     evidence = Evidence(:V => :yesV, :T => :yesT)
     query = [:L, :R]
-    @test_throws ErrorException("Query [:L, :R] contains Symbol(s) [:R] that are names of the nodes of the network") InferenceState(cn, query, evidence)
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:L, :R] contains Symbols [:R] that are not associated to any node of the network") InferenceState(cn, query, evidence)
 
     query = [:L, :T]
-    @test_throws ErrorException("Query [:L, :T] contains Symbol(s) [:T] that are already part of the evidence Dict(:T => :yesT, :V => :yesV)") InferenceState(cn, query, evidence)
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:L, :T] contains Symbols [:T] that are already part of the evidence [:T => :yesT, :V => :yesV]") InferenceState(cn, query, evidence)
 end
