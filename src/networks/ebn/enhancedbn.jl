@@ -45,12 +45,12 @@ function add_child!(
     all_nodes = vcat(parents, children)
     missing_nodes = setdiff([i.name for i in all_nodes], [i.name for i in net.nodes])
     if !isempty(missing_nodes)
-        error("Nodes $missing_nodes are not defined in the eBN")
+        error("Invalid eBN: nodes $missing_nodes are not defined in the eBN")
     end
     ## verify No loop
     loop = intersect(parents, children)
     if !isempty(loop)
-        error("Invalid eBN: node '$(getproperty.(loop, :name))' has a loop")
+        error("Invalid eBN: nodes $(getproperty.(loop, :name)) have a loop")
     end
     # ## verify Discrete parent nodes
     discrete_par = filter(x -> isa(x, DiscreteNode), parents)
@@ -76,7 +76,7 @@ function add_child!(
     all_nodes = vcat(parents, children)
     missing_nodes = setdiff(all_nodes, [i.name for i in net.nodes])
     if !isempty(missing_nodes)
-        error("Nodes $missing_nodes are not defined in the eBN")
+        error("Invalid eBN: nodes $missing_nodes are not defined in the eBN")
     end
     par_nodes = filter(x -> x.name ∈ parents, net.nodes)
     ch_nodes = filter(x -> x.name ∈ children, net.nodes)
@@ -191,11 +191,11 @@ function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ##
     net_ancestors = discrete_ancestors(net, node)
     only_in_st = setdiff(st_ancestors, net_ancestors)
     if !isempty(only_in_st)
-        error("Invalid SimulationTable: node $(repr(node.name)) has nodes '$only_in_st' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN")
+        error("Invalid SimulationTable: node $(repr(node.name)) has nodes $only_in_st defined in the SimulationTable only, but they are not ancestors in the defined eBN")
     end
     only_in_net = setdiff(net_ancestors, st_ancestors)
     if !isempty(only_in_net)
-        error("Invalid SimulationTable: node $(repr(node.name)) has ancestors(s) '$only_in_net' defined in the eBN only, but they are not present in its SimulationTable")
+        error("Invalid SimulationTable: node $(repr(node.name)) has ancestors $only_in_net defined in the eBN only, but they are not present in its SimulationTable")
     end
 end
 

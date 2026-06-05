@@ -88,7 +88,7 @@ end
 
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
-    @test_throws ErrorException("Invalid eBN: node '[:W]' has a loop") add_child!(net, weather, weather)
+    @test_throws ErrorException("Invalid eBN: nodes [:W] have a loop") add_child!(net, weather, weather)
     @test_throws ErrorException("Invalid Network: node :G does not have the node :W in its CPT") add_child!(net, weather, grass)
     @test_throws ErrorException("Invalid Network: nodes [:G] are not functional nodes and cannot be children of the continuous/functional node :G2") add_child!(net, grass2, grass)
     @test_throws ErrorException("Invalid Network: nodes [:G] are not functional nodes and cannot be children of the continuous/functional node :Rc") add_child!(net, rain2, grass)
@@ -103,8 +103,8 @@ end
     b = DiscreteNode(:b)
     b[:b=>:b1] = 0.5
     b[:b=>:b2] = 0.5
-    @test_throws ErrorException("Nodes [:b] are not defined in the eBN") add_child!(net, b, sprinkler)
-    @test_throws ErrorException("Nodes [:b] are not defined in the eBN") add_child!(net, :b, :S)
+    @test_throws ErrorException("Invalid eBN: nodes [:b] are not defined in the eBN") add_child!(net, b, sprinkler)
+    @test_throws ErrorException("Invalid eBN: nodes [:b] are not defined in the eBN") add_child!(net, :b, :S)
 end
 
 @testitem "EnhancedBayesianNetwork - Transmission" begin
@@ -414,7 +414,7 @@ end
     add_child!(net, weather, [sprinkler, rain, rain2, rain3])
     add_child!(net, [rain, sprinkler], grass)
     add_child!(net, [rain2, sprinkler], grass2)
-    @test_throws ErrorException("Invalid SimulationTable: node :G3 has nodes '[:W, :S, :R]' defined in the SimulationTable only, but they are not ancestor(s) in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
+    @test_throws ErrorException("Invalid SimulationTable: node :G3 has nodes [:W, :S, :R] defined in the SimulationTable only, but they are not ancestors in the defined eBN") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
 
     grass3 = ContinuousFunctionalNode(:G3, [:W], model)
     grass3[:W=>:sunny] = MonteCarlo(10)
@@ -425,7 +425,7 @@ end
     add_child!(net, [rain, sprinkler], grass)
     add_child!(net, [rain2, sprinkler], grass2)
     add_child!(net, [rain3, sprinkler], grass3)
-    @test_throws ErrorException("Invalid SimulationTable: node :G3 has ancestors(s) '[:S]' defined in the eBN only, but they are not present in its SimulationTable") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
+    @test_throws ErrorException("Invalid SimulationTable: node :G3 has ancestors [:S] defined in the eBN only, but they are not present in its SimulationTable") EnhancedBayesianNetworks.verify_ancestors(net, grass3)
 
     grass3 = ContinuousFunctionalNode(:G3, [:W, :S], model)
     grass3[:W=>:sunny, :S=>:on] = MonteCarlo(10)
