@@ -85,7 +85,8 @@ end
     @test approximated_dist[3].ρ.θ == λ
 end
 
-@testsitem "Discretize Nodes" begin
+@testitem "Discretize Nodes" begin
+    using Suppressor
     ## Root Nodes
     discretization = ExactDiscretization([-1, 0, 1])
     node = ContinuousNode(:x, discretization)
