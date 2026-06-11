@@ -1,4 +1,4 @@
-struct InferenceState <: AbstractInferenceState
+struct InferenceState
     net::Union{BayesianNetwork,CredalNetwork}
     query::Vector{Symbol}
     evidence::Evidence
@@ -27,7 +27,7 @@ function verify_evidence(evidence::Evidence, net::Union{BayesianNetwork,CredalNe
     missing_names = setdiff(keys(evidence), getproperty.(net.nodes, :name))
     if !isempty(missing_names)
         evidence_str = "[" * join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ") * "]"
-        missing_str = string(collect(missing_names))
+        missing_str = string(collect(missixng_names))
         error("Invalid Evidence: evidence $evidence_str contains Symbols $missing_str that are not associated to any node of the network")
     end
     for (n, s) in evidence
