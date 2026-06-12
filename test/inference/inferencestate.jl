@@ -41,7 +41,7 @@
     @test_throws ErrorException("Invalid Query: queried nodes vector [:L, :T] contains Symbols [:T] that are already part of the evidence [:T => :yesT, :V => :yesV]") EnhancedBayesianNetworks.verify_query(query, bn, evidence)
 end
 
-@testitem "Credal Networks" begin
+@testitem "Inference State - CN" begin
     v = DiscreteNode(:V)
     v[:V=>:yesV] = 0.01
     v[:V=>:noV] = 0.99
