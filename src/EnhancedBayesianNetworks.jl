@@ -46,7 +46,7 @@ export children
 export discrete_ancestors
 # export dispatch
 # export distributions
-# export factorize
+export factorize
 export gplot
 # export infer
 export isprecise
