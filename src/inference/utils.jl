@@ -1,16 +1,3 @@
-struct InferenceState
-    net::Union{BayesianNetwork,CredalNetwork}
-    query::Vector{Symbol}
-    evidence::Evidence
-
-    function InferenceState(net::Union{BayesianNetwork,CredalNetwork}, query::Union{Symbol,Vector{Symbol}}, evidence::Evidence)
-        query = wrap(query)
-        verify_evidence(evidence, net)
-        verify_query(query, net, evidence)
-        return new(net, query, evidence)
-    end
-end
-
 function verify_query(query::Vector{Symbol}, net::Union{BayesianNetwork,CredalNetwork}, evidence::Evidence)
     missing_names = setdiff(query, getproperty.(net.nodes, :name))
     if !isempty(missing_names)
@@ -37,4 +24,19 @@ function verify_evidence(evidence::Evidence, net::Union{BayesianNetwork,CredalNe
             error("Invalid Evidence: evidence $evidence_str defines state $(repr(s)) for node $(repr(n)) that does not belong to its possible states $(repr(sts))")
         end
     end
+end
+
+function query_to_idx(query::Vector{Symbol}, ns::NetworkSchema)
+    return [ns.node_to_idx[q] for q in query]
+end
+
+function evidence_to_idx(evidence::Evidence, ns::NetworkSchema)
+    result = Tuple{Int,Int}[]
+    for (node, state) in evidence
+        nodeid = ns.node_to_idx[node]
+        stateid =
+            ns.state_to_idx[nodeid][state]
+        push!(result, (nodeid, stateid))
+    end
+    return result
 end
