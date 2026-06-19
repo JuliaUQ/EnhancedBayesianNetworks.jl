@@ -6,17 +6,22 @@ struct NetworkSchema
 end
 
 function NetworkSchema(bn::BayesianNetwork)
-    idx_to_node = getproperty.(bn.nodes, :name)
-    node_to_idx = Dict(
-        v => i
-        for (i, v) in enumerate(idx_to_node)
-    )
-    idx_to_state = states.(bn.nodes)
-    state_to_idx = [
-        Dict(state => i
-             for (i, state) in enumerate(sts))
-        for sts in idx_to_state
-    ]
+    node_to_idx = copy(bn.topology)
+
+    n = length(node_to_idx)
+    idx_to_node = Vector{Symbol}(undef, n)
+    for (node, idx) in node_to_idx
+        idx_to_node[idx] = node
+    end
+
+    idx_to_state = Vector{Vector{Symbol}}(undef, n)
+    for node in bn.nodes
+        idx = node_to_idx[node.name]
+        idx_to_state[idx] = states(node)
+    end
+
+    state_to_idx = [Dict(state => i for (i, state) in enumerate(sts)) for sts in idx_to_state]
+
     NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
 end
 
