@@ -1,4 +1,5 @@
-function verify_query(query::Vector{Symbol}, net::Union{BayesianNetwork,CredalNetwork}, evidence::Evidence)
+function verify_query(query::Union{Symbol,Vector{Symbol}}, net::Union{BayesianNetwork,CredalNetwork}, evidence::Evidence)
+    query = wrap(query)
     missing_names = setdiff(query, getproperty.(net.nodes, :name))
     if !isempty(missing_names)
         error("Invalid Query: queried nodes vector $query contains Symbols $missing_names that are not associated to any node of the network")
@@ -26,7 +27,8 @@ function verify_evidence(evidence::Evidence, net::Union{BayesianNetwork,CredalNe
     end
 end
 
-function query_to_idx(query::Vector{Symbol}, ns::NetworkSchema)
+function query_to_idx(query::Union{Symbol,Vector{Symbol}}, ns::NetworkSchema)
+    query = wrap(query)
     return [ns.node_to_idx[q] for q in query]
 end
 

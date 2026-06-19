@@ -3,21 +3,21 @@ struct NetworkSchema
     idx_to_node::Vector{Symbol}
     state_to_idx::Vector{Dict{Symbol,Int}}
     idx_to_state::Vector{Vector{Symbol}}
+end
 
-    function NetworkSchema(bn::BayesianNetwork)
-        idx_to_node = getproperty.(bn.nodes, :name)
-        node_to_idx = Dict(
-            v => i
-            for (i, v) in enumerate(idx_to_node)
-        )
-        idx_to_state = states.(bn.nodes)
-        state_to_idx = [
-            Dict(state => i
-                 for (i, state) in enumerate(sts))
-            for sts in idx_to_state
-        ]
-        new(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
-    end
+function NetworkSchema(bn::BayesianNetwork)
+    idx_to_node = getproperty.(bn.nodes, :name)
+    node_to_idx = Dict(
+        v => i
+        for (i, v) in enumerate(idx_to_node)
+    )
+    idx_to_state = states.(bn.nodes)
+    state_to_idx = [
+        Dict(state => i
+             for (i, state) in enumerate(sts))
+        for sts in idx_to_state
+    ]
+    NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
 end
 
 struct InferenceState
