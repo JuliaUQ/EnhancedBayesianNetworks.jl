@@ -25,6 +25,35 @@ function NetworkSchema(bn::BayesianNetwork)
     NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
 end
 
+struct InteractionGraph
+    neighbors::Vector{Set{Int}}
+end
+
+function InteractionGraph(bn::BayesianNetwork)
+    n = size(bn.A, 1)
+    neighbors = [Set{Int}() for _ in 1:n]
+    rows = rowvals(bn.A)
+    for child in 1:n
+        pars = rows[nzrange(bn.A, child)]
+        # parent-child edges
+        for p in pars
+            push!(neighbors[child], p)
+            push!(neighbors[p], child)
+        end
+        # moral edges
+        for i in eachindex(pars)
+            for j in (i+1):length(pars)
+                p1 = pars[i]
+                p2 = pars[j]
+                push!(neighbors[p1], p2)
+                push!(neighbors[p2], p1)
+            end
+        end
+    end
+
+    InteractionGraph(neighbors)
+end
+
 struct InferenceState
     net::Union{BayesianNetwork,CredalNetwork}
     query::Vector{Symbol}
@@ -41,4 +70,5 @@ end
 include("utils.jl")
 include("factors.jl")
 include("factors_algebra.jl")
+include("sorting.jl")
 include("variableselimination.jl")
