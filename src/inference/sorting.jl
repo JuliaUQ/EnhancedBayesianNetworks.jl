@@ -33,7 +33,7 @@ function best_node(ig::InteractionGraph, ns::NetworkSchema, remaining::Set{Int},
     return best
 end
 
-function ic_score(ig::InteractionGraph, _::NetworkSchema, node::Int)
+function fill_score(ig::InteractionGraph, _::NetworkSchema, node::Int)
     ed = deleted_edges(ig, node)
     if ed == 0
         return 0.0
@@ -42,7 +42,7 @@ function ic_score(ig::InteractionGraph, _::NetworkSchema, node::Int)
     return ea / ed
 end
 
-function complexity_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
+function factor_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
     score = length(ns.idx_to_state[node])
     for neigh in ig.neighbors[node]
         score *= length(ns.idx_to_state[neigh])
@@ -50,10 +50,10 @@ function complexity_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
     return score
 end
 
-function ic_complexity_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
+function fill_factor_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
     return (
-        ic_score(ig, ns, node),
-        complexity_score(ig, ns, node),
+        fill_score(ig, ns, node),
+        factor_score(ig, ns, node),
         node
     )
 end

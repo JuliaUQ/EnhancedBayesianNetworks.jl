@@ -100,7 +100,7 @@ end
     end
 end
 
-@testitem "Sorting - complexity-score" begin
+@testitem "Sorting - min complexity" begin
     idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
     idx_to_state = [
         [:YesV, :NoV],
@@ -136,7 +136,7 @@ end
     ])
     scores = Dict(
         ns.idx_to_node[i] =>
-            EnhancedBayesianNetworks.complexity_score(ig, ns, i)
+            EnhancedBayesianNetworks.factor_score(ig, ns, i)
         for i in eachindex(ns.idx_to_node)
     )
 
@@ -150,7 +150,7 @@ end
     @test scores[:E] == 64
 end
 
-@testitem "Sorting - ic-score" begin
+@testitem "Sorting - min added complexity" begin
     idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
     idx_to_state = [
         [:YesV, :NoV],
@@ -186,7 +186,7 @@ end
     ])
 
     scores = Dict(
-        i => EnhancedBayesianNetworks.ic_score(ig, ns, i)
+        i => EnhancedBayesianNetworks.fill_score(ig, ns, i)
         for i in 1:8
     )
 
@@ -202,10 +202,10 @@ end
     ig = EnhancedBayesianNetworks.InteractionGraph([
         Set{Int}()
     ])
-    @test EnhancedBayesianNetworks.ic_score(ig, ns, 1) == 0.0
+    @test EnhancedBayesianNetworks.fill_score(ig, ns, 1) == 0.0
 end
 
-@testitem "Sorting - ic_complexity-score" begin
+@testitem "Sorting - min added complexity & complexity" begin
     idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
     idx_to_state = [
         [:YesV, :NoV],
@@ -241,7 +241,7 @@ end
     ])
     scores = Dict(
         ns.idx_to_node[i] =>
-            EnhancedBayesianNetworks.ic_complexity_score(ig, ns, i)
+            EnhancedBayesianNetworks.fill_factor_score(ig, ns, i)
         for i in eachindex(ns.idx_to_node)
     )
     expected = Dict(
@@ -299,7 +299,7 @@ end
 
     # ic
     remaining = Set(1:8)
-    scorefun = EnhancedBayesianNetworks.ic_score
+    scorefun = EnhancedBayesianNetworks.fill_score
     node = EnhancedBayesianNetworks.best_node(
         ig,
         ns,
@@ -337,7 +337,7 @@ end
 
     # complexity
     remaining = Set(1:8)
-    scorefun = EnhancedBayesianNetworks.complexity_score
+    scorefun = EnhancedBayesianNetworks.factor_score
     node = EnhancedBayesianNetworks.best_node(
         ig,
         ns,
@@ -375,7 +375,7 @@ end
 
     # ic-complexity
     remaining = Set(1:8)
-    scorefun = EnhancedBayesianNetworks.ic_complexity_score
+    scorefun = EnhancedBayesianNetworks.fill_factor_score
     node = EnhancedBayesianNetworks.best_node(
         ig,
         ns,
@@ -475,7 +475,7 @@ end
     add_child!(bn, E, X)
     order!(bn)
 
-    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.ic_score) == [1, 7, 8, 3, 2, 4, 5, 6]
-    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.complexity_score) == [1, 8, 2, 3, 4, 5, 6, 7]
-    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.ic_complexity_score) == [1, 8, 3, 7, 2, 4, 5, 6]
+    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.fill_score) == [1, 7, 8, 3, 2, 4, 5, 6]
+    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.factor_score) == [1, 8, 2, 3, 4, 5, 6, 7]
+    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.fill_factor_score) == [1, 8, 3, 7, 2, 4, 5, 6]
 end
