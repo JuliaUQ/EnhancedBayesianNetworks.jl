@@ -64,4 +64,7 @@ order!(bn)
 
 gplot(bn)
 
-ns = EnhancedBayesianNetworks.NetworkSchema(bn)
+
+query = [:L, :X, :E]
+evidence = Evidence(:D=>:YesD)
+infer(bn, query, evidence)
