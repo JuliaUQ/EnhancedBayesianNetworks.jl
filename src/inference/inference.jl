@@ -54,19 +54,6 @@ function InteractionGraph(bn::BayesianNetwork)
     InteractionGraph(neighbors)
 end
 
-struct InferenceState
-    net::Union{BayesianNetwork,CredalNetwork}
-    query::Vector{Symbol}
-    evidence::Evidence
-
-    function InferenceState(net::Union{BayesianNetwork,CredalNetwork}, query::Union{Symbol,Vector{Symbol}}, evidence::Evidence)
-        query = wrap(query)
-        verify_evidence(evidence, net)
-        verify_query(query, net, evidence)
-        return new(net, query, evidence)
-    end
-end
-
 include("utils.jl")
 include("factors.jl")
 include("factors_algebra.jl")
