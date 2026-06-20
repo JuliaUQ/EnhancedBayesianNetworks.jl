@@ -62,3 +62,8 @@ function expand(f::Factor, allvars::Vector{Int}, allpos::Dict{Int,Int})
     end
     return reshape(A, shape...)
 end
+
+function reorder(f::Factor, vars::Vector{Int})
+    perm = [varpos(f, v) for v in vars]
+    return Factor(vars, permutedims(f.table, perm))
+end

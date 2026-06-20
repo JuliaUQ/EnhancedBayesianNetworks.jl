@@ -56,6 +56,56 @@ end
     @test all(collect(A) .== expected)
 end
 
+@testitem "Factors Algebra - reorder" begin
+    f = Factor([1, 2], reshape(collect(1:4), 2, 2))
+    r = EnhancedBayesianNetworks.reorder(f, [1, 2])
+
+    @test r.vars == [1, 2]
+    @test r.table == f.table
+
+    f = Factor([1, 2], reshape(collect(1:4), 2, 2))
+    r = EnhancedBayesianNetworks.reorder(f, [2, 1])
+    @test r.vars == [2, 1]
+    @test r.table[1, 1] == f.table[1, 1]
+    @test r.table[2, 1] == f.table[1, 2]
+    @test r.table[1, 2] == f.table[2, 1]
+    @test r.table[2, 2] == f.table[2, 2]
+
+    f = Factor([1, 2, 3], reshape(collect(1:24), 2, 3, 4))
+    r = EnhancedBayesianNetworks.reorder(f, [3, 1, 2])
+    @test r.vars == [3, 1, 2]
+    @test size(r.table) == (4, 2, 3)
+    @test r.table[1, 1, 1] == f.table[1, 1, 1]
+    @test r.table[4, 2, 3] == f.table[2, 3, 4]
+
+    f = Factor([1, 2, 3], reshape(collect(1:24), 2, 3, 4))
+    r1 = EnhancedBayesianNetworks.reorder(f, [3, 1, 2])
+    r2 = EnhancedBayesianNetworks.reorder(r1, [1, 2, 3])
+    @test r2.vars == f.vars
+    @test r2.table == f.table
+
+    f = Factor([5], [0.3, 0.7])
+    r = EnhancedBayesianNetworks.reorder(f, [5])
+    @test r.vars == [5]
+    @test r.table == [0.3, 0.7]
+
+    f = Factor(Int[], fill(42.0))
+    r = EnhancedBayesianNetworks.reorder(f, Int[])
+    @test isempty(r.vars)
+    @test r.table[] == 42.0
+
+    f = Factor([10, 20, 30], reshape(collect(1:24), 2, 3, 4))
+    r = EnhancedBayesianNetworks.reorder(f, [30, 10, 20])
+    @test r.vars == [30, 10, 20]
+    for i in 1:2
+        for j in 1:3
+            for k in 1:4
+                @test f.table[i, j, k] == r.table[k, i, j]
+            end
+        end
+    end
+end
+
 @testitem "Factors Algebra - multiply" begin
     fW = Factor([1], [0.5, 0.5])
     fR = Factor([1, 2], [0.8 0.2; 0.1 0.9])

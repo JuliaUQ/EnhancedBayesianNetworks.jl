@@ -17,7 +17,7 @@ function best_node(ig::InteractionGraph, ns::NetworkSchema, remaining::Set{Int},
     best = minimum(remaining)
     best_score = scorefun(ig, ns, best)
 
-    for node in remaining
+    for node ∈ remaining
         if node == best
             continue
         end
@@ -42,7 +42,7 @@ end
 
 function factor_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
     score = length(ns.idx_to_state[node])
-    for neigh in ig.neighbors[node]
+    for neigh ∈ ig.neighbors[node]
         score *= length(ns.idx_to_state[neigh])
     end
     return score
@@ -59,8 +59,8 @@ end
 function eliminate!(ig::InteractionGraph, node::Int)
     neigh = collect(ig.neighbors[node])
     # add fill-in edges
-    for i in eachindex(neigh)
-        for j in (i+1):length(neigh)
+    for i ∈ eachindex(neigh)
+        for j ∈ (i+1):length(neigh)
             n1 = neigh[i]
             n2 = neigh[j]
             push!(ig.neighbors[n1], n2)
@@ -68,7 +68,7 @@ function eliminate!(ig::InteractionGraph, node::Int)
         end
     end
     # remove node from its neighbors
-    for n in neigh
+    for n ∈ neigh
         delete!(ig.neighbors[n], node)
     end
     empty!(ig.neighbors[node])
@@ -78,9 +78,9 @@ end
 function added_edges(ig::InteractionGraph, node::Int)
     neigh = collect(ig.neighbors[node])
     missing = 0
-    for i in eachindex(neigh)
-        for j in (i+1):length(neigh)
-            if !(neigh[j] in ig.neighbors[neigh[i]])
+    for i ∈ eachindex(neigh)
+        for j ∈ (i+1):length(neigh)
+            if !(neigh[j] ∈ ig.neighbors[neigh[i]])
                 missing += 1
             end
         end
