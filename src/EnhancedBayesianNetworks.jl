@@ -34,6 +34,7 @@ export Evidence
 export Factor
 export FunctionalNode
 export InferenceState
+export Posterior
 
 # export Factor
 
@@ -48,7 +49,7 @@ export discrete_ancestors
 # export distributions
 export factorize
 export gplot
-# export infer
+export infer
 export isprecise
 export isroot
 export joint_probability
@@ -67,6 +68,6 @@ include("nodes/nodes.jl")
 include("networks/networks.jl")
 include("inference/inference.jl")
 # include("learning/learning.jl")
-# include("utils/base_show.jl")
+include("utils/base_show.jl")
 include("utils/plots.jl")
 end
