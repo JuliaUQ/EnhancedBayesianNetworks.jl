@@ -1,7 +1,5 @@
-function sort_nodes(bn::BayesianNetwork, scorefun)
+function sort_nodes(ig::InteractionGraph, ns::NetworkSchema, scorefun)
 
-    ig = InteractionGraph(bn)
-    ns = NetworkSchema(bn)
     remaining = Set(1:length(ig.neighbors))
     order = Int[]
 

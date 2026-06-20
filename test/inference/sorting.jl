@@ -413,69 +413,108 @@ end
 end
 
 @testitem "Sorting - sort_nodes" begin
+    idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
+    idx_to_state = [
+        [:YesV, :NoV],
+        [:YesS, :NoS],
+        [:YesT, :NoT],
+        [:YesL, :NoL],
+        [:YesB, :NoB],
+        [:YesE, :NoE],
+        [:YesD, :NoD],
+        [:YesX, :NoX]
+    ]
+    node_to_idx = Dict(:T => 3, :D => 7, :L => 4, :V => 1, :S => 2, :B => 5, :X => 8, :E => 6)
+    state_to_idx = [
+        Dict(:YesV => 1, :NoV => 2),
+        Dict(:NoS => 2, :YesS => 1),
+        Dict(:YesT => 1, :NoT => 2),
+        Dict(:YesL => 1, :NoL => 2),
+        Dict(:YesB => 1, :NoB => 2),
+        Dict(:YesE => 1, :NoE => 2),
+        Dict(:YesD => 1, :NoD => 2),
+        Dict(:YesX => 1, :NoX => 2)
+    ]
+    ns = EnhancedBayesianNetworks.NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
+    ig = EnhancedBayesianNetworks.InteractionGraph([
+        Set([3])
+        Set([5, 4])
+        Set([4, 6, 1])
+        Set([6, 2, 3])
+        Set([6, 7, 2])
+        Set([5, 4, 7, 8, 3])
+        Set([5, 6])
+        Set([6])
+    ])
+    @test EnhancedBayesianNetworks.sort_nodes(ig, ns, EnhancedBayesianNetworks.fill_score) == [1, 7, 8, 3, 2, 4, 5, 6]
 
-    V = DiscreteNode(:V)
-    V[:V=>:YesV] = 0.01
-    V[:V=>:NoV] = 0.99
+    idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
+    idx_to_state = [
+        [:YesV, :NoV],
+        [:YesS, :NoS],
+        [:YesT, :NoT],
+        [:YesL, :NoL],
+        [:YesB, :NoB],
+        [:YesE, :NoE],
+        [:YesD, :NoD],
+        [:YesX, :NoX]
+    ]
+    node_to_idx = Dict(:T => 3, :D => 7, :L => 4, :V => 1, :S => 2, :B => 5, :X => 8, :E => 6)
+    state_to_idx = [
+        Dict(:YesV => 1, :NoV => 2),
+        Dict(:NoS => 2, :YesS => 1),
+        Dict(:YesT => 1, :NoT => 2),
+        Dict(:YesL => 1, :NoL => 2),
+        Dict(:YesB => 1, :NoB => 2),
+        Dict(:YesE => 1, :NoE => 2),
+        Dict(:YesD => 1, :NoD => 2),
+        Dict(:YesX => 1, :NoX => 2)
+    ]
+    ns = EnhancedBayesianNetworks.NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
+    ig = EnhancedBayesianNetworks.InteractionGraph([
+        Set([3])
+        Set([5, 4])
+        Set([4, 6, 1])
+        Set([6, 2, 3])
+        Set([6, 7, 2])
+        Set([5, 4, 7, 8, 3])
+        Set([5, 6])
+        Set([6])
+    ])
+    @test EnhancedBayesianNetworks.sort_nodes(ig, ns, EnhancedBayesianNetworks.factor_score) == [1, 8, 2, 3, 4, 5, 6, 7]
 
-    S = DiscreteNode(:S)
-    S[:S=>:YesS] = 0.01
-    S[:S=>:NoS] = 0.99
-
-    T = DiscreteNode(:T, [:V])
-    T[:V=>:YesV, :T=>:YesT] = 0.05
-    T[:V=>:YesV, :T=>:NoT] = 0.95
-    T[:V=>:NoV, :T=>:YesT] = 0.01
-    T[:V=>:NoV, :T=>:NoT] = 0.99
-
-    L = DiscreteNode(:L, [:S])
-    L[:S=>:YesS, :L=>:YesL] = 0.1
-    L[:S=>:YesS, :L=>:NoL] = 0.9
-    L[:S=>:NoS, :L=>:YesL] = 0.01
-    L[:S=>:NoS, :L=>:NoL] = 0.99
-
-    B = DiscreteNode(:B, [:S])
-    B[:S=>:YesS, :B=>:YesB] = 0.6
-    B[:S=>:YesS, :B=>:NoB] = 0.4
-    B[:S=>:NoS, :B=>:YesB] = 0.3
-    B[:S=>:NoS, :B=>:NoB] = 0.7
-
-    E = DiscreteNode(:E, [:L, :T])
-    E[:L=>:YesL, :T=>:YesT, :E=>:YesE] = 1
-    E[:L=>:YesL, :T=>:YesT, :E=>:NoE] = 0
-    E[:L=>:YesL, :T=>:NoT, :E=>:YesE] = 1
-    E[:L=>:YesL, :T=>:NoT, :E=>:NoE] = 0
-    E[:L=>:NoL, :T=>:YesT, :E=>:YesE] = 1
-    E[:L=>:NoL, :T=>:YesT, :E=>:NoE] = 0
-    E[:L=>:NoL, :T=>:NoT, :E=>:YesE] = 0
-    E[:L=>:NoL, :T=>:NoT, :E=>:NoE] = 1
-
-    D = DiscreteNode(:D, [:B, :E])
-    D[:B=>:YesB, :E=>:YesE, :D=>:YesD] = 0.9
-    D[:B=>:YesB, :E=>:YesE, :D=>:NoD] = 0.1
-    D[:B=>:YesB, :E=>:NoE, :D=>:YesD] = 0.8
-    D[:B=>:YesB, :E=>:NoE, :D=>:NoD] = 0.2
-    D[:B=>:NoB, :E=>:YesE, :D=>:YesD] = 0.7
-    D[:B=>:NoB, :E=>:YesE, :D=>:NoD] = 0.3
-    D[:B=>:NoB, :E=>:NoE, :D=>:YesD] = 0.1
-    D[:B=>:NoB, :E=>:NoE, :D=>:NoD] = 0.9
-
-    X = DiscreteNode(:X, [:E])
-    X[:E=>:YesE, :X=>:YesX] = 0.98
-    X[:E=>:YesE, :X=>:NoX] = 0.02
-    X[:E=>:NoE, :X=>:YesX] = 0.05
-    X[:E=>:NoE, :X=>:NoX] = 0.95
-
-    nodes = [V, S, T, L, B, E, D, X]
-    bn = BayesianNetwork(nodes)
-    add_child!(bn, V, T)
-    add_child!(bn, S, [L, B])
-    add_child!(bn, [T, L], E)
-    add_child!(bn, [E, B], D)
-    add_child!(bn, E, X)
-    order!(bn)
-
-    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.fill_score) == [1, 7, 8, 3, 2, 4, 5, 6]
-    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.factor_score) == [1, 8, 2, 3, 4, 5, 6, 7]
-    @test EnhancedBayesianNetworks.sort_nodes(bn, EnhancedBayesianNetworks.fill_factor_score) == [1, 8, 3, 7, 2, 4, 5, 6]
+    idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
+    idx_to_state = [
+        [:YesV, :NoV],
+        [:YesS, :NoS],
+        [:YesT, :NoT],
+        [:YesL, :NoL],
+        [:YesB, :NoB],
+        [:YesE, :NoE],
+        [:YesD, :NoD],
+        [:YesX, :NoX]
+    ]
+    node_to_idx = Dict(:T => 3, :D => 7, :L => 4, :V => 1, :S => 2, :B => 5, :X => 8, :E => 6)
+    state_to_idx = [
+        Dict(:YesV => 1, :NoV => 2),
+        Dict(:NoS => 2, :YesS => 1),
+        Dict(:YesT => 1, :NoT => 2),
+        Dict(:YesL => 1, :NoL => 2),
+        Dict(:YesB => 1, :NoB => 2),
+        Dict(:YesE => 1, :NoE => 2),
+        Dict(:YesD => 1, :NoD => 2),
+        Dict(:YesX => 1, :NoX => 2)
+    ]
+    ns = EnhancedBayesianNetworks.NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
+    ig = EnhancedBayesianNetworks.InteractionGraph([
+        Set([3])
+        Set([5, 4])
+        Set([4, 6, 1])
+        Set([6, 2, 3])
+        Set([6, 7, 2])
+        Set([5, 4, 7, 8, 3])
+        Set([5, 6])
+        Set([6])
+    ])
+    @test EnhancedBayesianNetworks.sort_nodes(ig, ns, EnhancedBayesianNetworks.fill_factor_score) == [1, 8, 3, 7, 2, 4, 5, 6]
 end
