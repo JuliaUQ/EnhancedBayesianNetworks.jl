@@ -1,23 +1,12 @@
-function sort_with_minimal_added_complexity_and_complexity(bn::BayesianNetwork, ns::NetworkSchema)
-    sort_nodes(bn, (ig, node) -> (ic_score(ig, node), complexity_score(ig, node, ns), node))
-end
-
-function sort_with_minimal_added_complexity(bn::BayesianNetwork)
-    sort_nodes(bn, (ig, node) -> ic_score(ig, node))
-end
-
-function sort_with_minimal_complexity(bn::BayesianNetwork, ns::NetworkSchema)
-    sort_nodes(bn, (ig, node) -> complexity_score(ig, node, ns))
-end
-
 function sort_nodes(bn::BayesianNetwork, scorefun)
 
     ig = InteractionGraph(bn)
+    ns = NetworkSchema(bn)
     remaining = Set(1:length(ig.neighbors))
     order = Int[]
 
     while !isempty(remaining)
-        node = best_node(ig, remaining, scorefun)
+        node = best_node(ig, ns, remaining, scorefun)
         push!(order, node)
         delete!(remaining, node)
         eliminate!(ig, node)
@@ -26,26 +15,25 @@ function sort_nodes(bn::BayesianNetwork, scorefun)
     return order
 end
 
-function best_node(ig::InteractionGraph, remaining::Set{Int}, scorefun)
-
-    best_node = minimum(remaining)
-    best_score = scorefun(ig, best_node)
+function best_node(ig::InteractionGraph, ns::NetworkSchema, remaining::Set{Int}, scorefun)
+    best = minimum(remaining)
+    best_score = scorefun(ig, ns, best)
 
     for node in remaining
-        if node == best_node
+        if node == best
             continue
         end
-        score = scorefun(ig, node)
+        score = scorefun(ig, ns, node)
         if score < best_score
             best_score = score
-            best_node = node
+            best = node
         end
     end
 
-    return best_node
+    return best
 end
 
-function ic_score(ig::InteractionGraph, node::Int)
+function ic_score(ig::InteractionGraph, _::NetworkSchema, node::Int)
     ed = deleted_edges(ig, node)
     if ed == 0
         return 0.0
@@ -54,12 +42,20 @@ function ic_score(ig::InteractionGraph, node::Int)
     return ea / ed
 end
 
-function complexity_score(ig::InteractionGraph, node::Int, ns::NetworkSchema)
+function complexity_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
     score = length(ns.idx_to_state[node])
     for neigh in ig.neighbors[node]
         score *= length(ns.idx_to_state[neigh])
     end
     return score
+end
+
+function ic_complexity_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
+    return (
+        ic_score(ig, ns, node),
+        complexity_score(ig, ns, node),
+        node
+    )
 end
 
 function eliminate!(ig::InteractionGraph, node::Int)

@@ -1,4 +1,4 @@
-@testitem "Inference - restrict" begin
+@testitem "Factors Algebra - restrict" begin
     # test restrict - scalar
     f = Factor([1], [0.5, 0.5])
     r = EnhancedBayesianNetworks.restrict(f, 1, 1)
@@ -13,7 +13,7 @@
     @test r.table[2] == 0.1
 end
 
-@testitem "Inference - sumout" begin
+@testitem "Factors Algebra - sumout" begin
     f = Factor([1], [0.5, 0.5])
     s = EnhancedBayesianNetworks.sumout(f, 1)
     @test s.vars == Int[]
@@ -26,7 +26,7 @@ end
     @test s.table[2] == 1.0
 end
 
-@testitem "Infernce - expand" begin
+@testitem "Factors Algebra - expand" begin
     # expand test - no expansion
     f = Factor([1, 2], reshape(collect(1:4), 2, 2))
     allpos = Dict(v => i for (i, v) in enumerate([1, 2]))
@@ -56,7 +56,7 @@ end
     @test all(collect(A) .== expected)
 end
 
-@testitem "Inference - multiply" begin
+@testitem "Factors Algebra - multiply" begin
     fW = Factor([1], [0.5, 0.5])
     fR = Factor([1, 2], [0.8 0.2; 0.1 0.9])
     fWR = EnhancedBayesianNetworks.multiply(fW, fR)
@@ -114,7 +114,7 @@ end
     @test_throws ErrorException("Cannot multiply an empty factor set") EnhancedBayesianNetworks.multiply(Factor[])
 end
 
-@testitem "Inference - normalize" begin
+@testitem "Factors Algebra - normalize" begin
     # normalize - 1D
     f = Factor([1], [2.0, 3.0])
     n = EnhancedBayesianNetworks.normalize(f)
