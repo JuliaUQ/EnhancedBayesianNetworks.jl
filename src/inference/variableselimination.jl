@@ -6,24 +6,18 @@ function ve(
 )
 
     factors = copy(factors)
-
     apply_evidence!(factors, evidence_idx)
-
     protected = Set(query_vars)
-
     for (node, _) ∈ evidence_idx
         push!(protected, node)
     end
-
     order = [v for v ∈ order if !(v ∈ protected)]
-
     for var ∈ order
         factors = eliminate_var(factors, var)
     end
-
+    result_query_vars = setdiff(query_vars, first.(evidence_idx))
     result = multiply(factors)
-    result = reorder(result, query_vars)
-
+    result = reorder(result, result_query_vars)
     return normalize(result)
 end
 

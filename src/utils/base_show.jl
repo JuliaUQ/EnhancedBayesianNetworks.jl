@@ -8,7 +8,6 @@ function Base.show(io::IO, p::Posterior)
         print(io, "Posterior P(", q, " | ", ev, ")")
     end
 end
-
 #REPL
 function Base.show(io::IO, ::MIME"text/plain", p::Posterior)
     f = p.factor
@@ -35,4 +34,46 @@ function Base.show(io::IO, ::MIME"text/plain", p::Posterior)
         end
         println(io, f.table[I])
     end
+end
+
+# Compact
+function Base.show(io::IO, p::CredalPosterior)
+    q = join(string.(p.query), ", ")
+    if isempty(p.evidence)
+        print(io, "CredalPosterior P(", q, ")")
+    else
+        ev = join(["$(n)=$(s)" for (n, s) in p.evidence], ", ")
+        print(io, "CredalPosterior P(", q, " | ", ev, ")")
+    end
+end
+# REPL
+function Base.show(io::IO, ::MIME"text/plain", p::CredalPosterior)
+    lower = p.lower
+    upper = p.upper
+    ns = p.schema
+    q = join(string.(p.query), ", ")
+    if isempty(p.evidence)
+        println(io, "CredalPosterior P(", q, ")")
+    else
+        ev = join(["$(n)=$(s)" for (n, s) in p.evidence], ", ")
+        println(io, "CredalPosterior P(", q, " | ", ev, ")")
+    end
+    println(io)
+    names = ns.idx_to_node[lower.vars]
+    for name in names
+        print(io, name, "\t")
+    end
+    println(io, "Interval")
+    println(io, repeat("-", 12 * (length(names) + 1)))
+    for I in CartesianIndices(lower.table)
+        idxs = Tuple(I)
+        for (var, idx) in zip(lower.vars, idxs)
+            print(io, ns.idx_to_state[var][idx], "\t")
+        end
+        l = round(lower.table[I], sigdigits=6)
+        u = round(upper.table[I], sigdigits=6)
+        println(io, "[", l, ", ", u, "]")
+    end
+    println(io)
+    println(io, "Extreme posteriors: ", length(p.posteriors))
 end
