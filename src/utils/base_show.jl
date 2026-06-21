@@ -17,7 +17,6 @@ function Base.show(io::IO, ::MIME"text/plain", node::DiscreteNode)
         println(io, "Type: Credal")
     end
     if !isempty(node.parameters)
-        println(io)
         println(io, "Parameters:")
         for (name, pars) in node.parameters
             println(io, "  ", name, ": ", join(string.(pars), ", "))
@@ -41,8 +40,15 @@ function Base.show(io::IO, ::MIME"text/plain", node::ContinuousNode)
         println(io, "Parents: ", join(string.(p), ", "))
     end
 
-    println(io, "Discretization: ", nameof(typeof(node.discretization))
-    )
+    d = node.discretization
+    if !isempty(d)
+        println(io, "Discretization: ", nameof(typeof(d)))
+        if d isa ApproximatedDiscretization
+            println(io, "  Sigma: ", d.sigma)
+        end
+        println(io, "  Intervals: ", join(d.intervals, ", "))
+    end
+
     println(io, "Type: ", isprecise(node) ? "Precise" : "Imprecise")
     try
         bounds = _distribution_bounds(node)
@@ -52,6 +58,7 @@ function Base.show(io::IO, ::MIME"text/plain", node::ContinuousNode)
     println(io)
     show(io, MIME"text/plain"(), node.cpt.data)
 end
+
 # Functional Nodes
 function Base.show(io::IO, node::ContinuousFunctionalNode)
     print(
@@ -59,9 +66,19 @@ function Base.show(io::IO, node::ContinuousFunctionalNode)
 end
 function Base.show(io::IO, ::MIME"text/plain", node::ContinuousFunctionalNode)
     println(io, "ContinuousFunctionalNode: ", node.name)
-    println(io, "Models: ", length(node.models))
-    println(io, "Discretization: ", nameof(typeof(node.discretization))
-    )
+    if !isempty(node.models)
+        println(io, "Models: ", length(node.models))
+        println(io, "  Names: ", join(getproperty.(node.models, :name), ", "))
+    end
+    d = node.discretization
+    if !isempty(d)
+        println(io, "Discretization: ", nameof(typeof(d)))
+        if d isa ApproximatedDiscretization
+            println(io, "  Sigma: ", d.sigma)
+        end
+        println(io, "  Intervals: ", join(d.intervals, ", "))
+    end
+
     println(io, "Bins: ", node.nbins)
     println(io, "Simulation: ", nameof(typeof(node.simulation)))
     if node.simulation isa ScenariosTable
@@ -76,16 +93,20 @@ end
 function Base.show(io::IO, ::MIME"text/plain", node::DiscreteFunctionalNode)
     println(io, "DiscreteFunctionalNode: ", node.name)
     println(io, "States: ", join(string.(states(node)), ", "))
-    println(io, "Models: ", length(node.models))
+
+    if !isempty(node.models)
+        println(io, "Models: ", length(node.models))
+        println(io, "  Names: ", join(getproperty.(node.models, :name), ", "))
+    end
+
     println(io, "Simulation: ", nameof(typeof(node.simulation)))
-    println(io, "Parameters: ", length(node.parameters)
-    )
     if !isempty(node.parameters)
-        println(io)
+        println(io, "Parameters:")
         for (name, pars) in node.parameters
-            println(io, "  ", name, ": ", length(pars), " parameter(s)")
+            println(io, "  ", name, ": ", join(string.(pars), ", "))
         end
     end
+
     if node.simulation isa ScenariosTable
         println(io)
         show(io, MIME"text/plain"(), node.simulation.data)
