@@ -1,23 +1,43 @@
 using EnhancedBayesianNetworks
-using Plots
+using Cairo
 
-tampering = DiscreteNode(:Tampering, DataFrame(:Tampering => [:NoT, :YesT], :Π => [0.98, 0.02]))
-fire = DiscreteNode(:Fire, DataFrame(:Fire => [:NoF, :YesF], :Π => [[0.98, 0.99], [0.01, 0.02]]))
+T = DiscreteNode(:Tampering)
+T[:Tampering=>:YesT] = 0.98
+T[:Tampering=>:NoT] = 0.02
 
-alarm_df = DataFrame(:Tampering => [:NoT, :NoT, :NoT, :NoT, :YesT, :YesT, :YesT, :YesT], :Fire => [:NoF, :NoF, :YesF, :YesF, :NoF, :NoF, :YesF, :YesF], :Alarm => [:NoA, :YesA, :NoA, :YesA, :NoA, :YesA, :NoA, :YesA], :Π => [[0.9998, 0.9999], [0.0001, 0.0002], [0.01, 0.015], [0.985, 0.99], [0.1, 0.15], [0.85, 0.90], [0.4, 0.6], [0.4, 0.6]])
-alarm = DiscreteNode(:Alarm, alarm_df)
+F = DiscreteNode(:Fire)
+F[:Fire=>:YesF] = Interval(0.98, 0.99)
+F[:Fire=>:NoF] = Interval(0.01, 0.02)
 
-smoke_df = DataFrame(:Fire => [:NoF, :NoF, :YesF, :YesF], :Smoke => [:NoS, :YesS, :NoS, :YesS], :Π => [[0.9, 0.99], [0.01, 0.1], [0.09, 0.13], [0.87, 0.91]])
-smoke = DiscreteNode(:Smoke, smoke_df)
+A = DiscreteNode(:Alarm, [:Tampering, :Fire])
+A[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.4, 0.6)
+A[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.4, 0.5)
+A[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.85, 0.9)
+A[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.1, 0.15)
+A[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.985, 0.99)
+A[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.01, 0.015)
+A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.0001, 0.0002)
+A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.9998, 0.9999)
 
-leaving_df = DataFrame(:Alarm => [:NoA, :NoA, :YesA, :YesA], :Leaving => [:NoL, :YesL, :NoL, :YesL], :Π => [[0.58, 0.999], [0.10, 0.12], [0.001, 0.420], [0.88, 0.9]])
-leaving = DiscreteNode(:Leaving, leaving_df)
+S = DiscreteNode(:Smoke, [:Fire])
+S[:Fire=>:YesF, :Smoke=>:YesS] = Interval(0.87, 0.91)
+S[:Fire=>:YesF, :Smoke=>:NoS] = Interval(0.09, 0.13)
+S[:Fire=>:NoF, :Smoke=>:YesS] = Interval(0.01, 0.1)
+S[:Fire=>:NoF, :Smoke=>:NoS] = Interval(0.9, 0.99)
 
-report_df = DataFrame(:Leaving => [:NoL, :NoL, :YesL, :YesL], :Report => [:NoR, :YesR, :NoR, :YesR], :Π => [[0.80, 0.99], [0.01, 0.2], [0.24, 0.75], [0.25, 0.76]])
+L = DiscreteNode(:Leaving, [:Alarm])
+L[:Alarm=>:YesA, :Leaving=>:YesL] = Interval(0.88, 0.99)
+L[:Alarm=>:YesA, :Leaving=>:NoL] = Interval(0.001, 0.42)
+L[:Alarm=>:NoA, :Leaving=>:YesL] = Interval(0.1, 0.12)
+L[:Alarm=>:NoA, :Leaving=>:NoL] = Interval(0.58, 0.99)
 
-report = DiscreteNode(:Report, report_df)
+R = DiscreteNode(:Report, [:Leaving])
+R[:Leaving=>:YesL, :Report=>:YesR] = Interval(0.25, 0.76)
+R[:Leaving=>:YesL, :Report=>:NoR] = Interval(0.24, 0.75)
+R[:Leaving=>:NoL, :Report=>:YesR] = Interval(0.01, 0.2)
+R[:Leaving=>:NoL, :Report=>:NoR] = Interval(0.8, 0.99)
 
-nodes = [tampering, fire, alarm, smoke, leaving, report]
+nodes = [T, F, A, S, L, R]
 
 cn = CredalNetwork(nodes)
 add_child!(cn, :Tampering, :Alarm)
@@ -27,9 +47,7 @@ add_child!(cn, :Alarm, :Leaving)
 add_child!(cn, :Leaving, :Report)
 order!(cn)
 
-plt1 = gplot(cn; nodesizefactor=0.17)
-
-# saveplot(plt1, "/Users/andreaperin_macos/Documents/PhD/3_Academic/Papers_Presentations/Presentations/BGE-Slide/imgs/fig_cn_tolo.svg")
+plt1 = gplot(cn)
 
 evidence = Evidence()
 query = [:Smoke]
