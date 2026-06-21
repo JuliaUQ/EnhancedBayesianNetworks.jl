@@ -1,15 +1,13 @@
 module EnhancedBayesianNetworks
 
-using AutoHashEquals
 using DataFrames
-using Distributed
 using Distributions
 using LinearAlgebra
 using NetworkLayout
+using Polyhedra: HalfSpace, doubledescription
 using Reexport
 using SparseArrays
-using UncertaintyQuantification: sample, Interval
-using Polyhedra: HalfSpace, doubledescription
+using UncertaintyQuantification
 
 # @reexport using Graphs
 @reexport using UncertaintyQuantification
@@ -26,6 +24,7 @@ export ContinuousFunctionalNode
 export ContinuousInput
 export ContinuousNode
 export CredalNetwork
+export CredalPosterior
 export DiscreteFunctionalNode
 export DiscreteNode
 export ExactDiscretization
@@ -45,16 +44,15 @@ const Evidence = Dict{Symbol,Symbol}
 export add_child!
 export children
 export discrete_ancestors
-# export dispatch
-# export distributions
 export factorize
+export factor_score
+export fill_factor_score
+export fill_score
 export gplot
 export infer
 export isprecise
 export isroot
 export joint_probability
-# export learn_parameters_EM
-# export learn_parameters_MLE
 export markov_blanket
 export markov_envelope
 export order!
