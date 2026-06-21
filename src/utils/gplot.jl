@@ -4,7 +4,7 @@
 
 # Internal base values — all user parameters scale these.
 const _BASE_LABELSIZE = 8pt    # node label font size
-const _BASE_TITLESIZE = 10pt   # title font size
+const _BASE_TITLESIZE = 18pt   # title font size
 const _BORDER_PAD = 0.12   # fraction of canvas kept free at each edge
 
 
@@ -27,7 +27,8 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     ts = _BASE_TITLESIZE * title_size
 
     # ── positions ────────────────────────────────────────────────────────────
-    locs_x, locs_y = _layered_positions(net.A, _BORDER_PAD)
+    top_pad = isempty(title) ? 0.12 : 0.18
+    locs_x, locs_y = _layered_positions(net.A, _BORDER_PAD, top_pad)
 
     # ── edges ────────────────────────────────────────────────────────────────
     edge_list = [(i, j) for i in 1:n for j in 1:n if net.A[i, j] != 0]
@@ -110,7 +111,7 @@ function _compute_layers(A::SparseMatrixCSC)
     return layer
 end
 
-function _layered_positions(A::SparseMatrixCSC, border_pad::Float64=0.12)
+function _layered_positions(A::SparseMatrixCSC, border_pad::Float64=0.12, top_pad::Float64=0.12)
     n = size(A, 1)
     layers = _compute_layers(A)
     max_layer = maximum(layers)
@@ -122,7 +123,8 @@ function _layered_positions(A::SparseMatrixCSC, border_pad::Float64=0.12)
 
     locs_x = zeros(n)
     locs_y = zeros(n)
-    inner = 1.0 - 2 * border_pad   # usable canvas fraction
+    innerx = 1 - 2border_pad
+    innery = 1 - border_pad - top_pad
 
     for (l, group) in enumerate(layer_groups)
         isempty(group) && continue
@@ -130,8 +132,8 @@ function _layered_positions(A::SparseMatrixCSC, border_pad::Float64=0.12)
         for (pos, idx) in enumerate(group)
             x_frac = k == 1 ? 0.5 : (pos - 1) / (k - 1)
             y_frac = (l - 1) / max(max_layer, 1)
-            locs_x[idx] = border_pad + x_frac * inner
-            locs_y[idx] = border_pad + y_frac * inner
+            locs_x[idx] = border_pad + x_frac * innerx
+            locs_y[idx] = top_pad + y_frac * innery
         end
     end
 
