@@ -3,6 +3,8 @@ struct Factor{T,A<:AbstractArray{T}}
     table::A
 end
 
+Factor(vars::Vector{Int}, x::Number) = Factor(vars, fill(x))
+
 function factorize(node::DiscreteNode, ns::NetworkSchema)
     var_names = Symbol.(names(node.cpt.data))[1:(end-1)]
     var_idxs = map(vn -> ns.node_to_idx[vn], var_names)
