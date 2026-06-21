@@ -9,11 +9,12 @@ const _BORDER_PAD = 0.12   # fraction of canvas kept free at each edge
 
 
 function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
-    nodesize=1.0,
-    labelsize=1.0,
-    title="",
-    title_size=1.0,
-    figsize=(20cm, 20cm)
+    nodesize::Float64=1.0,
+    labelsize::Float64=1.0,
+    title::String="",
+    title_size::Float64=1.0,
+    figsize::Tuple=(20cm, 20cm),
+    legend::Bool=false
 )
     node_list = net.nodes
     n = length(node_list)
@@ -62,14 +63,14 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     # ── assemble (painter's order: back → front) ─────────────────────────────
     Compose.set_default_graphic_size(figsize[1], figsize[2])
 
-    legend = _build_legend()
+    legend_ctx = legend ? _build_legend() : context()
 
     compose(context(),
         title_ctx,
         label_ctx,                                                        # labels (front)
         circle_ctxs...,                                                   # circular nodes
         rect_ctxs...,                                                     # rectangular nodes
-        legend,
+        legend_ctx,
         compose(context(), edge_arrows, fill("black")),                   # arrowheads
         compose(context(), edge_lines, Compose.stroke("black"), linewidth(ew)), # edge lines (back)
     )
