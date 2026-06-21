@@ -1,4 +1,91 @@
-# Compact
+# Discrete Nodes
+function Base.show(io::IO, node::DiscreteNode)
+    print(io, "DiscreteNode(", node.name, ", parents=", parents(node), ", states=", states(node), ")")
+end
+function Base.show(io::IO, ::MIME"text/plain", node::DiscreteNode)
+    println(io, "DiscreteNode: ", node.name)
+    p = parents(node)
+    if isempty(p)
+        println(io, "Parents: none")
+    else
+        println(io, "Parents: ", join(string.(p), ", "))
+    end
+    println(io, "States: ", join(string.(states(node)), ", "))
+    if isprecise(node)
+        println(io, "Type: Precise")
+    else
+        println(io, "Type: Credal")
+    end
+    println(io)
+    show(io, MIME"text/plain"(), node.cpt.data)
+end
+
+# Continuous Nodes
+function Base.show(io::IO, node::ContinuousNode)
+    print(io, "ContinuousNode(", node.name, ", parents=", parents(node), ", discretization=", typeof(node.discretization).name.name, ")"
+    )
+end
+function Base.show(io::IO, ::MIME"text/plain", node::ContinuousNode)
+    println(io, "ContinuousNode: ", node.name)
+    p = parents(node)
+    if isempty(p)
+        println(io, "Parents: none")
+    else
+        println(io, "Parents: ", join(string.(p), ", "))
+    end
+
+    println(io, "Discretization: ", nameof(typeof(node.discretization))
+    )
+    println(io, "Type: ", isprecise(node) ? "Precise" : "Imprecise")
+    try
+        bounds = _distribution_bounds(node)
+        println(io, "Support: [", bounds[1], ", ", bounds[2], "]")
+    catch
+    end
+    println(io)
+    show(io, MIME"text/plain"(), node.cpt.data)
+end
+# Functional Nodes
+function Base.show(io::IO, node::ContinuousFunctionalNode)
+    print(
+        io, "ContinuousFunctionalNode(", node.name, ", models=", length(node.models), ", nbins=", node.nbins, ")")
+end
+function Base.show(io::IO, ::MIME"text/plain", node::ContinuousFunctionalNode)
+    println(io, "ContinuousFunctionalNode: ", node.name)
+    println(io, "Models: ", length(node.models))
+    println(io, "Discretization: ", nameof(typeof(node.discretization))
+    )
+    println(io, "Bins: ", node.nbins)
+    println(io, "Simulation: ", nameof(typeof(node.simulation)))
+    if node.simulation isa ScenariosTable
+        println(io)
+        show(io, MIME"text/plain"(), node.simulation.data)
+    end
+end
+
+function Base.show(io::IO, node::DiscreteFunctionalNode)
+    print(io, "DiscreteFunctionalNode(", node.name, ", states=", states(node), ", models=", length(node.models), ")")
+end
+function Base.show(io::IO, ::MIME"text/plain", node::DiscreteFunctionalNode)
+    println(io, "DiscreteFunctionalNode: ", node.name)
+    println(io, "States: ", join(string.(states(node)), ", "))
+    println(io, "Models: ", length(node.models))
+    println(io, "Simulation: ", nameof(typeof(node.simulation)))
+    println(io, "Parameters: ", length(node.parameters)
+    )
+    if !isempty(node.parameters)
+        println(io)
+        for (name, pars) in node.parameters
+            println(io, "  ", name, ": ", length(pars), " parameter(s)")
+        end
+    end
+    if node.simulation isa ScenariosTable
+        println(io)
+        show(io, MIME"text/plain"(), node.simulation.data)
+    end
+end
+
+# Posterior
 function Base.show(io::IO, p::Posterior)
     q = join(string.(p.query), ", ")
     if isempty(p.evidence)
@@ -8,7 +95,6 @@ function Base.show(io::IO, p::Posterior)
         print(io, "Posterior P(", q, " | ", ev, ")")
     end
 end
-#REPL
 function Base.show(io::IO, ::MIME"text/plain", p::Posterior)
     f = p.factor
     ns = p.schema
@@ -36,7 +122,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::Posterior)
     end
 end
 
-# Compact
+# CredalPosterior
 function Base.show(io::IO, p::CredalPosterior)
     q = join(string.(p.query), ", ")
     if isempty(p.evidence)
@@ -46,7 +132,6 @@ function Base.show(io::IO, p::CredalPosterior)
         print(io, "CredalPosterior P(", q, " | ", ev, ")")
     end
 end
-# REPL
 function Base.show(io::IO, ::MIME"text/plain", p::CredalPosterior)
     lower = p.lower
     upper = p.upper
