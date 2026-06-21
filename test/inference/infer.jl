@@ -244,56 +244,72 @@ end
 
 
     p = infer(bn, [:T, :E], Evidence(:E => :YesE))
-
     # E removed from query because it is evidence
     @test p.factor.vars == [3]   # T
     @test sum(p.factor.table) ≈ 1.0
     @test p.factor.table[1] ≈ 0.49087538184440765
     @test p.factor.table[2] ≈ 0.5091246181555923
-    # T = DiscreteNode(:Tampering)
-    # T[:Tampering=>:YesT] = 0.98
-    # T[:Tampering=>:NoT] = 0.02
-    # F = DiscreteNode(:Fire)
-    # F[:Fire=>:YesF] = Interval(0.98, 0.99)
-    # F[:Fire=>:NoF] = Interval(0.01, 0.02)
-    # A = DiscreteNode(:Alarm, [:Tampering, :Fire])
-    # A[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.4, 0.6)
-    # A[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.4, 0.5)
-    # A[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.85, 0.9)
-    # A[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.1, 0.15)
-    # A[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.985, 0.99)
-    # A[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.01, 0.015)
-    # A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.0001, 0.0002)
-    # A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.9998, 0.9999)
-    # S = DiscreteNode(:Smoke, [:Fire])
-    # S[:Fire=>:YesF, :Smoke=>:YesS] = Interval(0.87, 0.91)
-    # S[:Fire=>:YesF, :Smoke=>:NoS] = Interval(0.09, 0.13)
-    # S[:Fire=>:NoF, :Smoke=>:YesS] = Interval(0.01, 0.1)
-    # S[:Fire=>:NoF, :Smoke=>:NoS] = Interval(0.9, 0.99)
-    # L = DiscreteNode(:Leaving, [:Alarm])
-    # L[:Alarm=>:YesA, :Leaving=>:YesL] = Interval(0.88, 0.99)
-    # L[:Alarm=>:YesA, :Leaving=>:NoL] = Interval(0.001, 0.42)
-    # L[:Alarm=>:NoA, :Leaving=>:YesL] = Interval(0.1, 0.12)
-    # L[:Alarm=>:NoA, :Leaving=>:NoL] = Interval(0.58, 0.99)
-    # R = DiscreteNode(:Report, [:Leaving])
-    # R[:Leaving=>:YesL, :Report=>:YesR] = Interval(0.25, 0.76)
-    # R[:Leaving=>:YesL, :Report=>:NoR] = Interval(0.24, 0.75)
-    # R[:Leaving=>:NoL, :Report=>:YesR] = Interval(0.01, 0.2)
-    # R[:Leaving=>:NoL, :Report=>:NoR] = Interval(0.8, 0.99)
-    # nodes = [T, F, A, S, L, R]
-    # cn = CredalNetwork(nodes)
 
-    # p = infer(cn, [:Fire], Evidence())
-    # @test p.lower.table[1] ≈ 0.98
-    # @test p.upper.table[1] ≈ 0.99
-    # @test p.lower.table[2] ≈ 0.01
-    # @test p.upper.table[2] ≈ 0.02
 
-    # p = infer(cn, [:Fire], Evidence())
-    # @test p.lower.table[1] ≈ 0.98
-    # @test p.upper.table[1] ≈ 0.99
-    # @test p.lower.table[2] ≈ 0.01
-    # @test p.upper.table[2] ≈ 0.02
+    # Credal Inference
+    T = DiscreteNode(:Tampering)
+    T[:Tampering=>:YesT] = 0.98
+    T[:Tampering=>:NoT] = 0.02
+    F = DiscreteNode(:Fire)
+    F[:Fire=>:YesF] = Interval(0.98, 0.99)
+    F[:Fire=>:NoF] = Interval(0.01, 0.02)
+    A = DiscreteNode(:Alarm, [:Tampering, :Fire])
+    A[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.4, 0.6)
+    A[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.4, 0.5)
+    A[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.85, 0.9)
+    A[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.1, 0.15)
+    A[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.985, 0.99)
+    A[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.01, 0.015)
+    A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.0001, 0.0002)
+    A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.9998, 0.9999)
+    S = DiscreteNode(:Smoke, [:Fire])
+    S[:Fire=>:YesF, :Smoke=>:YesS] = Interval(0.87, 0.91)
+    S[:Fire=>:YesF, :Smoke=>:NoS] = Interval(0.09, 0.13)
+    S[:Fire=>:NoF, :Smoke=>:YesS] = Interval(0.01, 0.1)
+    S[:Fire=>:NoF, :Smoke=>:NoS] = Interval(0.9, 0.99)
+    L = DiscreteNode(:Leaving, [:Alarm])
+    L[:Alarm=>:YesA, :Leaving=>:YesL] = Interval(0.88, 0.99)
+    L[:Alarm=>:YesA, :Leaving=>:NoL] = Interval(0.001, 0.42)
+    L[:Alarm=>:NoA, :Leaving=>:YesL] = Interval(0.1, 0.12)
+    L[:Alarm=>:NoA, :Leaving=>:NoL] = Interval(0.58, 0.99)
+    R = DiscreteNode(:Report, [:Leaving])
+    R[:Leaving=>:YesL, :Report=>:YesR] = Interval(0.25, 0.76)
+    R[:Leaving=>:YesL, :Report=>:NoR] = Interval(0.24, 0.75)
+    R[:Leaving=>:NoL, :Report=>:YesR] = Interval(0.01, 0.2)
+    R[:Leaving=>:NoL, :Report=>:NoR] = Interval(0.8, 0.99)
+    nodes = [T, F, A, S, L, R]
+    cn = CredalNetwork(nodes)
 
-    # p = infer(cn, [:Alarm], Evidence(:Alarm => :YesA))
+    p = infer(cn, [:Fire], Evidence())
+    @test p.lower.table[1] ≈ 0.98
+    @test p.upper.table[1] ≈ 0.99
+    @test p.lower.table[2] ≈ 0.01
+    @test p.upper.table[2] ≈ 0.02
+
+    p = infer(cn, [:Alarm], Evidence(:Alarm => :YesA))
+    @test isempty(p.lower.vars)
+    @test isempty(p.upper.vars)
+    @test p.lower.table[] ≈ 1.0
+    @test p.upper.table[] ≈ 1.0
+
+    p = infer(cn, [:Fire, :Alarm], Evidence(:Alarm => :YesA))
+    @test length(p.lower.vars) == 1
+    @test length(p.upper.vars) == 1
+    ns = EnhancedBayesianNetworks.NetworkSchema(first(EnhancedBayesianNetworks.extreme_bayesian_networks(cn)))
+    @test p.lower.vars == [ns.node_to_idx[:Fire]]
+    @test p.upper.vars == [ns.node_to_idx[:Fire]]
+
+    p = infer(cn, [:Fire], Evidence(:Smoke => :YesS))
+    @test p.lower.table[1] ≈ 0.997659723847414
+    @test p.upper.table[1] ≈ 0.9998890122086571
+
+    p = infer(cn, [:Fire], Evidence(:Smoke => :YesS, :Alarm => :YesA))
+    @test p.lower.table[1] ≈ 0.99595720920615
+    @test p.upper.table[1] ≈ 0.9998478952774653
+
 end
