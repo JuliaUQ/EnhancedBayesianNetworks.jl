@@ -27,10 +27,12 @@ function multiply(f1::Factor, f2::Factor)
     # Expand and multiply factors
     A = expand(f1, allvars, allpos)
     B = expand(f2, allvars, allpos)
-    return Factor(
-        allvars,
-        A .* B
-    )
+
+    table = A .* B
+    if !(table isa AbstractArray)
+        table = fill(table)
+    end
+    return Factor(allvars, table)
 end
 
 function multiply(factors::Vector{<:Factor})
@@ -64,6 +66,10 @@ function expand(f::Factor, allvars::Vector{Int}, allpos::Dict{Int,Int})
 end
 
 function reorder(f::Factor, vars::Vector{Int})
+    isempty(vars) && return f
+    isempty(f.vars) && return f
+    @assert length(vars) == length(f.vars)
+    @assert Set(vars) == Set(f.vars)
     perm = [varpos(f, v) for v in vars]
     return Factor(vars, permutedims(f.table, perm))
 end
