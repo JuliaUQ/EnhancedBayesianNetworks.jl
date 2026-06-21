@@ -119,15 +119,6 @@ end
 # ─────────────────────────────────────────────────────────────────────────────
 # Layout: layered top-down positions from the adjacency matrix
 # ─────────────────────────────────────────────────────────────────────────────
-
-"""
-    _compute_layers(A) -> Vector{Int}
-
-Assigns a display layer to every node.
-- Layer 0: root nodes (no incoming edges).
-- Otherwise: `max(parent layers) + 1`.
-Propagates iteratively until stable (correct for any DAG).
-"""
 function _compute_layers(A::SparseMatrixCSC)
     n = size(A, 1)
     layer = fill(-1, n)
@@ -151,13 +142,6 @@ function _compute_layers(A::SparseMatrixCSC)
     return layer
 end
 
-"""
-    _layered_positions(A, border_pad) -> locs_x, locs_y
-
-Spreads nodes evenly within each layer.
-`border_pad` (fraction of canvas) keeps nodes away from the canvas edge.
-y = 0 is the top (roots), y = 1 is the bottom (leaves).
-"""
 function _layered_positions(A::SparseMatrixCSC, border_pad::Float64=0.12)
     n = size(A, 1)
     layers = _compute_layers(A)
@@ -190,22 +174,10 @@ end
 # Shape-aware border attachment points
 # ─────────────────────────────────────────────────────────────────────────────
 
-"""
-    _circle_border(cx, cy, θ, r) -> (x, y)
-
-Point on a circle's border in direction θ from its centre.
-"""
 function _circle_border(cx, cy, θ, r)
     return cx + r * cos(θ), cy + r * sin(θ)
 end
 
-"""
-    _rect_border(cx, cy, θ, hw, hh) -> (x, y)
-
-Point on an axis-aligned rectangle's border in direction θ from its centre.
-Uses slab-intersection: finds the t at which the ray exits each half-slab
-and takes the minimum (first exit face).
-"""
 function _rect_border(cx, cy, θ, hw, hh)
     dx, dy = cos(θ), sin(θ)
     tx = abs(dx) < 1e-12 ? Inf : hw / abs(dx)
@@ -214,13 +186,6 @@ function _rect_border(cx, cy, θ, hw, hh)
     return cx + t * dx, cy + t * dy
 end
 
-"""
-    _border_point(node, cx, cy, θ, hw, hh) -> (x, y)
-
-Dispatches to the correct border computation based on node shape:
-- `AbstractContinuousNode` → circle  (radius = hw)
-- `AbstractDiscreteNode`   → rectangle (half-width = hw, half-height = hh)
-"""
 function _border_point(node::AbstractNode, cx, cy, θ, hw, hh)
     if node isa AbstractContinuousNode
         return _circle_border(cx, cy, θ, hw)
@@ -249,18 +214,6 @@ end
 # Build all edges (lines + arrowhead polygons)
 # ─────────────────────────────────────────────────────────────────────────────
 
-"""
-    _build_edges(edge_list, locs_x, locs_y, nodes, hw, hh, arrowlength, angleoffset)
-
-For each directed edge (i → j):
-1. Computes θ = angle from centre i to centre j.
-2. Finds the departure point on node i's border (in direction θ).
-3. Finds the arrival point on node j's border (in direction θ + π, i.e. opposite).
-4. Places the arrowhead triangle with its tip exactly on node j's border.
-5. Ends the line at the arrowhead base midpoint so it doesn't poke through.
-
-Returns `(line_primitive, polygon_primitive)` ready for Compose.
-"""
 function _build_edges(edge_list, locs_x, locs_y, nodes, hw, hh,
     arrowlength, angleoffset)
     isempty(edge_list) && return line([]), polygon([])
@@ -311,12 +264,6 @@ function _node_color(node::AbstractNode)
     end
 end
 
-"""
-    _node_strokewidth(node) -> Compose measure
-
-Returns a thicker border for `AbstractContinuousNode`s whose `discretization`
-field is non-empty, and the standard thin border for everything else.
-"""
 function _node_strokewidth(node::AbstractNode)
     if node isa AbstractContinuousNode && !isempty(node.discretization)
         return 1.2mm   # thick border: discretized continuous node
@@ -325,16 +272,6 @@ function _node_strokewidth(node::AbstractNode)
     end
 end
 
-"""
-    _build_node_contexts(locs_x, locs_y, node_list, hw, hh)
-
-Returns two vectors of Compose contexts, one per node:
-- Circles for `AbstractContinuousNode`
-- Rectangles for `AbstractDiscreteNode`
-
-Each context carries its own fill and stroke so mixed networks render correctly.
-`AbstractContinuousNode`s with a non-empty `discretization` get a thicker border.
-"""
 function _build_node_contexts(locs_x, locs_y, node_list, hw, hh)
     circle_ctxs = Compose.Context[]
     rect_ctxs = Compose.Context[]
