@@ -16,6 +16,13 @@ function Base.show(io::IO, ::MIME"text/plain", node::DiscreteNode)
     else
         println(io, "Type: Credal")
     end
+    if !isempty(node.parameters)
+        println(io)
+        println(io, "Parameters:")
+        for (name, pars) in node.parameters
+            println(io, "  ", name, ": ", join(string.(pars), ", "))
+        end
+    end
     println(io)
     show(io, MIME"text/plain"(), node.cpt.data)
 end
