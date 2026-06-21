@@ -70,6 +70,7 @@ query = [:Leaving]
 evidence = Evidence(
     :Fire => :YesF
 )
+
 query = [:Report]
 ϕ5 = infer(cn, query, evidence)
 
@@ -78,15 +79,3 @@ evidence = Evidence(
 )
 query = [:Fire]
 ϕ6 = infer(cn, query, evidence)
-
-smoke_pot = ϕ1.potential
-reference_smoke = [[0.8838 0.9814], [0.0186, 0.1162]]
-
-report_pot = ϕ2.potential
-reference_report = [[0.5547, 0.9719], [0.0281, 0.4453]]
-
-alarm_pot = ϕ3.potential
-reference_alarm = [[0.9625 0.9733], [0.0281, 0.0375]]
-
-leaving_pot = ϕ4.potential
-reference_leaving = [[0.1085 0.1435], [0.8565, 0.8915]]
