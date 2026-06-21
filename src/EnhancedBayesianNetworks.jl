@@ -67,5 +67,5 @@ include("networks/networks.jl")
 include("inference/inference.jl")
 # include("learning/learning.jl")
 include("utils/base_show.jl")
-include("utils/plots.jl")
+include("utils/gplot.jl")
 end
