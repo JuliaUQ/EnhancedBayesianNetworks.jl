@@ -3,59 +3,27 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Internal base values — all user parameters scale these.
-const _BASE_NODESIZE = 0.05   # circle radius / rect half-width (canvas units)
-const _BASE_NODE_ASPECT = 0.6    # rect half-height = nodesize × aspect
-const _BASE_ARROWLENGTH = 0.03   # arrowhead wing length (canvas units)
-const _BASE_ARROWANGLE = π / 9  # arrowhead half-opening angle (fixed)
-const _BASE_EDGEWIDTH = 0.3mm  # edge stroke width
 const _BASE_LABELSIZE = 8pt    # node label font size
 const _BASE_TITLESIZE = 10pt   # title font size
 const _BORDER_PAD = 0.12   # fraction of canvas kept free at each edge
 
-"""
-    gplot(net::AbstractNetwork; kwargs...)
 
-Plot an `AbstractNetwork` using pure Compose.jl.
-
-**Layout**: hierarchical top-down. Root nodes (no parents) sit at the top;
-every other node is placed one layer below its deepest parent. Nodes within
-a layer are spread evenly across the width.
-
-**Shapes**:
-- `AbstractContinuousNode` → circle
-- `AbstractDiscreteNode`   → rectangle
-
-**Colours**:
-- `FunctionalNode` (`ContinuousFunctionalNode` | `DiscreteFunctionalNode`) → orange
-- Non-functional nodes (`ContinuousNode`, `DiscreteNode`) → green
-
-**Keyword arguments**:
-
-| Name            | Default | Description                                              |
-|-----------------|---------|----------------------------------------------------------|
-| `nodesize`      | `1.0`   | Scale factor for node size (circles and rectangles)      |
-| `arrowsize`     | `1.0`   | Scale factor for arrowhead size                          |
-| `edgesize`      | `1.0`   | Scale factor for edge stroke width                       |
-| `nodelabelsize` | `1.0`   | Scale factor for node label font size                    |
-| `title`         | `""`    | Optional title string drawn above the graph              |
-| `title_size`    | `1.0`   | Scale factor for title font size                         |
-"""
 function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     nodesize=1.0,
-    arrowsize=1.0,
-    edgesize=1.0,
-    nodelabelsize=1.0,
+    labelsize=1.0,
     title="",
     title_size=1.0,
+    figsize=(20cm, 20cm)
 )
     node_list = net.nodes
     n = length(node_list)
 
-    hw = _BASE_NODESIZE * nodesize
-    hh = hw * _BASE_NODE_ASPECT
-    al = _BASE_ARROWLENGTH * arrowsize
-    ew = _BASE_EDGEWIDTH * edgesize
-    ls = _BASE_LABELSIZE * nodelabelsize
+    hw = nodesize * 0.05
+    hh = hw * 0.6
+    al = 0.03 * nodesize
+
+    ew = 0.3mm * nodesize
+    ls = _BASE_LABELSIZE * labelsize
     ts = _BASE_TITLESIZE * title_size
 
     # ── positions ────────────────────────────────────────────────────────────
@@ -65,7 +33,7 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     edge_list = [(i, j) for i in 1:n for j in 1:n if net.A[i, j] != 0]
     edge_lines, edge_arrows = _build_edges(
         edge_list, locs_x, locs_y, node_list,
-        hw, hh, al, _BASE_ARROWANGLE
+        hw, hh, al, π / 9
     )
 
     # ── node shapes ──────────────────────────────────────────────────────────
@@ -91,7 +59,7 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     )
 
     # ── assemble (painter's order: back → front) ─────────────────────────────
-    Compose.set_default_graphic_size(20cm, 20cm)
+    Compose.set_default_graphic_size(figsize[1], figsize[2])
 
     legend = _build_legend()
 
