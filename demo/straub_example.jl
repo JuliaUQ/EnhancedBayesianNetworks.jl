@@ -1,5 +1,4 @@
 using EnhancedBayesianNetworks
-using Suppressor
 using .MathConstants: γ
 
 using Cairo
