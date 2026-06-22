@@ -3,7 +3,6 @@ module EnhancedBayesianNetworks
 using DataFrames
 using Distributions
 using LinearAlgebra
-using NetworkLayout
 using Polyhedra: HalfSpace, doubledescription
 using Reexport
 using SparseArrays
