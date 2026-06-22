@@ -43,13 +43,11 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     circle_ctxs, rect_ctxs = _build_node_contexts(locs_x, locs_y, node_list, hw, hh)
 
     # ── labels ───────────────────────────────────────────────────────────────
-    label_ctx = compose(context(),
-        Compose.text(locs_x, locs_y,
-            string.(getfield.(node_list, :name)),
-            [hcenter], [vcenter]),
-        fill("black"),
-        fontsize(ls),
-        Compose.font("Helvetica")
+    label_ctxs = _build_labels(
+        node_list,
+        locs_x,
+        locs_y,
+        ls
     )
 
     # ── optional title ───────────────────────────────────────────────────────
@@ -68,7 +66,7 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
 
     compose(context(),
         title_ctx,
-        label_ctx,                                                        # labels (front)
+        label_ctxs...,                                                        # labels (front)
         circle_ctxs...,                                                   # circular nodes
         rect_ctxs...,                                                     # rectangular nodes
         legend_ctx,
@@ -216,7 +214,7 @@ function _build_edges(edge_list, locs_x, locs_y, nodes, hw, hh,
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Node colour and shape contexts
+# Node colour, shape and label contexts
 # ─────────────────────────────────────────────────────────────────────────────
 function _node_color(node::AbstractNode)
     if node isa ContinuousNode
@@ -275,6 +273,34 @@ function _build_node_contexts(locs_x, locs_y, node_list, hw, hh)
     end
 
     return circle_ctxs, rect_ctxs
+end
+
+function _build_labels(node_list, locs_x, locs_y, labelsize)
+    labels = Compose.Context[]
+    for (i, node) in enumerate(node_list)
+        x = locs_x[i]
+        y = locs_y[i]
+        push!(
+            labels,
+            compose(context(), text(x, y - 0.01, string(node.name), hcenter, vcenter), fontsize(labelsize)))
+        if node isa AbstractDiscreteNode
+            push!(
+                labels,
+                compose(
+                    context(),
+                    text(
+                        x,
+                        y + 0.025,
+                        "["*string(length(states(node)))*"]",
+                        hcenter,
+                        vcenter
+                    ),
+                    fontsize(0.8labelsize)
+                )
+            )
+        end
+    end
+    return labels
 end
 
 # ─────────────────────────────────────────────────────────────────────────────
