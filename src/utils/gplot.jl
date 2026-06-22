@@ -15,7 +15,9 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     title_scale::Float64=1.0,
     figsize::Tuple=(20cm, 20cm),
     legend::Bool=false,
-    legend_scale::Float64=1.0
+    legend_scale::Float64=1.0,
+    legend_x::Float64=0.8,
+    legend_y::Float64=0.65
 )
     node_list = net.nodes
     n = length(node_list)
@@ -63,7 +65,11 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     # ── assemble (painter's order: back → front) ─────────────────────────────
     Compose.set_default_graphic_size(figsize[1], figsize[2])
 
-    legend_ctx = legend ? _build_legend(legend_scale) : context()
+    legend_ctx = legend ? _build_legend(
+        legend_scale;
+        x_fraction=legend_x,
+        y_fraction=legend_y
+    ) : context()
 
     compose(context(),
         title_ctx,
@@ -316,7 +322,7 @@ end
 # Legend functionality
 # ─────────────────────────────────────────────────────────────────────────────
 
-function _build_legend(scale)
+function _build_legend(scale; x_fraction=0.8, y_fraction=0.65)
 
     r = 0.05 * scale
     rect_w = 0.09 * scale
@@ -329,7 +335,7 @@ function _build_legend(scale)
     header_fs = 11 * scale
 
     compose(
-        context(0.8, 0.65, 0.18, 0.3),
+        context(x_fraction, y_fraction, 0.18, 0.3),
 
         # Border
         compose(
