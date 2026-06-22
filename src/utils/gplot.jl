@@ -47,7 +47,8 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
         node_list,
         locs_x,
         locs_y,
-        ls
+        ls,
+        label_scale
     )
 
     # ── optional title ───────────────────────────────────────────────────────
@@ -275,28 +276,36 @@ function _build_node_contexts(locs_x, locs_y, node_list, hw, hh)
     return circle_ctxs, rect_ctxs
 end
 
-function _build_labels(node_list, locs_x, locs_y, labelsize)
+function _build_labels(node_list, locs_x, locs_y, labelsize, label_scale)
     labels = Compose.Context[]
     for (i, node) in enumerate(node_list)
         x = locs_x[i]
         y = locs_y[i]
-        push!(
-            labels,
-            compose(context(), text(x, y - 0.01, string(node.name), hcenter, vcenter), fontsize(labelsize)))
+        name_offset = 0.008 * label_scale
+        count_offset = 0.008 * label_scale
         if node isa AbstractDiscreteNode
+            push!(
+                labels,
+                compose(context(), text(x, y - name_offset, string(node.name), hcenter, vcenter), fontsize(labelsize))
+            )
             push!(
                 labels,
                 compose(
                     context(),
                     text(
                         x,
-                        y + 0.025,
+                        y + count_offset,
                         "["*string(length(states(node)))*"]",
                         hcenter,
                         vcenter
                     ),
                     fontsize(0.8labelsize)
                 )
+            )
+        else
+            push!(
+                labels,
+                compose(context(), text(x, y, string(node.name), hcenter, vcenter), fontsize(labelsize))
             )
         end
     end
