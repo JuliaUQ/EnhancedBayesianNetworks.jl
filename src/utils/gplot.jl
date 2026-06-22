@@ -23,7 +23,7 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     n = length(node_list)
 
     hw = node_scale * 0.05
-    hh = hw * 0.6
+    hh = hw * 0.95
     al = 0.03 * node_scale
 
     ew = 0.3mm * node_scale
