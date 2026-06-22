@@ -1,5 +1,5 @@
 using EnhancedBayesianNetworks
-using Cairo
+using CairoMakie
 
 T = DiscreteNode(:Tampering)
 T[:Tampering=>:YesT] = 0.98
