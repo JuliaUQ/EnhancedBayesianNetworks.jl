@@ -9,23 +9,24 @@ const _BORDER_PAD = 0.12   # fraction of canvas kept free at each edge
 
 
 function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
-    nodesize::Float64=1.0,
-    labelsize::Float64=1.0,
+    node_scale::Float64=1.0,
+    label_scale::Float64=1.0,
     title::String="",
-    title_size::Float64=1.0,
+    title_scale::Float64=1.0,
     figsize::Tuple=(20cm, 20cm),
-    legend::Bool=false
+    legend::Bool=false,
+    legend_scale::Float64=1.0
 )
     node_list = net.nodes
     n = length(node_list)
 
-    hw = nodesize * 0.05
+    hw = node_scale * 0.05
     hh = hw * 0.6
-    al = 0.03 * nodesize
+    al = 0.03 * node_scale
 
-    ew = 0.3mm * nodesize
-    ls = _BASE_LABELSIZE * labelsize
-    ts = _BASE_TITLESIZE * title_size
+    ew = 0.3mm * node_scale
+    ls = _BASE_LABELSIZE * label_scale
+    ts = _BASE_TITLESIZE * title_scale
 
     # ── positions ────────────────────────────────────────────────────────────
     top_pad = isempty(title) ? 0.12 : 0.18
@@ -63,7 +64,7 @@ function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
     # ── assemble (painter's order: back → front) ─────────────────────────────
     Compose.set_default_graphic_size(figsize[1], figsize[2])
 
-    legend_ctx = legend ? _build_legend() : context()
+    legend_ctx = legend ? _build_legend(legend_scale) : context()
 
     compose(context(),
         title_ctx,
@@ -280,12 +281,22 @@ end
 # Legend functionality
 # ─────────────────────────────────────────────────────────────────────────────
 
-function _build_legend()
+function _build_legend(scale)
+
+    r = 0.05 * scale
+    rect_w = 0.09 * scale
+    rect_h = 0.06 * scale
+
+    bar_w = 0.09 * scale
+    bar_h = 0.015 * scale
+
+    fs = 10 * scale
+    header_fs = 11 * scale
 
     compose(
-        context(0.8, 0.68, 0.18, 0.25),
+        context(0.8, 0.65, 0.18, 0.3),
 
-        # border
+        # Border
         compose(
             context(),
             rectangle(),
@@ -294,71 +305,119 @@ function _build_legend()
             linewidth(0.3mm)
         ),
 
-        # Precise
-        compose(
-            context(),
-            circle(0.12, 0.12, 0.03),
-            fill("lightgreen")
-        ),
+        ####################################################################
+        # Shape section
+        ####################################################################
 
-        # Imprecise
         compose(
             context(),
-            circle(0.12, 0.27, 0.03),
-            fill("limegreen")
+            text(0.08, 0.06, "Shape", hleft, vcenter),
+            fontsize(header_fs * pt)
         ),
-
-        # Functional
         compose(
             context(),
-            circle(0.12, 0.42, 0.03),
-            fill("orange")
+            text(0.08, 0.54, "Color", hleft, vcenter),
+            fontsize(header_fs * pt)
         ),
 
         # Continuous
         compose(
             context(),
-            circle(0.12, 0.58, 0.03),
+            circle(0.12, 0.16, r),
             fill(nothing),
             stroke("black")
+        ),
+        compose(
+            context(),
+            text(0.22, 0.16, "Continuous", hleft, vcenter),
+            fontsize(fs * pt)
         ),
 
         # Discrete
         compose(
             context(),
-            rectangle(0.09, 0.71, 0.06, 0.06),
+            rectangle(
+                0.12 - rect_w/2,
+                0.28 - rect_h/2,
+                rect_w,
+                rect_h
+            ),
             fill(nothing),
             stroke("black")
         ),
-
-        # Discretized continuous
         compose(
             context(),
-            circle(0.12, 0.88, 0.03),
-            fill("lightgreen"),
-            stroke("black"),
-            linewidth(1.2mm)
+            text(0.22, 0.28, "Discrete", hleft, vcenter),
+            fontsize(fs * pt)
         ),
 
-        # Labels
+        # Discretized
         compose(
             context(),
-            text(0.22, 0.12, "Precise", hleft, vcenter)
-        ), compose(
+            circle(0.12, 0.40, r),
+            fill("lightgreen"),
+            stroke("black"),
+            linewidth(1.2mm * scale)
+        ),
+        compose(
             context(),
-            text(0.22, 0.27, "Imprecise", hleft, vcenter)
-        ), compose(
+            text(0.22, 0.40, "Discretized", hleft, vcenter),
+            fontsize(fs * pt)
+        ),
+
+        ####################################################################
+        # Color section
+        ####################################################################
+
+        # Precise
+        compose(
             context(),
-            text(0.22, 0.42, "Functional", hleft, vcenter)
-        ), compose(
+            rectangle(
+                0.125 - bar_w/2,
+                0.635 - bar_h/2,
+                bar_w,
+                bar_h
+            ),
+            fill("lightgreen")
+        ),
+        compose(
             context(),
-            text(0.22, 0.58, "Continuous", hleft, vcenter)
-        ), compose(
+            text(0.22, 0.635, "Precise", hleft, vcenter),
+            fontsize(fs * pt)
+        ),
+
+        # Imprecise
+        compose(
             context(),
-            text(0.22, 0.74, "Discrete", hleft, vcenter)
-        ), compose(
+            rectangle(
+                0.125 - bar_w/2,
+                0.755 - bar_h/2,
+                bar_w,
+                bar_h
+            ),
+            fill("limegreen")
+        ),
+        compose(
             context(),
-            text(0.22, 0.88, "Discretized", hleft, vcenter)
-        ), fontsize(10pt)
+            text(0.22, 0.755, "Imprecise", hleft, vcenter),
+            fontsize(fs * pt)
+        ),
+
+        # Functional
+        compose(
+            context(),
+            rectangle(
+                0.125 - bar_w/2,
+                0.875 - bar_h/2,
+                bar_w,
+                bar_h
+            ),
+            fill("orange")
+        ),
+        compose(
+            context(),
+            text(0.22, 0.875, "Functional", hleft, vcenter),
+            fontsize(fs * pt)
+        )
     )
 end
