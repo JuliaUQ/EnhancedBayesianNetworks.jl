@@ -1,4 +1,4 @@
-@testitem "FunctionalNode - Continuous" begin
+@testsnippet NodesSetup begin
     x1 = ContinuousNode(:x1)
     x1[] = Normal()
     x2 = DiscreteNode(:x2)
@@ -8,6 +8,25 @@
     name = :functional
     models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
     simulation = MonteCarlo(200)
+
+    x1 = ContinuousNode(:x1)
+    x1[] = Normal()
+    x2 = DiscreteNode(:x2)
+    x2[:x2=>:yx2] = 0.5
+    x2[:x2=>:nx2] = 0.5
+
+    name = :functional
+    models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
+    simulation = MonteCarlo(200)
+
+    performance = df -> 1 .- 2 .* df.value1
+
+    ancestors = [:x1, :x2, :y1]
+    discretization = ApproximatedDiscretization([-2, -1, 0, 1, 2], 2)
+end
+
+
+@testitem "FunctionalNode - Continuous" setup = [NodesSetup] begin
     node = ContinuousFunctionalNode(name, models, simulation)
     @test isa(node, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node, EnhancedBayesianNetworks.AbstractContinuousNode)
@@ -21,7 +40,6 @@
     @test node.discretization.sigma == 0
     @test node.nbins == 0
 
-    discretization = ApproximatedDiscretization([-2, -1, 0, 1, 2], 2)
     node = ContinuousFunctionalNode(name, models, simulation, discretization)
     @test isa(node.discretization, ApproximatedDiscretization)
     @test node.discretization.intervals == [-2, -1, 0, 1, 2]
@@ -46,7 +64,6 @@
     @test isempty(node.discretization.intervals)
     @test node.nbins == nbins
 
-    ancestors = [:x1, :x2, :y1]
     node = ContinuousFunctionalNode(name, ancestors, models)
     node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(100)
     node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(100)
@@ -83,16 +100,6 @@
 end
 
 @testitem "FunctionalNode - Discrete" begin
-    x1 = ContinuousNode(:x1)
-    x1[] = Normal()
-    x2 = DiscreteNode(:x2)
-    x2[:x2=>:yx2] = 0.5
-    x2[:x2=>:nx2] = 0.5
-
-    name = :functional
-    models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
-    simulation = MonteCarlo(200)
-    performance = df -> 1 .- 2 .* df.value1
     node = DiscreteFunctionalNode(name, models, performance, simulation)
     @test isa(node, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node, EnhancedBayesianNetworks.AbstractDiscreteNode)
@@ -109,7 +116,6 @@ end
     @test_throws ErrorException(":Π is not allowed as node name") DiscreteFunctionalNode(:Π, models, performance, simulation)
     @test_throws ErrorException(":sim is not allowed as node name") DiscreteFunctionalNode(:sim, models, performance, simulation)
 
-    ancestors = [:x1, :x2, :y1]
     node = DiscreteFunctionalNode(name, ancestors, models, performance)
     node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(100)
     node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(100)

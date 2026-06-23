@@ -1,10 +1,13 @@
 using Test
 using TestItems
 using TestItemRunner
-
 using EnhancedBayesianNetworks
-using Suppressor
-using CSV
+
+@testsnippet ExtraDeps begin
+    using DataFrames
+    using Suppressor
+end
+
 
 @run_package_tests()
 
