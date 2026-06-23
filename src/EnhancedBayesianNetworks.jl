@@ -6,13 +6,9 @@ using LinearAlgebra
 using Polyhedra: HalfSpace, doubledescription
 using Reexport
 using SparseArrays
-using UncertaintyQuantification
+using Compose
 
-# @reexport using Graphs
 @reexport using UncertaintyQuantification
-@reexport using DataFrames
-@reexport using SparseArrays
-@reexport using Compose
 
 import Base: *, sum, reduce
 
@@ -34,12 +30,10 @@ export FunctionalNode
 export InferenceState
 export Posterior
 
-# export Factor
-
-## Constants
+# Constants
 const Evidence = Dict{Symbol,Symbol}
 
-## Functions
+# Functions
 export add_child!
 export children
 export discrete_ancestors
@@ -57,6 +51,7 @@ export markov_envelope
 export order!
 export parents
 export reduce
+export sample
 export saveplot
 export scenarios
 export states
