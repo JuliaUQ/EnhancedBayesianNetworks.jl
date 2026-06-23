@@ -5,6 +5,7 @@ using EnhancedBayesianNetworks
 
 @testsnippet ExtraDeps begin
     using DataFrames
+    using SparseArrays
     using Suppressor
 end
 
