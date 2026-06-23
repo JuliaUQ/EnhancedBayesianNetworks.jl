@@ -57,6 +57,13 @@ function _inputs(node::DiscreteNode, evidence::Evidence)
     end
 end
 
+function sample(node::DiscreteNode, ev::Vector{Evidence})
+    evs = map(i -> filter(i -> i.first ∈ parents(node), i), ev)
+    cpts = map(i -> filter(node.cpt, (i)...), evs)
+    dists = map(cpt -> Distributions.Categorical(Vector{Real}(cpt.Π)), cpts)
+    map(dist -> node.cpt.data[:, node.name][rand(dist)], dists)
+end
+
 function _extreme_nodes(node::DiscreteNode)
     function _extreme_points(cpt)
         extreme_probs = _extreme_probabilities(cpt.Π...)

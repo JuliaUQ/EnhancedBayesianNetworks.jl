@@ -63,3 +63,18 @@ function joint_probability(bn::BayesianNetwork, scenario::Evidence)
     end
     return prob
 end
+
+function sample(bn::BayesianNetwork, n::Int=1)
+    order!(bn)
+    ev = fill(Evidence(), n)
+    samples = DataFrame()
+    for node in bn.nodes
+        results = sample(node, ev)
+        samples[!, node.name] = results
+        # Update Evidence
+        for (e, r) in zip(ev, results)
+            e[node.name] = r
+        end
+    end
+    return samples
+end
