@@ -1,7 +1,4 @@
-@testitem "Inference - Factor & factorize" begin
-
-    using Suppressor
-
+@testitem "Inference - Factor & factorize" setup = [ExtraDeps] begin
     f = Factor(
         [1],
         [0.5, 0.5]

@@ -1,4 +1,5 @@
-@testitem "EnhancedBayesianNetwork - Struct" begin
+@testsnippet NodeSetup begin
+
     weather = DiscreteNode(:W)
     weather[:W=>:sunny] = 0.5
     weather[:W=>:cloudy] = 0.5
@@ -33,7 +34,9 @@
     performance = df -> df.G2
     simulation = MonteCarlo(100)
     grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
+end
 
+@testitem "EnhancedBayesianNetwork - Struct" setup = [ExtraDeps, NodeSetup] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     @test net.A == sparse(zeros(length(nodes), length(nodes)))
@@ -50,42 +53,7 @@
     @test_throws ErrorException("Invalid eBN: duplicate node states [:yes]") EnhancedBayesianNetwork(nodes)
 end
 
-@testitem "EnhancedBayesianNetwork - add_child!" begin
-    weather = DiscreteNode(:W)
-    weather[:W=>:sunny] = 0.5
-    weather[:W=>:cloudy] = 0.5
-
-    sprinkler_parameter = [:on => [Parameter(0.5, :S)], :off => [Parameter(0, :S)]]
-    sprinkler = DiscreteNode(:S, [:W], sprinkler_parameter)
-    sprinkler[:W=>:sunny, :S=>:on] = 0.7
-    sprinkler[:W=>:sunny, :S=>:off] = 0.3
-    sprinkler[:W=>:cloudy, :S=>:on] = 0.05
-    sprinkler[:W=>:cloudy, :S=>:off] = 0.95
-
-    rain = DiscreteNode(:R, [:W])
-    rain[:W=>:sunny, :R=>:yes] = 0.05
-    rain[:W=>:sunny, :R=>:no] = 0.95
-    rain[:W=>:cloudy, :R=>:yes] = 0.7
-    rain[:W=>:cloudy, :R=>:no] = 0.3
-
-    rain2 = ContinuousNode(:Rc)
-    rain2[] = Normal()
-
-    grass = DiscreteNode(:G, [:S, :R])
-    grass[:R=>:yes, :S=>:on, :G=>:dry] = 0
-    grass[:R=>:yes, :S=>:on, :G=>:wet] = 1
-    grass[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass[:R=>:no, :S=>:off, :G=>:wet] = 0
-
-    model = Model(df -> df.Rc .+ df.S, :G2)
-    performance = df -> df.G2
-    simulation = MonteCarlo(100)
-    grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
-
+@testitem "EnhancedBayesianNetwork - add_child!" setup = [ExtraDeps, NodeSetup] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     @test_throws ErrorException("Invalid eBN: nodes [:W] have a loop") add_child!(net, weather, weather)

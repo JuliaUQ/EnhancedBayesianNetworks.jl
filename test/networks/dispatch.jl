@@ -1,5 +1,4 @@
-@testitem "Dispatch Function" begin
-    using Suppressor
+@testitem "Dispatch Function" setup = [ExtraDeps] begin
 
     r = ContinuousNode(:R, Normal())
 
