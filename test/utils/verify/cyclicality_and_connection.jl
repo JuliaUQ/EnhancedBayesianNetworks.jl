@@ -1,4 +1,4 @@
-@testitem "Transitive Closure" begin
+@testitem "Transitive Closure" setup=[ExtraDeps] begin
     rowsA = [1, 1, 2, 3, 4, 4]
     colsA = [3, 4, 6, 5, 5, 6]
     valsA = trues(6)
@@ -24,7 +24,7 @@
     @test EnhancedBayesianNetworks.transitive_closure(A) == R
 end
 
-@testitem "Iscyclic function" begin
+@testitem "Iscyclic function" setup=[ExtraDeps] begin
     rowsA = [1, 2, 3, 4, 5]
     colsA = [3, 4, 5, 5, 1]
     valsA = trues(5)
@@ -38,7 +38,7 @@ end
     @test !EnhancedBayesianNetworks.iscyclic(A)
 end
 
-@testitem "Isconnected function" begin
+@testitem "Isconnected function" setup=[ExtraDeps] begin
     rowsA = [1, 2, 3, 4, 5]
     colsA = [3, 4, 5, 5, 1]
     valsA = trues(5)

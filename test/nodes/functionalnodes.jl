@@ -1,4 +1,4 @@
-@testsnippet NodesSetup begin
+@testsnippet SetupFunctionalNodes begin
     x1 = ContinuousNode(:x1)
     x1[] = Normal()
     x2 = DiscreteNode(:x2)
@@ -8,17 +8,6 @@
     name = :functional
     models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
     simulation = MonteCarlo(200)
-
-    x1 = ContinuousNode(:x1)
-    x1[] = Normal()
-    x2 = DiscreteNode(:x2)
-    x2[:x2=>:yx2] = 0.5
-    x2[:x2=>:nx2] = 0.5
-
-    name = :functional
-    models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
-    simulation = MonteCarlo(200)
-
     performance = df -> 1 .- 2 .* df.value1
 
     ancestors = [:x1, :x2, :y1]
@@ -26,7 +15,7 @@
 end
 
 
-@testitem "FunctionalNode - Continuous" setup = [NodesSetup] begin
+@testitem "FunctionalNode - Continuous" setup = [SetupFunctionalNodes] begin
     node = ContinuousFunctionalNode(name, models, simulation)
     @test isa(node, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node, EnhancedBayesianNetworks.AbstractContinuousNode)
@@ -99,7 +88,7 @@ end
     @test !isroot(node)
 end
 
-@testitem "FunctionalNode - Discrete" begin
+@testitem "FunctionalNode - Discrete" setup=[SetupFunctionalNodes] begin
     node = DiscreteFunctionalNode(name, models, performance, simulation)
     @test isa(node, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node, EnhancedBayesianNetworks.AbstractDiscreteNode)

@@ -1,4 +1,4 @@
-@testitem "Topological Sorting" begin
+@testitem "Topological Sorting" setup=[ExtraDeps] begin
     A = spzeros(Bool, 4, 4)
     A[1, 3] = true
     A[2, 3] = true

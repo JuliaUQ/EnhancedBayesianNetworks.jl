@@ -1,4 +1,4 @@
-@testsnippet NodeSetup begin
+@testsnippet SetupNetCommon begin
 
     weather = DiscreteNode(:W)
     weather[:W=>:sunny] = 0.5
@@ -111,7 +111,7 @@
 
 end
 
-@testitem "Networks Common - cyclicality & connection" setup = [NodeSetup] begin
+@testitem "Networks Common - cyclicality & connection" setup = [SetupNetCommon] begin
     ## BN
     A = DiscreteNode(:A, [:B])
     A[:B=>:b1, :A=>:a1] = 0.05
@@ -149,7 +149,7 @@ end
     @test !EnhancedBayesianNetworks.isconnected(net)
 end
 
-@testitem "Networks Common - parents, children and ancestors" setup=[NodeSetup] begin
+@testitem "Networks Common - parents, children and ancestors" setup=[SetupNetCommon] begin
     ## BN
     nodes = [weather, grass, rain, sprinkler]
     net = BayesianNetwork(nodes)
@@ -211,7 +211,7 @@ end
     @test issetequal(discrete_ancestors(net, :G2), [:W, :S])
 end
 
-@testitem "Networks Common - verify BN" setup = [NodeSetup] begin
+@testitem "Networks Common - verify BN" setup = [SetupNetCommon] begin
     nodes = [weather, grass, rain, sprinkler]
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -244,7 +244,7 @@ end
     @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_mutually_exclusive)
 end
 
-@testitem "Networks Common - verify CN" setup = [NodeSetup] begin
+@testitem "Networks Common - verify CN" setup = [SetupNetCommon] begin
     weather = DiscreteNode(:W)
     weather[:W=>:sunny] = Interval(0.4, 0.6)
     weather[:W=>:cloudy] = Interval(0.4, 0.6)
@@ -304,7 +304,7 @@ end
     @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_lb2)
 end
 
-@testitem "Networks Common - verify eBN" setup = [NodeSetup] begin
+@testitem "Networks Common - verify eBN" setup = [SetupNetCommon] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -508,7 +508,7 @@ end
     @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
 end
 
-@testitem "Networks Common - add/remove node" setup = [ExtraDeps, NodeSetup] begin
+@testitem "Networks Common - add/remove node" setup = [ExtraDeps, SetupNetCommon] begin
     ## BN
     nodes = [weather, sprinkler, rain, grass]
     net = BayesianNetwork(nodes)
