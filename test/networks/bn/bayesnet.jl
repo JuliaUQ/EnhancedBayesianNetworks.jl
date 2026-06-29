@@ -1,4 +1,4 @@
-@testitem "Bayesian Network" begin
+@testitem "Bayesian Network" setup=[ExtraDeps] begin
     r = ContinuousNode(:R, Normal())
 
     v = DiscreteNode(:V)
