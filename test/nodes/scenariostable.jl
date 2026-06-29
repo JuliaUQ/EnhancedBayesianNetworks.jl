@@ -1,4 +1,4 @@
-@testitem "Discrete CPT" setup = [ExtraDeps] begin
+@testitem "Discrete CPT" setup=[ExtraDeps] begin
     st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:x], :Π)
     @test names(st.data) == ["x", "Π"]
     @test typeof(st).parameters[1] == EnhancedBayesianNetworks.DiscreteProbability
@@ -64,7 +64,7 @@
     @test issetequal(filtering2.Π, [0.09])
 end
 
-@testitem "Continuous CPT" setup = [ExtraDeps] begin
+@testitem "Continuous CPT" setup=[ExtraDeps] begin
     st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.ContinuousProbability}(:x, :Π)
     @test names(st.data) == ["x", "Π"]
     @test typeof(st).parameters[1] == EnhancedBayesianNetworks.ContinuousProbability
@@ -110,7 +110,7 @@ end
     @test issetequal(filtering2.Π, [Normal(1, 1)])
 end
 
-@testitem "Discrete ST" setup = [ExtraDeps] begin
+@testitem "Discrete ST" setup=[ExtraDeps] begin
     st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteSimulation}([:x], :sim)
     @test names(st.data) == ["x", "sim"]
     @test typeof(st).parameters[1] == EnhancedBayesianNetworks.DiscreteSimulation
@@ -153,7 +153,7 @@ end
     @test issetequal(filtering2.sim, [DoubleLoop(MonteCarlo(50))])
 end
 
-@testitem "Continuous ST" setup = [ExtraDeps] begin
+@testitem "Continuous ST" setup=[ExtraDeps] begin
     st = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.ContinuousSimulation}(:x, :sim)
     @test names(st.data) == ["x", "sim"]
     @test typeof(st).parameters[1] == EnhancedBayesianNetworks.ContinuousSimulation

@@ -142,7 +142,7 @@ end
     node_a[:b=>:b2, :c=>:c2, :a=>:a3] = Interval(0.41123, 0.511223)
 end
 
-@testitem "DiscreteNode - Extreme Points" setup = [NodeSetup] begin
+@testitem "DiscreteNode - Extreme Points" setup=[NodeSetup] begin
     int1 = Interval(0.2, 0.5)
     int2 = Interval(0.5, 0.6)
     int3 = Interval(0.2, 0.4)

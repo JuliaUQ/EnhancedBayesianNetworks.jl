@@ -15,7 +15,7 @@
 end
 
 
-@testitem "FunctionalNode - Continuous" setup = [SetupFunctionalNodes] begin
+@testitem "FunctionalNode - Continuous" setup=[SetupFunctionalNodes] begin
     node = ContinuousFunctionalNode(name, models, simulation)
     @test isa(node, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node, EnhancedBayesianNetworks.AbstractContinuousNode)

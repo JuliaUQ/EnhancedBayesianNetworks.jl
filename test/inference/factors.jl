@@ -1,4 +1,4 @@
-@testitem "Inference - Factor & factorize" setup = [ExtraDeps] begin
+@testitem "Inference - Factor & factorize" setup=[ExtraDeps] begin
     f = Factor(
         [1],
         [0.5, 0.5]

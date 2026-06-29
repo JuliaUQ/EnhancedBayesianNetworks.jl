@@ -1,4 +1,4 @@
-@testitem "Dispatch Function" setup = [ExtraDeps] begin
+@testitem "Dispatch Function" setup=[ExtraDeps] begin
 
     r = ContinuousNode(:R, Normal())
 

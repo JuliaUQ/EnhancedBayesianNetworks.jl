@@ -37,7 +37,7 @@
 
 end
 
-@testitem "EnhancedBayesianNetwork - Struct" setup = [ExtraDeps, SetupeBN1] begin
+@testitem "EnhancedBayesianNetwork - Struct" setup=[ExtraDeps, SetupeBN1] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     @test net.A == sparse(zeros(length(nodes), length(nodes)))
@@ -54,7 +54,7 @@ end
     @test_throws ErrorException("Invalid eBN: duplicate node states [:yes]") EnhancedBayesianNetwork(nodes)
 end
 
-@testitem "EnhancedBayesianNetwork - add_child!" setup = [ExtraDeps, SetupeBN1] begin
+@testitem "EnhancedBayesianNetwork - add_child!" setup=[ExtraDeps, SetupeBN1] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     @test_throws ErrorException("Invalid eBN: nodes [:W] have a loop") add_child!(net, weather, weather)
@@ -76,7 +76,7 @@ end
     @test_throws ErrorException("Invalid eBN: nodes [:b] are not defined in the eBN") add_child!(net, :b, :S)
 end
 
-@testitem "EnhancedBayesianNetwork - Transmission" setup = [ExtraDeps] begin
+@testitem "EnhancedBayesianNetwork - Transmission" setup=[ExtraDeps] begin
     parameters_root1 = [:x1 => [Parameter(0.5, :x)], :x2 => [Parameter(0.7, :x)]]
     root1 = DiscreteNode(:x, parameters_root1)
     root1[:x=>:x1] = 0.3
