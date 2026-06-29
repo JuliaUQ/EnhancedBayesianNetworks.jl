@@ -1,4 +1,4 @@
-@testsnippet SetupeBN begin
+@testsnippet SetupeBN1 begin
 
     weather = DiscreteNode(:W)
     weather[:W=>:sunny] = 0.5
@@ -37,7 +37,7 @@
 
 end
 
-@testitem "EnhancedBayesianNetwork - Struct" setup = [ExtraDeps, SetupeBN] begin
+@testitem "EnhancedBayesianNetwork - Struct" setup = [ExtraDeps, SetupeBN1] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     @test net.A == sparse(zeros(length(nodes), length(nodes)))
@@ -54,7 +54,7 @@ end
     @test_throws ErrorException("Invalid eBN: duplicate node states [:yes]") EnhancedBayesianNetwork(nodes)
 end
 
-@testitem "EnhancedBayesianNetwork - add_child!" setup = [ExtraDeps, SetupeBN] begin
+@testitem "EnhancedBayesianNetwork - add_child!" setup = [ExtraDeps, SetupeBN1] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     @test_throws ErrorException("Invalid eBN: nodes [:W] have a loop") add_child!(net, weather, weather)
@@ -235,7 +235,7 @@ end
     @test issetequal(envelopes[2], [:y6, :y5, :x4])
 end
 
-@testitem "EnhancedBayesianNetwork - verify functional parents" setup=[SetupeBN] begin
+@testitem "EnhancedBayesianNetwork - verify functional parents" setup=[SetupeBN1] begin
 
     rain3 = ContinuousNode(:R3, [:W])
     rain3[:W=>:sunny] = Normal()
@@ -281,7 +281,7 @@ end
     @test isnothing(EnhancedBayesianNetworks.verify_functional_parents(net, grass2))
 end
 
-@testitem "EnhancedBayesianNetwork - verify ancestors & scenarios" setup=[SetupeBN] begin
+@testitem "EnhancedBayesianNetwork - verify ancestors & scenarios" setup=[SetupeBN1] begin
 
     parameters_rain = [:yes => [Parameter(0, :R)], :no => [Parameter(1, :R)]]
     rain = DiscreteNode(:R, [:W], parameters_rain)
