@@ -1,5 +1,4 @@
-@testitem "Evaluate Net - precise no discrete parents" begin
-    using Suppressor
+@testsnippet SetupeBN3 begin
     using .MathConstants: γ
 
     μ_gamma = 60
@@ -38,6 +37,9 @@
     model = Model(df -> frame_model.(df.r1, df.r2, df.r3, df.r4, df.r5, df.V, df.H), :G)
     performance = df -> df.G
 
+end
+
+@testitem "Evaluate Net - precise no discrete parents" setup=[ExtraDeps, SetupeBN3] begin
     n = 10^6
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
     R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(n))
@@ -78,46 +80,7 @@
     @test isnothing(reduced_ebn.nodes[1].results)
 end
 
-@testitem "Evaluate Net - imprecise no discrete parents" begin
-    using Suppressor
-    using .MathConstants: γ
-
-    μ_gamma = 60
-    cov_gamma = 0.2
-    α, θ = distribution_parameters(μ_gamma, μ_gamma * cov_gamma, Gamma)
-    V = ContinuousNode(:V, Gamma(α, θ))
-
-    μ_gumbel = 50
-    cov_gumbel = 0.4
-    μ_loc, β = distribution_parameters(μ_gumbel, cov_gumbel * μ_gumbel, Gumbel)
-    H = ContinuousNode(:H, Gumbel(μ_loc, β))
-
-    function plastic_moment_capacities(uᵣ)
-        ρ = 0.5477
-        μ = 150
-        cov = 0.2
-        λ, ζ = distribution_parameters(μ, μ * cov, LogNormal)
-        normal_μ = λ + ρ * ζ * uᵣ
-        normal_std = sqrt((1 - ρ^2) * ζ^2)
-        exp(rand(Normal(normal_μ, normal_std)))
-    end
-
-    model1 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r1)
-    model2 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r2)
-    model3 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r3)
-    model4 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r4)
-    model5 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r5)
-
-    function frame_model(r1, r2, r3, r4, r5, v, h)
-        g1 = r1 + r2 + r4 + r5 - 5 * h
-        g2 = r2 + 2 * r3 + r4 - 5 * v
-        g3 = r1 + 2 * r3 + 2 * r4 + r5 - 5 * h - 5 * v
-        return minimum([g1, g2, g3])
-    end
-
-    model = Model(df -> frame_model.(df.r1, df.r2, df.r3, df.r4, df.r5, df.V, df.H), :G)
-    performance = df -> df.G
-
+@testitem "Evaluate Net - imprecise no discrete parents" setup=[ExtraDeps, SetupeBN3] begin
     n = 10^4
     Uᵣ = ContinuousNode(:Uᵣ, Interval(-1, 1))
     R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(n))
@@ -162,35 +125,7 @@ end
     @test isnothing(ebn2.nodes[1].results)
 end
 
-@testitem "Evaluate Net - precise discrete parents" begin
-    using Suppressor
-    using .MathConstants: γ
-
-    function plastic_moment_capacities(uᵣ)
-        ρ = 0.5477
-        μ = 150
-        cov = 0.2
-        λ, ζ = distribution_parameters(μ, μ * cov, LogNormal)
-        normal_μ = λ + ρ * ζ * uᵣ
-        normal_std = sqrt((1 - ρ^2) * ζ^2)
-        exp(rand(Normal(normal_μ, normal_std)))
-    end
-
-    model1 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r1)
-    model2 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r2)
-    model3 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r3)
-    model4 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r4)
-    model5 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r5)
-
-    function frame_model(r1, r2, r3, r4, r5, v, h)
-        g1 = r1 + r2 + r4 + r5 - 5 * h
-        g2 = r2 + 2 * r3 + r4 - 5 * v
-        g3 = r1 + 2 * r3 + 2 * r4 + r5 - 5 * h - 5 * v
-        return minimum([g1, g2, g3])
-    end
-
-    model = Model(df -> frame_model.(df.r1, df.r2, df.r3, df.r4, df.r5, df.V, df.H), :G)
-    performance = df -> df.G
+@testitem "Evaluate Net - precise discrete parents" setup=[ExtraDeps, SetupeBN3] begin
 
     n = 10^6
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
@@ -287,36 +222,7 @@ end
     @test isnothing(ebn2.nodes[4].results)
 end
 
-@testitem "Evaluate Net - imprecise discrete parents" begin
-    using Suppressor
-    using .MathConstants: γ
-
-    function plastic_moment_capacities(uᵣ)
-        ρ = 0.5477
-        μ = 150
-        cov = 0.2
-        λ, ζ = distribution_parameters(μ, μ * cov, LogNormal)
-        normal_μ = λ + ρ * ζ * uᵣ
-        normal_std = sqrt((1 - ρ^2) * ζ^2)
-        exp(rand(Normal(normal_μ, normal_std)))
-    end
-
-    model1 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r1)
-    model2 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r2)
-    model3 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r3)
-    model4 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r4)
-    model5 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r5)
-
-    function frame_model(r1, r2, r3, r4, r5, v, h)
-        g1 = r1 + r2 + r4 + r5 - 5 * h
-        g2 = r2 + 2 * r3 + r4 - 5 * v
-        g3 = r1 + 2 * r3 + 2 * r4 + r5 - 5 * h - 5 * v
-        return minimum([g1, g2, g3])
-    end
-
-    model = Model(df -> frame_model.(df.r1, df.r2, df.r3, df.r4, df.r5, df.V, df.H), :G)
-    performance = df -> df.G
-
+@testitem "Evaluate Net - imprecise discrete parents" setup=[ExtraDeps, SetupeBN3] begin
     n = 10^4
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
 
