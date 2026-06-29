@@ -1,6 +1,4 @@
-@testitem "Inference - verify query & evidence" begin
-
-    using Suppressor
+@testsnippet SetupBNgrass begin
     weather = DiscreteNode(:W)
     weather[:W=>:Cloudy] = 0.5
     weather[:W=>:Sunny] = 0.5
@@ -36,6 +34,9 @@
     add_child!(bn, :W, :S)
     add_child!(bn, :R, :G)
     add_child!(bn, :S, :G)
+end
+
+@testitem "Inference - verify query & evidence" setup=[ExtraDeps, SetupBNgrass] begin
     @suppress order!(bn)
 
     @test_throws ErrorException("Invalid Query: queried nodes vector [:H] contains Symbols [:H] that are not associated to any node of the network") EnhancedBayesianNetworks.verify_query([:H], bn, Evidence(:G=>:Wet))

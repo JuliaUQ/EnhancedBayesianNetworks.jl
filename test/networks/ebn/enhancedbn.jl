@@ -364,7 +364,7 @@ end
     @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass3))
 end
 
-@testitem "EnhancedBayesianNetwork - build simulation table" setup=[ExtraDeps] begin
+@testitem "EnhancedBayesianNetwork - build simulation table" setup=[ExtraDeps, SetupeBN1] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
