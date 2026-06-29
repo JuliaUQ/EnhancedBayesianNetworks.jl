@@ -1,4 +1,4 @@
-@testitem "Simulation Inputs" begin
+@testsnippet SetupeBN2 begin
     parameters_A = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]]
     A = DiscreteNode(:A, parameters_A)
     A[:A=>:a1] = 0.5
@@ -39,103 +39,23 @@
     add_child!(net, [A, C, D], G)
     add_child!(net, [A, D, C, B], H)
     order!(net)
+end
 
+@testitem "Simulation Inputs" setup=[SetupeBN2] begin
     uqi = EnhancedBayesianNetworks.simulation_inputs(net, E, Dict(:A => :a1, :C => :c1))
     @test isa(uqi, Vector{UQInput})
     @test issetequal(uqi, [Parameter(1, :A), Parameter(1, :C), RandomVariable(Normal(), :D)])
 
 end
 
-@testitem "Simulation Scenarios" begin
-    parameters_A = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]]
-    A = DiscreteNode(:A, parameters_A)
-    A[:A=>:a1] = 0.5
-    A[:A=>:a2] = 0.5
-
-    B = ContinuousNode(:B)
-    B[] = Interval(1, 2)
-
-    parameters_C = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(2, :C)]]
-    C = DiscreteNode(:C, parameters_C)
-    C[:C=>:c1] = 0.5
-    C[:C=>:c2] = 0.5
-
-    D = ContinuousNode(:D)
-    D[] = Normal()
-
-    model = Model(df -> df.A .* df.D .- df.C, :E)
-    sim = MonteCarlo(1_000)
-    E = ContinuousFunctionalNode(:E, [model], sim, 100)
-
-    model = Model(df -> df.A .* df.D .- df.C .* df.B, :F)
-    sim = MonteCarlo(1_000)
-    F = ContinuousFunctionalNode(:F, [model], sim, 100)
-
-    model = Model(df -> df.A .- df.C .+ df.D, :G)
-    sim = MonteCarlo(1_000)
-    performance = df -> 2 .- df.G
-    G = DiscreteFunctionalNode(:G, [model], performance, sim)
-
-    model = Model(df -> df.A .- df.C .+ df.D .* df.B, :H)
-    sim = DoubleLoop(MonteCarlo(1_000))
-    performance = df -> 2 .- df.H
-    H = DiscreteFunctionalNode(:H, [model], performance, sim)
-
-    net = EnhancedBayesianNetwork([A, B, C, D, E, F, G, H])
-    add_child!(net, [A, C, D], E)
-    add_child!(net, [A, D, C, B], F)
-    add_child!(net, [A, C, D], G)
-    add_child!(net, [A, D, C, B], H)
-    order!(net)
-
+@testitem "Simulation Scenarios" setup=[SetupeBN2] begin
     EnhancedBayesianNetworks.build_simulations!(net, E)
     scs = EnhancedBayesianNetworks.simulation_scenarios(E)
     @test isa(scs, Vector{Evidence})
     @test issetequal(scs, [Evidence(:A => :a1, :C => :c1), Evidence(:A => :a2, :C => :c1), Evidence(:A => :a1, :C => :c2), Evidence(:A => :a2, :C => :c2)])
 end
 
-@testitem "Evaluate Node - continuous precise" begin
-    parameters_A = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]]
-    A = DiscreteNode(:A, parameters_A)
-    A[:A=>:a1] = 0.5
-    A[:A=>:a2] = 0.5
-
-    B = ContinuousNode(:B)
-    B[] = Interval(1, 2)
-
-    parameters_C = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(2, :C)]]
-    C = DiscreteNode(:C, parameters_C)
-    C[:C=>:c1] = 0.5
-    C[:C=>:c2] = 0.5
-
-    D = ContinuousNode(:D)
-    D[] = Normal()
-
-    model = Model(df -> df.A .* df.D .- df.C, :E)
-    sim = MonteCarlo(1_000)
-    E = ContinuousFunctionalNode(:E, [model], sim, 100)
-
-    model = Model(df -> df.A .* df.D .- df.C .* df.B, :F)
-    sim = MonteCarlo(1_000)
-    F = ContinuousFunctionalNode(:F, [model], sim, 100)
-
-    model = Model(df -> df.A .- df.C .+ df.D, :G)
-    sim = MonteCarlo(1_000)
-    performance = df -> 2 .- df.G
-    G = DiscreteFunctionalNode(:G, [model], performance, sim)
-
-    model = Model(df -> df.A .- df.C .+ df.D .* df.B, :H)
-    sim = DoubleLoop(MonteCarlo(1_000))
-    performance = df -> 2 .- df.H
-    H = DiscreteFunctionalNode(:H, [model], performance, sim)
-
-    net = EnhancedBayesianNetwork([A, B, C, D, E, F, G, H])
-    add_child!(net, [A, C, D], E)
-    add_child!(net, [A, D, C, B], F)
-    add_child!(net, [A, C, D], G)
-    add_child!(net, [A, D, C, B], H)
-    order!(net)
-
+@testitem "Evaluate Node - continuous precise" setup=[SetupeBN2] begin
     EnhancedBayesianNetworks.build_simulations!(net, E)
     evaluated_E = EnhancedBayesianNetworks.evaluate(net, E)
     @test evaluated_E.name == E.name
@@ -149,48 +69,7 @@ end
     @test isnothing(evaluated_E.results)
 end
 
-@testitem "Evaluate Node - continuous imprecise" begin
-    parameters_A = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]]
-    A = DiscreteNode(:A, parameters_A)
-    A[:A=>:a1] = 0.5
-    A[:A=>:a2] = 0.5
-
-    B = ContinuousNode(:B)
-    B[] = Interval(1, 2)
-
-    parameters_C = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(2, :C)]]
-    C = DiscreteNode(:C, parameters_C)
-    C[:C=>:c1] = 0.5
-    C[:C=>:c2] = 0.5
-
-    D = ContinuousNode(:D)
-    D[] = Normal()
-
-    model = Model(df -> df.A .* df.D .- df.C, :E)
-    sim = MonteCarlo(1_000)
-    E = ContinuousFunctionalNode(:E, [model], sim, 100)
-
-    model = Model(df -> df.A .* df.D .- df.C .* df.B, :F)
-    sim = MonteCarlo(1_000)
-    F = ContinuousFunctionalNode(:F, [model], sim, 100)
-
-    model = Model(df -> df.A .- df.C .+ df.D, :G)
-    sim = MonteCarlo(1_000)
-    performance = df -> 2 .- df.G
-    G = DiscreteFunctionalNode(:G, [model], performance, sim)
-
-    model = Model(df -> df.A .- df.C .+ df.D .* df.B, :H)
-    sim = DoubleLoop(MonteCarlo(1_000))
-    performance = df -> 2 .- df.H
-    H = DiscreteFunctionalNode(:H, [model], performance, sim)
-
-    net = EnhancedBayesianNetwork([A, B, C, D, E, F, G, H])
-    add_child!(net, [A, C, D], E)
-    add_child!(net, [A, D, C, B], F)
-    add_child!(net, [A, C, D], G)
-    add_child!(net, [A, D, C, B], H)
-    order!(net)
-
+@testitem "Evaluate Node - continuous imprecise" setup=[SetupeBN2] begin
     EnhancedBayesianNetworks.build_simulations!(net, F)
     evaluated_F = EnhancedBayesianNetworks.evaluate(net, F)
     @test evaluated_F.name == F.name
@@ -204,48 +83,7 @@ end
     @test isnothing(evaluated_F.results)
 end
 
-@testitem "Evaluate Node - discrete precise" begin
-    parameters_A = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]]
-    A = DiscreteNode(:A, parameters_A)
-    A[:A=>:a1] = 0.5
-    A[:A=>:a2] = 0.5
-
-    B = ContinuousNode(:B)
-    B[] = Interval(1, 2)
-
-    parameters_C = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(2, :C)]]
-    C = DiscreteNode(:C, parameters_C)
-    C[:C=>:c1] = 0.5
-    C[:C=>:c2] = 0.5
-
-    D = ContinuousNode(:D)
-    D[] = Normal()
-
-    model = Model(df -> df.A .* df.D .- df.C, :E)
-    sim = MonteCarlo(1_000)
-    E = ContinuousFunctionalNode(:E, [model], sim, 100)
-
-    model = Model(df -> df.A .* df.D .- df.C .* df.B, :F)
-    sim = MonteCarlo(1_000)
-    F = ContinuousFunctionalNode(:F, [model], sim, 100)
-
-    model = Model(df -> df.A .- df.C .+ df.D, :G)
-    sim = MonteCarlo(1_000)
-    performance = df -> 2 .- df.G
-    G = DiscreteFunctionalNode(:G, [model], performance, sim)
-
-    model = Model(df -> df.A .- df.C .+ df.D .* df.B, :H)
-    sim = DoubleLoop(MonteCarlo(1_000))
-    performance = df -> 2 .- df.H
-    H = DiscreteFunctionalNode(:H, [model], performance, sim)
-
-    net = EnhancedBayesianNetwork([A, B, C, D, E, F, G, H])
-    add_child!(net, [A, C, D], E)
-    add_child!(net, [A, D, C, B], F)
-    add_child!(net, [A, C, D], G)
-    add_child!(net, [A, D, C, B], H)
-    order!(net)
-
+@testitem "Evaluate Node - discrete precise" setup=[SetupeBN2] begin
     EnhancedBayesianNetworks.build_simulations!(net, G)
     evaluated_G = EnhancedBayesianNetworks.evaluate(net, G)
     @test evaluated_G.name == G.name
@@ -259,48 +97,7 @@ end
     @test isnothing(evaluated_G.results)
 end
 
-@testitem "Evaluate Node - discrete imprecise" begin
-    parameters_A = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]]
-    A = DiscreteNode(:A, parameters_A)
-    A[:A=>:a1] = 0.5
-    A[:A=>:a2] = 0.5
-
-    B = ContinuousNode(:B)
-    B[] = Interval(1, 2)
-
-    parameters_C = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(2, :C)]]
-    C = DiscreteNode(:C, parameters_C)
-    C[:C=>:c1] = 0.5
-    C[:C=>:c2] = 0.5
-
-    D = ContinuousNode(:D)
-    D[] = Normal()
-
-    model = Model(df -> df.A .* df.D .- df.C, :E)
-    sim = MonteCarlo(1_000)
-    E = ContinuousFunctionalNode(:E, [model], sim, 100)
-
-    model = Model(df -> df.A .* df.D .- df.C .* df.B, :F)
-    sim = MonteCarlo(1_000)
-    F = ContinuousFunctionalNode(:F, [model], sim, 100)
-
-    model = Model(df -> df.A .- df.C .+ df.D, :G)
-    sim = MonteCarlo(1_000)
-    performance = df -> 2 .- df.G
-    G = DiscreteFunctionalNode(:G, [model], performance, sim)
-
-    model = Model(df -> df.A .- df.C .+ df.D .* df.B, :H)
-    sim = DoubleLoop(MonteCarlo(1_000))
-    performance = df -> 2 .- df.H
-    H = DiscreteFunctionalNode(:H, [model], performance, sim)
-
-    net = EnhancedBayesianNetwork([A, B, C, D, E, F, G, H])
-    add_child!(net, [A, C, D], E)
-    add_child!(net, [A, D, C, B], F)
-    add_child!(net, [A, C, D], G)
-    add_child!(net, [A, D, C, B], H)
-    order!(net)
-
+@testitem "Evaluate Node - discrete imprecise" setup=[SetupeBN2] begin
     EnhancedBayesianNetworks.build_simulations!(net, H)
     evaluated_H = EnhancedBayesianNetworks.evaluate(net, H)
     @test evaluated_H.name == H.name
