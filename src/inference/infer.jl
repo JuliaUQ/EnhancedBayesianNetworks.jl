@@ -48,8 +48,7 @@ function infer(
 
     lower_table = reduce((a, b) -> min.(a, b), tables)
     upper_table = reduce((a, b) -> max.(a, b), tables)
-    @show typeof(lower_table)
-    @show typeof(upper_table)
+
     return CredalPosterior(
         posteriors,
         Factor(factors[1].vars, lower_table),
