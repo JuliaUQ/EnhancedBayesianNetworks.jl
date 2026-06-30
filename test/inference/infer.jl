@@ -140,8 +140,7 @@ end
     end
 end
 
-
-@testitem "Inference - Infer" setup=[SetupBN, SetupCN] begin
+@testitem "Inference - Infer" setup=[ExtraDeps, SetupBN, SetupCN] begin
 
     p = infer(bn, [:V], Evidence())
     @test p.factor.table ≈ [0.01, 0.99]
@@ -188,30 +187,30 @@ end
     @test p.factor.table[2] ≈ 0.5091246181555923
 
     # Credal Inference
-    p = infer(cn, [:Fire], Evidence())
+    p = @suppress infer(cn, [:Fire], Evidence())
     @test p.lower.table[1] ≈ 0.98
     @test p.upper.table[1] ≈ 0.99
     @test p.lower.table[2] ≈ 0.01
     @test p.upper.table[2] ≈ 0.02
 
-    p = infer(cn, [:Alarm], Evidence(:Alarm => :YesA))
+    p = @suppress infer(cn, [:Alarm], Evidence(:Alarm => :YesA))
     @test isempty(p.lower.vars)
     @test isempty(p.upper.vars)
     @test p.lower.table[] ≈ 1.0
     @test p.upper.table[] ≈ 1.0
 
-    p = infer(cn, [:Fire, :Alarm], Evidence(:Alarm => :YesA))
+    p = @suppress infer(cn, [:Fire, :Alarm], Evidence(:Alarm => :YesA))
     @test length(p.lower.vars) == 1
     @test length(p.upper.vars) == 1
     ns = EnhancedBayesianNetworks.NetworkSchema(first(EnhancedBayesianNetworks.extreme_bayesian_networks(cn)))
     @test p.lower.vars == [ns.node_to_idx[:Fire]]
     @test p.upper.vars == [ns.node_to_idx[:Fire]]
 
-    p = infer(cn, [:Fire], Evidence(:Smoke => :YesS))
+    p = @suppress infer(cn, [:Fire], Evidence(:Smoke => :YesS))
     @test p.lower.table[1] ≈ 0.997659723847414
     @test p.upper.table[1] ≈ 0.9998890122086571
 
-    p = infer(cn, [:Fire], Evidence(:Smoke => :YesS, :Alarm => :YesA))
+    p = @suppress infer(cn, [:Fire], Evidence(:Smoke => :YesS, :Alarm => :YesA))
     @test p.lower.table[1] ≈ 0.99595720920615
     @test p.upper.table[1] ≈ 0.9998478952774653
 
