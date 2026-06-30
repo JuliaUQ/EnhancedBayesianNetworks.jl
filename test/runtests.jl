@@ -3,12 +3,13 @@ using TestItems
 using TestItemRunner
 using EnhancedBayesianNetworks
 
+# Add dependencies only needed for testing
 @testsnippet ExtraDeps begin
+    using CSV
     using DataFrames
     using SparseArrays
     using Suppressor
 end
-
 
 @run_package_tests()
 
