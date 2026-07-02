@@ -1,4 +1,4 @@
-@testsnippet SprinklerBN begin
+@testsnippet SetupSprinklerBN begin
     weather = DiscreteNode(:W)
     weather[:W=>:Cloudy] = 0.5
     weather[:W=>:Sunny] = 0.5
@@ -33,7 +33,7 @@
     order!(bn_sprinkler)
 end
 
-@testitem "Bayesian Network - Struct" setup=[ExtraDeps, SprinklerBN] begin
+@testitem "Bayesian Network - Struct" setup=[ExtraDeps, SetupSprinklerBN] begin
     r = ContinuousNode(:R, Normal())
     v = DiscreteNode(:V)
     v[:V=>:yesV] = 0.01
@@ -101,7 +101,7 @@ end
     @test isapprox(joint_probability(bn, scenario5), 0.0016)
 end
 
-@testitem "Bayesian Network - sample" setup=[ExtraDeps, SprinklerBN] begin
+@testitem "Bayesian Network - Sampling" setup=[ExtraDeps, SetupSprinklerBN] begin
     # k standard errors of a sample proportion of size m.
     # k = 6 ⇒ ~2e-9 false-failure probability, independent of the RNG algorithm.
     band(p, m; k=6) = k * sqrt(p * (1 - p) / m)

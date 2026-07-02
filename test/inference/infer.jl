@@ -1,4 +1,4 @@
-@testsnippet SetupBN begin
+@testsnippet SetupAsiaBN begin
     V = DiscreteNode(:V)
     V[:V=>:YesV] = 0.01
     V[:V=>:NoV] = 0.99
@@ -53,7 +53,7 @@
     order!(bn)
 end
 
-@testsnippet SetupCN begin
+@testsnippet SetupFireProtectionCN begin
     T = DiscreteNode(:Tampering)
     T[:Tampering=>:YesT] = 0.98
     T[:Tampering=>:NoT] = 0.02
@@ -88,7 +88,7 @@ end
     cn = CredalNetwork(nodes)
 end
 
-@testitem "Inference - Posterior" setup=[SetupBN] begin
+@testitem "Inference - Posterior" setup=[SetupAsiaBN] begin
     posterior = infer(bn, [:X], Evidence())
     @test posterior isa Posterior
 
@@ -128,7 +128,7 @@ end
     @test isempty(cp.evidence)
 end
 
-@testitem "Inference - extreme bns" setup=[SetupCN] begin
+@testitem "Inference - extreme bns" setup=[SetupFireProtectionCN] begin
     nodes = [T, F, A, S, L, R]
     cn = CredalNetwork(nodes)
     bns = EnhancedBayesianNetworks.extreme_bayesian_networks(cn)
@@ -140,7 +140,7 @@ end
     end
 end
 
-@testitem "Inference - Infer" setup=[ExtraDeps, SetupBN, SetupCN] begin
+@testitem "Inference - Infer" setup=[ExtraDeps, SetupAsiaBN, SetupFireProtectionCN] begin
 
     p = infer(bn, [:V], Evidence())
     @test p.factor.table ≈ [0.01, 0.99]

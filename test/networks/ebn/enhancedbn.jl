@@ -1,4 +1,4 @@
-@testsnippet SetupeBN1 begin
+@testsnippet SetupSprinklereBN begin
 
     weather = DiscreteNode(:W)
     weather[:W=>:sunny] = 0.5
@@ -30,14 +30,13 @@
     grass[:R=>:no, :S=>:off, :G=>:dry] = 1
     grass[:R=>:no, :S=>:off, :G=>:wet] = 0
 
+end
+
+@testitem "EnhancedBayesianNetwork - Struct" setup=[ExtraDeps, SetupSprinklereBN] begin
     model = Model(df -> df.Rc .+ df.S, :G2)
     performance = df -> df.G2
     simulation = MonteCarlo(100)
     grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
-
-end
-
-@testitem "EnhancedBayesianNetwork - Struct" setup=[ExtraDeps, SetupeBN1] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     @test net.A == sparse(zeros(length(nodes), length(nodes)))
@@ -54,7 +53,11 @@ end
     @test_throws ErrorException("Invalid eBN: duplicate node states [:yes]") EnhancedBayesianNetwork(nodes)
 end
 
-@testitem "EnhancedBayesianNetwork - add_child!" setup=[ExtraDeps, SetupeBN1] begin
+@testitem "EnhancedBayesianNetwork - add_child!" setup=[ExtraDeps, SetupSprinklereBN] begin
+    model = Model(df -> df.Rc .+ df.S, :G2)
+    performance = df -> df.G2
+    simulation = MonteCarlo(100)
+    grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     @test_throws ErrorException("Invalid eBN: nodes [:W] have a loop") add_child!(net, weather, weather)
@@ -235,8 +238,11 @@ end
     @test issetequal(envelopes[2], [:y6, :y5, :x4])
 end
 
-@testitem "EnhancedBayesianNetwork - verify functional parents" setup=[SetupeBN1] begin
-
+@testitem "EnhancedBayesianNetwork - verify functional parents" setup=[SetupSprinklereBN] begin
+    model = Model(df -> df.Rc .+ df.S, :G2)
+    performance = df -> df.G2
+    simulation = MonteCarlo(100)
+    grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
     rain3 = ContinuousNode(:R3, [:W])
     rain3[:W=>:sunny] = Normal()
     rain3[:W=>:cloudy] = Normal()
@@ -281,7 +287,11 @@ end
     @test isnothing(EnhancedBayesianNetworks.verify_functional_parents(net, grass2))
 end
 
-@testitem "EnhancedBayesianNetwork - verify ancestors & scenarios" setup=[SetupeBN1] begin
+@testitem "EnhancedBayesianNetwork - verify ancestors & scenarios" setup=[SetupSprinklereBN] begin
+    model = Model(df -> df.Rc .+ df.S, :G2)
+    performance = df -> df.G2
+    simulation = MonteCarlo(100)
+    grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
 
     parameters_rain = [:yes => [Parameter(0, :R)], :no => [Parameter(1, :R)]]
     rain = DiscreteNode(:R, [:W], parameters_rain)
@@ -364,7 +374,12 @@ end
     @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass3))
 end
 
-@testitem "EnhancedBayesianNetwork - build simulation table" setup=[ExtraDeps, SetupeBN1] begin
+@testitem "EnhancedBayesianNetwork - build simulation table" setup=[ExtraDeps, SetupSprinklereBN] begin
+    model = Model(df -> df.Rc .+ df.S, :G2)
+    performance = df -> df.G2
+    simulation = MonteCarlo(100)
+    grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
+
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])

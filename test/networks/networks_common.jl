@@ -1,39 +1,4 @@
-@testsnippet SetupNetCommon begin
-
-    weather = DiscreteNode(:W)
-    weather[:W=>:sunny] = 0.5
-    weather[:W=>:cloudy] = 0.5
-
-    sprinkler_parameter = [:on => [Parameter(0.5, :S)], :off => [Parameter(0, :S)]]
-    sprinkler = DiscreteNode(:S, [:W], sprinkler_parameter)
-    sprinkler[:W=>:sunny, :S=>:on] = 0.7
-    sprinkler[:W=>:sunny, :S=>:off] = 0.3
-    sprinkler[:W=>:cloudy, :S=>:on] = 0.05
-    sprinkler[:W=>:cloudy, :S=>:off] = 0.95
-
-    rain = DiscreteNode(:R, [:W])
-    rain[:W=>:sunny, :R=>:yes] = 0.05
-    rain[:W=>:sunny, :R=>:no] = 0.95
-    rain[:W=>:cloudy, :R=>:yes] = 0.7
-    rain[:W=>:cloudy, :R=>:no] = 0.3
-
-    rain2 = ContinuousNode(:Rc)
-    rain2[] = Normal()
-
-    grass = DiscreteNode(:G, [:S, :R])
-    grass[:R=>:yes, :S=>:on, :G=>:dry] = 0
-    grass[:R=>:yes, :S=>:on, :G=>:wet] = 1
-    grass[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass[:R=>:no, :S=>:off, :G=>:wet] = 0
-
-    model = Model(df -> df.Rc .+ df.S, :G2)
-    performance = df -> df.G2
-    simulation = DoubleLoop(MonteCarlo(100))
-    grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
+@testsnippet SetupCommonNetTest begin
 
     model = Model(df -> df.Rc .+ df.S, :G2)
     performance = df -> df.G2
@@ -111,7 +76,7 @@
 
 end
 
-@testitem "Networks Common - cyclicality & connection" setup=[SetupNetCommon] begin
+@testitem "Networks Common - cyclicality & connection" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
     ## BN
     A = DiscreteNode(:A, [:B])
     A[:B=>:b1, :A=>:a1] = 0.05
@@ -149,7 +114,7 @@ end
     @test !EnhancedBayesianNetworks.isconnected(net)
 end
 
-@testitem "Networks Common - parents, children and ancestors" setup=[SetupNetCommon] begin
+@testitem "Networks Common - parents, children and ancestors" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
     ## BN
     nodes = [weather, grass, rain, sprinkler]
     net = BayesianNetwork(nodes)
@@ -211,7 +176,7 @@ end
     @test issetequal(discrete_ancestors(net, :G2), [:W, :S])
 end
 
-@testitem "Networks Common - verify BN" setup=[SetupNetCommon] begin
+@testitem "Networks Common - verify BN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
     nodes = [weather, grass, rain, sprinkler]
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -244,7 +209,7 @@ end
     @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_mutually_exclusive)
 end
 
-@testitem "Networks Common - verify CN" setup=[SetupNetCommon] begin
+@testitem "Networks Common - verify CN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
     weather = DiscreteNode(:W)
     weather[:W=>:sunny] = Interval(0.4, 0.6)
     weather[:W=>:cloudy] = Interval(0.4, 0.6)
@@ -304,7 +269,7 @@ end
     @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_lb2)
 end
 
-@testitem "Networks Common - verify eBN" setup=[SetupNetCommon] begin
+@testitem "Networks Common - verify eBN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -508,7 +473,7 @@ end
     @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
 end
 
-@testitem "Networks Common - add/remove node" setup=[ExtraDeps, SetupNetCommon] begin
+@testitem "Networks Common - add/remove node" setup=[ExtraDeps, SetupSprinklereBN, SetupCommonNetTest] begin
     ## BN
     nodes = [weather, sprinkler, rain, grass]
     net = BayesianNetwork(nodes)

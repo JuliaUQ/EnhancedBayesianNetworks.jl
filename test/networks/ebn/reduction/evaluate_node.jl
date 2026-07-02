@@ -1,4 +1,4 @@
-@testsnippet SetupeBN2 begin
+@testsnippet SetupEvaluateeBN begin
     parameters_A = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]]
     A = DiscreteNode(:A, parameters_A)
     A[:A=>:a1] = 0.5
@@ -41,21 +41,21 @@
     order!(net)
 end
 
-@testitem "Simulation Inputs" setup=[SetupeBN2] begin
+@testitem "Simulation Inputs" setup=[SetupEvaluateeBN] begin
     uqi = EnhancedBayesianNetworks.simulation_inputs(net, E, Dict(:A => :a1, :C => :c1))
     @test isa(uqi, Vector{UQInput})
     @test issetequal(uqi, [Parameter(1, :A), Parameter(1, :C), RandomVariable(Normal(), :D)])
 
 end
 
-@testitem "Simulation Scenarios" setup=[SetupeBN2] begin
+@testitem "Simulation Scenarios" setup=[SetupEvaluateeBN] begin
     EnhancedBayesianNetworks.build_simulations!(net, E)
     scs = EnhancedBayesianNetworks.simulation_scenarios(E)
     @test isa(scs, Vector{Evidence})
     @test issetequal(scs, [Evidence(:A => :a1, :C => :c1), Evidence(:A => :a2, :C => :c1), Evidence(:A => :a1, :C => :c2), Evidence(:A => :a2, :C => :c2)])
 end
 
-@testitem "Evaluate Node - continuous precise" setup=[SetupeBN2] begin
+@testitem "Evaluate Node - continuous precise" setup=[SetupEvaluateeBN] begin
     EnhancedBayesianNetworks.build_simulations!(net, E)
     evaluated_E = EnhancedBayesianNetworks.evaluate(net, E)
     @test evaluated_E.name == E.name
@@ -69,7 +69,7 @@ end
     @test isnothing(evaluated_E.results)
 end
 
-@testitem "Evaluate Node - continuous imprecise" setup=[SetupeBN2] begin
+@testitem "Evaluate Node - continuous imprecise" setup=[SetupEvaluateeBN] begin
     EnhancedBayesianNetworks.build_simulations!(net, F)
     evaluated_F = EnhancedBayesianNetworks.evaluate(net, F)
     @test evaluated_F.name == F.name
@@ -83,7 +83,7 @@ end
     @test isnothing(evaluated_F.results)
 end
 
-@testitem "Evaluate Node - discrete precise" setup=[SetupeBN2] begin
+@testitem "Evaluate Node - discrete precise" setup=[SetupEvaluateeBN] begin
     EnhancedBayesianNetworks.build_simulations!(net, G)
     evaluated_G = EnhancedBayesianNetworks.evaluate(net, G)
     @test evaluated_G.name == G.name
@@ -97,7 +97,7 @@ end
     @test isnothing(evaluated_G.results)
 end
 
-@testitem "Evaluate Node - discrete imprecise" setup=[SetupeBN2] begin
+@testitem "Evaluate Node - discrete imprecise" setup=[SetupEvaluateeBN] begin
     EnhancedBayesianNetworks.build_simulations!(net, H)
     evaluated_H = EnhancedBayesianNetworks.evaluate(net, H)
     @test evaluated_H.name == H.name

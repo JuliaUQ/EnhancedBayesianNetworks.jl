@@ -1,4 +1,4 @@
-@testitem "Inference - NetworkSchema" setup=[ExtraDeps, SetupBNgrass] begin
+@testitem "Inference - NetworkSchema" setup=[ExtraDeps, SetupModifiedSprinklerBN] begin
 
     @suppress order!(bn)
 
@@ -21,7 +21,7 @@
     @test ns2.idx_to_node == idx_to_node
 end
 
-@testitem "Inference - InteractionGraph" setup=[ExtraDeps, SetupBN] begin
+@testitem "Inference - InteractionGraph" setup=[ExtraDeps, SetupAsiaBN] begin
 
     ig = EnhancedBayesianNetworks.InteractionGraph(bn)
     @test ig.neighbors[1] == Set([3])

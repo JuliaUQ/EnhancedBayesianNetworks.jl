@@ -1,4 +1,4 @@
-@testsnippet SetupeBN3 begin
+@testsnippet SetupFrameeBN begin
     using .MathConstants: γ
 
     μ_gamma = 60
@@ -39,7 +39,7 @@
 
 end
 
-@testitem "Evaluate Net - precise no discrete parents" setup=[ExtraDeps, SetupeBN3] begin
+@testitem "Evaluate Net - precise no discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
     n = 10^6
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
     R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(n))
@@ -80,7 +80,7 @@ end
     @test isnothing(reduced_ebn.nodes[1].results)
 end
 
-@testitem "Evaluate Net - imprecise no discrete parents" setup=[ExtraDeps, SetupeBN3] begin
+@testitem "Evaluate Net - imprecise no discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
     n = 10^4
     Uᵣ = ContinuousNode(:Uᵣ, Interval(-1, 1))
     R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(n))
@@ -125,7 +125,7 @@ end
     @test isnothing(ebn2.nodes[1].results)
 end
 
-@testitem "Evaluate Net - precise discrete parents" setup=[ExtraDeps, SetupeBN3] begin
+@testitem "Evaluate Net - precise discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
 
     n = 10^6
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
@@ -222,7 +222,7 @@ end
     @test isnothing(ebn2.nodes[4].results)
 end
 
-@testitem "Evaluate Net - imprecise discrete parents" setup=[ExtraDeps, SetupeBN3] begin
+@testitem "Evaluate Net - imprecise discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
     n = 10^4
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
 
