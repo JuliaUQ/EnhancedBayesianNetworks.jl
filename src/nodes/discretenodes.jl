@@ -57,11 +57,20 @@ function _inputs(node::DiscreteNode, evidence::Evidence)
     end
 end
 
-function sample(node::DiscreteNode, ev::Vector{Evidence})
-    evs = map(i -> filter(i -> i.first ∈ parents(node), i), ev)
-    cpts = map(i -> filter(node.cpt, (i)...), evs)
-    dists = map(cpt -> Distributions.Categorical(Vector{Real}(cpt.Π)), cpts)
-    map(dist -> node.cpt.data[:, node.name][rand(dist)], dists)
+function sample(node::DiscreteNode, evidence::Evidence)
+    if node.name ∈ keys(evidence)
+        return evidence[node.name]          # observed → return directly
+    end
+    if !isprecise(node)
+        error("Sampling Error: cannot sample from imprecise node $(repr(node.name))")
+    end
+    parent_ev = filter(p -> p.first ∈ parents(node), evidence)
+    cpt = filter(node.cpt, parent_ev...)
+    if isempty(cpt)
+        error("Sampling Error: evidence $(parent_ev) is not a valid configuration of parents $(parents(node)) for node $(repr(node.name))")
+    end
+    dist = Distributions.Categorical(Vector{Float64}(cpt.Π))
+    return cpt[rand(dist), node.name]
 end
 
 function _extreme_nodes(node::DiscreteNode)
@@ -90,10 +99,9 @@ function _extreme_nodes(node::DiscreteNode)
         extreme_nodes = DiscreteNode[]
         for df in extreme_dataframes
             vars = vcat(par, node.name)
-            n = DiscreteNode(node.name, par)
+            n = DiscreteNode(node.name, par, node.parameters, node.results)
             for row in eachrow(df)
-                inds = map(v -> v => row[v], vars)
-                n[inds...] = row[:Π]
+                n[map(v->v=>row[v], vars)...] = row[:Π]
             end
             push!(extreme_nodes, n)
         end

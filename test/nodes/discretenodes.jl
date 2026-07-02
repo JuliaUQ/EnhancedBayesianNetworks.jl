@@ -176,3 +176,46 @@ end
     node_b[:b=>:b3] = 0.3
     @test EnhancedBayesianNetworks._extreme_nodes(node_b) == [node_b]
 end
+
+@testitem "DiscreteNode - Sampling" begin
+    # --- root node, deterministic marginal ---
+    node_v = DiscreteNode(:v)
+    node_v[:v=>:yes] = 1.0
+    node_v[:v=>:no] = 0.0
+    @test all(sample(node_v, Evidence()) == :yes for _ in 1:100)
+    # clamping: node's own state in evidence is returned directly, bypassing the CPT
+    @test sample(node_v, Evidence(:v => :no)) == :no
+
+    # --- root node, random 50/50: result must be a valid state ---
+    node_r = DiscreteNode(:r)
+    node_r[:r=>:r1] = 0.5
+    node_r[:r=>:r2] = 0.5
+    @test all(sample(node_r, Evidence()) ∈ [:r1, :r2] for _ in 1:100)
+
+    # --- child node, deterministic conditional ---
+    node_c = DiscreteNode(:c, [:v])
+    node_c[:v=>:yes, :c=>:c1] = 1.0
+    node_c[:v=>:yes, :c=>:c2] = 0.0
+    node_c[:v=>:no, :c=>:c1] = 0.0
+    node_c[:v=>:no, :c=>:c2] = 1.0
+    @test sample(node_c, Evidence(:v => :yes)) == :c1
+    @test sample(node_c, Evidence(:v => :no)) == :c2
+
+    # non-parent entries in evidence are ignored
+    @test sample(node_c, Evidence(:v => :yes, :x => :whatever)) == :c1
+
+    # clamping wins over the conditional, even for a zero-probability state
+    @test sample(node_c, Evidence(:v => :yes, :c => :c2)) == :c2
+
+    # --- errors ---
+    # imprecise node cannot be sampled
+    node_i = DiscreteNode(:i)
+    node_i[:i=>:i1] = Interval(0.2, 0.4)
+    node_i[:i=>:i2] = Interval(0.6, 0.8)
+    @test_throws ErrorException("Sampling Error: cannot sample from imprecise node :i") sample(node_i, Evidence())
+    # ...but an imprecise node can still be clamped (clamp precedes the precision check)
+    @test sample(node_i, Evidence(:i => :i1)) == :i1
+
+    # invalid parent configuration → empty CPT block
+    @test_throws "is not a valid configuration of parents" sample(node_c, Evidence(:v => :maybe))
+end
