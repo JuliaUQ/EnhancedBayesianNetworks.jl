@@ -66,13 +66,13 @@ end
 
 function sample(bn::BayesianNetwork, n::Int=1)
     order!(bn)
-    ev = fill(Evidence(), n)
+    evidences = [Evidence() for _ in 1:n]
     samples = DataFrame()
     for node in bn.nodes
-        results = sample(node, ev)
+        results = map(e -> sample(node, e), evidences)
         samples[!, node.name] = results
         # Update Evidence
-        for (e, r) in zip(ev, results)
+        for (e, r) in zip(evidences, results)
             e[node.name] = r
         end
     end
