@@ -89,8 +89,8 @@ end
 
 Base.setindex!(node::DiscreteFunctionalNode, value, key...) = Base.setindex!(node.simulation, value, key...)
 
-isroot(FunctionalNode) = false
-
 states(node::DiscreteFunctionalNode) = Symbol.([string(node.name) * "_safe", string(node.name) * "_failed"])
 
 const global FunctionalNode = Union{DiscreteFunctionalNode,ContinuousFunctionalNode}
+
+isroot(node::FunctionalNode) = false
