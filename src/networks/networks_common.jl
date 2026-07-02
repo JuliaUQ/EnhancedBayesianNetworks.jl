@@ -101,18 +101,11 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
     filtering_elements = map(th_s -> ([i.name for i in par] .=> th_s), theoretical_scenarios)
     if isprecise(node)
         for filtering_element in filtering_elements
-            cumulative_prob = sum(filter(node.cpt, filtering_element...).Π)
-            if cumulative_prob != 1
-                if isapprox(cumulative_prob, 1, atol=0.01)
-                    vals = filter(node.cpt, filtering_element...).Π
-                    valstr = "[" * join(string.(vals), ", ") * "]"
-                    @warn "Node $(repr(node.name)) has CPT values $valstr for the scenario $filtering_element and will be normalized!"
-                    filter(node.cpt, filtering_element...)[!, :Π] ./= cumulative_prob
-                else
-                    vals = filter(node.cpt, filtering_element...).Π
-                    valstr = "[" * join(string.(vals), ", ") * "]"
-                    error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr not exhaustive and mutually exclusive for the scenario $filtering_element")
-                end
+            sub = filter(node.cpt, filtering_element...)
+            cumulative_prob = sum(sub.Π)
+            if !isapprox(cumulative_prob, 1)
+                valstr = "[" * join(string.(sub.Π), ", ") * "]"
+                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr not exhaustive and mutually exclusive for the scenario $filtering_element")
             end
         end
     else

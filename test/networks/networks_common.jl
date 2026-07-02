@@ -14,16 +14,6 @@
     grass_incomplete[:R=>:no, :S=>:off, :G=>:dry] = 1
     grass_incomplete[:R=>:no, :S=>:off, :G=>:wet] = 0
 
-    grass_not_exhaustive = DiscreteNode(:G, [:S, :R])
-    grass_not_exhaustive[:R=>:yes, :S=>:on, :G=>:dry] = 0
-    grass_not_exhaustive[:R=>:yes, :S=>:on, :G=>:wet] = 0.999
-    grass_not_exhaustive[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass_not_exhaustive[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass_not_exhaustive[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass_not_exhaustive[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass_not_exhaustive[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass_not_exhaustive[:R=>:no, :S=>:off, :G=>:wet] = 0
-
     grass_not_mutually_exclusive = DiscreteNode(:G, [:S, :R])
     grass_not_mutually_exclusive[:R=>:yes, :S=>:on, :G=>:dry] = 0.3
     grass_not_mutually_exclusive[:R=>:yes, :S=>:on, :G=>:wet] = 0.999
@@ -196,12 +186,6 @@ end
     add_child!(net, [rain, sprinkler], grass)
     @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass))
 
-    nodes = [weather, grass_not_exhaustive, rain, sprinkler]
-    net = BayesianNetwork(nodes)
-    add_child!(net, weather, [sprinkler, rain])
-    add_child!(net, [rain, sprinkler], grass_not_exhaustive)
-    @test_logs (:warn, "Node :G has CPT values [0, 0.999] for the scenario [:R => :yes, :S => :on] and will be normalized!") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_exhaustive)
-    @test filter(grass_not_exhaustive.cpt, ([:S, :R, :G] .=> [:on, :yes, :wet])...).Π == [1.0]
     nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -232,12 +216,6 @@ end
     add_child!(net, [rain, sprinkler], grass)
     @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass))
 
-    nodes = [weather, grass_not_exhaustive, rain, sprinkler]
-    net = CredalNetwork(nodes)
-    add_child!(net, weather, [sprinkler, rain])
-    add_child!(net, [rain, sprinkler], grass_not_exhaustive)
-    @test_logs (:warn, "Node :G has CPT values [0, 0.999] for the scenario [:R => :yes, :S => :on] and will be normalized!") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_exhaustive)
-    @test filter(grass_not_exhaustive.cpt, ([:S, :R, :G] .=> [:on, :yes, :wet])...).Π == [1.0]
     nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -292,12 +270,6 @@ end
     add_child!(net, [rain, sprinkler], grass)
     @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass))
 
-    nodes = [weather, grass_not_exhaustive, rain, sprinkler]
-    net = EnhancedBayesianNetwork(nodes)
-    add_child!(net, weather, [sprinkler, rain])
-    add_child!(net, [rain, sprinkler], grass_not_exhaustive)
-    @test_logs (:warn, "Node :G has CPT values [0, 0.999] for the scenario [:R => :yes, :S => :on] and will be normalized!") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_exhaustive)
-    @test filter(grass_not_exhaustive.cpt, ([:S, :R, :G] .=> [:on, :yes, :wet])...).Π == [1.0]
     nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
