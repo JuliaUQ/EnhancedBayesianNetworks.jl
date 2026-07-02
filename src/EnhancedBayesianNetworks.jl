@@ -16,7 +16,6 @@ import Base: *, sum, reduce
 export ApproximatedDiscretization
 export BayesianNetwork
 export ContinuousFunctionalNode
-export ContinuousInput
 export ContinuousNode
 export CredalNetwork
 export CredalPosterior
@@ -26,7 +25,6 @@ export ExactDiscretization
 export EnhancedBayesianNetwork
 export Evidence
 export Factor
-export FunctionalNode
 export InferenceState
 export Posterior
 
