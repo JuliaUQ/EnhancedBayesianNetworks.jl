@@ -3,23 +3,20 @@ iscyclic(net::AbstractNetwork) = iscyclic(net.A)
 isconnected(net::AbstractNetwork) = isconnected(net.A)
 
 function parents(net::AbstractNetwork, name::Symbol)
-    rev_topology = Dict(v => k for (k, v) in net.topology)
     parents_idx = findnz(net.A[:, net.topology[name]])[1]
-    return map(idx -> rev_topology[idx], parents_idx)
+    return Symbol[net.nodes[idx].name for idx in parents_idx]
 end
 
 parents(net::AbstractNetwork, node::AbstractNode) = parents(net, node.name)
 
 function children(net::AbstractNetwork, name::Symbol)
-    rev_topology = Dict(v => k for (k, v) in net.topology)
     children_idx = findnz(net.A[net.topology[name], :])[1]
-    return map(idx -> rev_topology[idx], children_idx)
+    return Symbol[net.nodes[idx].name for idx in children_idx]
 end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
 
 function discrete_ancestors(net::AbstractNetwork, name::Symbol)
-    rev_topology = Dict(v => k for (k, v) in net.topology)
     start_idx = net.topology[name]
     visited = Set{Int}()
     result = Set{Symbol}()
@@ -29,10 +26,9 @@ function discrete_ancestors(net::AbstractNetwork, name::Symbol)
         for p in findnz(net.A[:, current])[1]
             if p ∉ visited
                 push!(visited, p)
-                node_name = rev_topology[p]
-                node = net.nodes[findfirst(n -> n.name == node_name, net.nodes)]
+                node = net.nodes[p]
                 if node isa AbstractDiscreteNode
-                    push!(result, node_name)
+                    push!(result, node.name)
                 else
                     push!(stack, p)
                 end
