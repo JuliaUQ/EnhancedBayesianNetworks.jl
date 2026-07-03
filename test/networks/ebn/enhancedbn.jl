@@ -392,4 +392,8 @@ end
     @test issetequal(Symbol.(names(node.simulation.data)), [:S, :sim])
     @test issetequal(Symbol.(node.simulation.data.S), [:on, :off])
     @test issetequal(node.simulation.data.sim, [MonteCarlo(100), MonteCarlo(100)])
+
+    st1 = node.simulation
+    EnhancedBayesianNetworks.build_simulations!(net, node)   # 2nd call must be a no-op
+    @test node.simulation === st1
 end

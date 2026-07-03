@@ -171,10 +171,9 @@ function verify_functional_parents(net::EnhancedBayesianNetwork, node::Functiona
 end
 
 function build_simulations!(net::EnhancedBayesianNetwork, node::FunctionalNode)
-    if !isa(node.simulation, ScenariosTable{Simulation})
-        anc = Symbol[]
+    if !isa(node.simulation, ScenariosTable)
         anc_nodes = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
-        append!(anc, [i.name for i in anc_nodes])
+        anc = Symbol[i.name for i in anc_nodes]
         if isa(node, AbstractContinuousNode)
             st = EnhancedBayesianNetworks.ScenariosTable{ContinuousSimulation}(anc, :sim)
         else
