@@ -66,7 +66,7 @@
     @test factors[2].vars == [1, 2]
     @test factors[2].table == [0.8 0.2; 0.1 0.9]
     @test factors[3].vars == [1, 3]
-    @test factors[3].table == [0.4 0.4 0.2; 0.6000000000000001 0.30000000000000004 0.10000000000000002]
+    @test factors[3].table == [0.4 0.4 0.2; 0.6 0.3 0.1]
     @test factors[4].vars == [3, 2, 4]
     @test factors[4].table == [0.4 0.2; 0.45 0.8; 0.42 0.9;;; 0.6 0.8; 0.55 0.2; 0.58 0.1]
 
