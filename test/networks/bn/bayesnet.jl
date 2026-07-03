@@ -90,14 +90,17 @@ end
 
     bn = bn_sprinkler
     scenario1 = Evidence(:W => :Cloudy, :G => :Wet)
-    @test_throws ErrorException("Node(s) [:R, :S] are not defined in the scenario Dict(:G => :Wet, :W => :Cloudy). Use Inference instead") joint_probability(bn, scenario1)
+    @test_throws ErrorException("Invalid Scenario: nodes [:R, :S] are not defined in the scenario; joint_probability requires a complete scenario, use infer instead") joint_probability(bn, scenario1)
     scenario2 = Evidence(:W => :Cloudy, :G => :Wet, :R => :Yes, :S => :On, :N => :nothing)
-    @test_logs (:warn, "Defined scenario contains Set([:N]) that are not defined in the BN. Therefore is useless for the scenario probability evaluation") joint_probability(bn, scenario2)
+    @test_logs (:warn, "Scenario contains nodes [:N] that are not defined in the network; they are ignored in the joint probability evaluation") joint_probability(bn, scenario2)
     scenario3 = Evidence(:W => :Cloudy, :G => :Mild, :R => :Yes, :S => :On)
-    @test_throws ErrorException("Scenario defined state Mild for node G that does not belongs to its possible states [:Wet, :Dry]") joint_probability(bn, scenario3)
+    @test_throws ErrorException("Invalid Scenario: scenario defines state :Mild for node :G that does not belong to its possible states [:Wet, :Dry]") joint_probability(bn, scenario3)
     scenario4 = Evidence(:W => :Cloudy, :G => :Wet, :R => :Yes, :S => :On)
     @test isapprox(joint_probability(bn, scenario4), 0.1584)
     scenario5 = Evidence(:W => :Cloudy, :G => :Dry, :R => :Yes, :S => :On)
+    scenario2 = Evidence(:W => :Cloudy, :G => :Wet, :R => :Yes, :S => :On, :N => :nothing)
+    @test_logs (:warn, "Scenario contains nodes [:N] that are not defined in the network; they are ignored in the joint probability evaluation") joint_probability(bn, scenario2)
+    @test haskey(scenario2, :N)
     @test isapprox(joint_probability(bn, scenario5), 0.0016)
 end
 

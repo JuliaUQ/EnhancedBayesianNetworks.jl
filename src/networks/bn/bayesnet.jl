@@ -33,15 +33,14 @@ function BayesianNetwork(nodes::AbstractVector{DiscreteNode})
 end
 
 function joint_probability(bn::BayesianNetwork, scenario::Evidence)
+    scenario = deepcopy(scenario)
     missing_names = setdiff(getproperty.(bn.nodes, :name), keys(scenario))
-
     if !isempty(missing_names)
-        error("Node(s) $missing_names are not defined in the scenario $scenario. Use Inference instead")
+        error("Invalid Scenario: nodes $missing_names are not defined in the scenario; joint_probability requires a complete scenario, use infer instead")
     end
-
     extra_names = setdiff(keys(scenario), getproperty.(bn.nodes, :name))
     if !isempty(extra_names)
-        @warn("Defined scenario contains $extra_names that are not defined in the BN. Therefore is useless for the scenario probability evaluation")
+        @warn("Scenario contains nodes $(collect(extra_names)) that are not defined in the network; they are ignored in the joint probability evaluation")
         for k in extra_names
             delete!(scenario, k)
         end
@@ -50,7 +49,7 @@ function joint_probability(bn::BayesianNetwork, scenario::Evidence)
     for (n, s) in scenario
         sts = states(first(filter(x -> x.name == n, bn.nodes)))
         if s ∉ sts
-            error("Scenario defined state $s for node $n that does not belongs to its possible states $sts")
+            error("Invalid Scenario: scenario defines state $(repr(s)) for node $(repr(n)) that does not belong to its possible states $(repr(sts))")
         end
     end
 
