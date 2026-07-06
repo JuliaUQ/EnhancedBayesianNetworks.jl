@@ -191,6 +191,12 @@ end
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_not_mutually_exclusive)
     @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_mutually_exclusive)
+
+    bad_root = DiscreteNode(:W)
+    bad_root[:W=>:sunny] = 0.5
+    bad_root[:W=>:cloudy] = 0.6
+    net = BayesianNetwork([bad_root])
+    @test_throws ErrorException("Invalid CPT: node :W has CPT values [0.5, 0.6] not exhaustive and mutually exclusive for the scenario Any[]") EnhancedBayesianNetworks.verify_exhaustiveness(net, bad_root)
 end
 
 @testitem "Networks Common - verify CN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin

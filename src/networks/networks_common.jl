@@ -79,42 +79,42 @@ function verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,Continuou
     end
 end
 
+# Every combination of (parent states × own states) must appear in the CPT. Build the set of present rows once, then membership-test each theoretical scenario
 function verify_scenarios(net::AbstractNetwork, node::DiscreteNode)
     par = filter(n -> n.name ∈ parents(node), net.nodes)
     v = vcat(par, node)
-    theoretical_scenarios = vec(collect(Iterators.product(states.(v)...)))
-    filtering_elements = map(th_s -> ([i.name for i in v] .=> th_s), theoretical_scenarios)
-    for filtering_element in filtering_elements
-        if isempty(filter(node.cpt, filtering_element...))
+    cols = [n.name for n in v]
+    present = Set(Tuple(r) for r in eachrow(node.cpt.data[:, cols]))
+    for scenario in Iterators.product(states.(v)...)
+        if scenario ∉ present
+            filtering_element = cols .=> scenario
             error("Invalid CPT: node $(repr(node.name)) is missing the following scenario $(filtering_element)")
         end
     end
 end
 
+# For each parent-state combination the own-state probabilities must be exhaustive: sum ≈ 1 (precise) or the interval sum must bracket 1 (imprecise). 
+# groupby partitions the CPT by parent columns in a single pass. Assumes every combination is present.
+# order! runs verify_scenarios first, so a missing group cannot reach here.
 function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
-    par = filter(n -> n.name ∈ parents(node), net.nodes)
-    theoretical_scenarios = vec(collect(Iterators.product(states.(par)...)))
-    filtering_elements = map(th_s -> ([i.name for i in par] .=> th_s), theoretical_scenarios)
-    if isprecise(node)
-        for filtering_element in filtering_elements
-            sub = filter(node.cpt, filtering_element...)
-            cumulative_prob = sum(sub.Π)
-            if !isapprox(cumulative_prob, 1)
+    par = [n.name for n in filter(n -> n.name ∈ parents(node), net.nodes)]
+    groups = isempty(par) ? (node.cpt.data,) : groupby(node.cpt.data, par)
+    precise = isprecise(node)
+    for sub in groups
+        scenario = [p => sub[1, p] for p in par]
+        if precise
+            if !isapprox(sum(sub.Π), 1)
                 valstr = "[" * join(string.(sub.Π), ", ") * "]"
-                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr not exhaustive and mutually exclusive for the scenario $filtering_element")
+                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr not exhaustive and mutually exclusive for the scenario $scenario")
             end
-        end
-    else
-        for filtering_element in filtering_elements
-            lb_sum, ub_sum = EnhancedBayesianNetworks.sum_intervals_and_float(filter(node.cpt, filtering_element...).Π...)
+        else
+            lb_sum, ub_sum = EnhancedBayesianNetworks.sum_intervals_and_float(sub.Π...)
             if lb_sum > 1
-                vals = filter(node.cpt, filtering_element...).Π
-                valstr = "[" * join(string.(vals), ", ") * "]"
-                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr for the scenario $filtering_element, the sum of lower bound values must be less than 1")
+                valstr = "[" * join(string.(sub.Π), ", ") * "]"
+                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr for the scenario $scenario, the sum of lower bound values must be less than 1")
             elseif ub_sum < 1
-                vals = filter(node.cpt, filtering_element...).Π
-                valstr = "[" * join(string.(vals), ", ") * "]"
-                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr for the scenario $filtering_element, the sum of upper bound values must be greater than 1")
+                valstr = "[" * join(string.(sub.Π), ", ") * "]"
+                error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr for the scenario $scenario, the sum of upper bound values must be greater than 1")
             end
         end
     end
