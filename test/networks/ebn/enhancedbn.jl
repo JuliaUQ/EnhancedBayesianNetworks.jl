@@ -79,7 +79,7 @@ end
     @test_throws ErrorException("Invalid eBN: nodes [:b] are not defined in the eBN") add_child!(net, :b, :S)
 end
 
-@testitem "EnhancedBayesianNetwork - Transmission" setup=[ExtraDeps] begin
+@testitem "EnhancedBayesianNetwork - Transmission" setup=[ExtraDeps, CheckSetup] begin
     parameters_root1 = [:x1 => [Parameter(0.5, :x)], :x2 => [Parameter(0.7, :x)]]
     root1 = DiscreteNode(:x, parameters_root1)
     root1[:x=>:x1] = 0.3
@@ -110,6 +110,7 @@ end
     @test issetequal([i.name for i in net.nodes], [:x, :y, :fd])
     @test net.topology == Dict(:x => 1, :y => 2, :fd => 3)
     @test discrete_functional.models == new_discrete_functional.models
+    check_index_coherence(net)
 
     discrete_functional = DiscreteFunctionalNode(:fd, [model2], performance, MonteCarlo(300))
     discretization = ApproximatedDiscretization([-2, 0, 2], 2)
@@ -124,9 +125,10 @@ end
     EnhancedBayesianNetworks.transfer_continuous_functional_node!(net, cont_functional)
     @test :fc ∈ [i.name for i in net.nodes]
     @test length(discrete_functional.models) == 1
+    check_index_coherence(net)
 end
 
-@testitem "EnhancedBayesianNetwork - Discretize" setup=[ExtraDeps] begin
+@testitem "EnhancedBayesianNetwork - Discretize" setup=[ExtraDeps, CheckSetup] begin
     A = DiscreteNode(:A)
     A[:A=>:a1] = 0.2
     A[:A=>:a2] = 0.8
@@ -163,6 +165,7 @@ end
     @test disc2.name ∈ [i.name for i in net.nodes]
     @test issetequal(parents(net, F), [:D, :B, :C])
     @test net.A == sparse([1, 2, 4, 5, 6, 7], [6, 3, 5, 3, 7, 3], [true, true, true, true, true, true], 7, 7)
+    check_index_coherence(net)
 end
 
 @testitem "EnhancedBayesianNetwork - Markov Envelope" begin

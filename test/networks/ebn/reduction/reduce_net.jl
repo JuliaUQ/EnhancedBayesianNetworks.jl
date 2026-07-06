@@ -80,7 +80,7 @@ end
     @test isnothing(reduced_ebn.nodes[1].results)
 end
 
-@testitem "Evaluate Net - imprecise no discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
+@testitem "Evaluate Net - imprecise no discrete parents" setup=[ExtraDeps, SetupFrameeBN, CheckSetup] begin
     n = 10^4
     Uᵣ = ContinuousNode(:Uᵣ, Interval(-1, 1))
     R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(n))
@@ -110,6 +110,7 @@ end
     @test isapprox(ebn1.nodes[1].cpt.data.Π[2].lb, 0.943, atol=0.05)
     @test isapprox(ebn1.nodes[1].cpt.data.Π[2].ub, 1, atol=0.05)
     @test !isnothing(ebn1.nodes[1].results)
+    check_index_coherence(ebn1)
 
     ebn2 = deepcopy(ebn)
     ebn2 = @suppress reduce(ebn2, false)
@@ -123,6 +124,7 @@ end
     @test isapprox(ebn2.nodes[1].cpt.data.Π[2].lb, 0.943, atol=0.05)
     @test isapprox(ebn2.nodes[1].cpt.data.Π[2].ub, 1, atol=0.05)
     @test isnothing(ebn2.nodes[1].results)
+    check_index_coherence(ebn2)
 end
 
 @testitem "Evaluate Net - precise discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
