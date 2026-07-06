@@ -79,7 +79,7 @@ end
     @test issetequal(bn.nodes, nodes)
     @test bn.topology == Dict(:V => 1, :S => 2, :T => 3, :L => 4)
     @test bn.A == spzeros(Bool, 4, 4)
-    @test_throws ErrorException("Invalid Network: node '[:V]' has a loop") add_child!(bn, v, v)
+    @test_throws ErrorException("Invalid Network: nodes [:V] have a loop") add_child!(bn, v, v)
     @test_throws ErrorException("Invalid Network: node :T does not have the node :S in its CPT") add_child!(bn, s, t)
     @test_throws ErrorException("Invalid Network: nodes [:G] are not defined in the network") add_child!(bn, v, g)
     @test_throws ErrorException("Invalid Network: nodes [:G] are not defined in the network") add_child!(bn, :V, :G)

@@ -41,54 +41,6 @@ end
 
 EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = EnhancedBayesianNetwork(nodes, topology_and_adjacency(nodes)...)
 
-function add_child!(
-    net::EnhancedBayesianNetwork,
-    par::Union{<:AbstractNode,Vector{<:AbstractNode}},
-    ch::Union{<:AbstractNode,Vector{<:AbstractNode}}
-)
-    parents = wrap(par)
-    children = wrap(ch)
-    all_nodes = vcat(parents, children)
-    missing_nodes = setdiff([i.name for i in all_nodes], [i.name for i in net.nodes])
-    if !isempty(missing_nodes)
-        error("Invalid eBN: nodes $missing_nodes are not defined in the eBN")
-    end
-    ## verify No loop
-    loop = intersect(parents, children)
-    if !isempty(loop)
-        error("Invalid eBN: nodes $(getproperty.(loop, :name)) have a loop")
-    end
-    # ## verify Discrete parent nodes
-    discrete_par = filter(x -> isa(x, DiscreteNode), parents)
-    map(dp -> verify_discrete(dp, children), discrete_par)
-    ## verify Continuous and Functional parent nodes
-    continuous_par = filter(x -> isa(x, ContinuousNode), parents)
-    functional_par = filter(x -> isa(x, FunctionalNode), parents)
-    cont_and_fun_par = vcat(continuous_par, functional_par)
-    map(cfp -> verify_continuous_and_functional(cfp, children), cont_and_fun_par)
-
-    pidx = getindex.(Ref(net.topology), getfield.(parents, :name))
-    cidx = getindex.(Ref(net.topology), getfield.(children, :name))
-    net.A[pidx, cidx] .= true
-end
-
-function add_child!(
-    net::EnhancedBayesianNetwork,
-    par::Union{Symbol,Vector{Symbol}},
-    ch::Union{Symbol,Vector{Symbol}}
-)
-    parents = wrap(par)
-    children = wrap(ch)
-    all_nodes = vcat(parents, children)
-    missing_nodes = setdiff(all_nodes, [i.name for i in net.nodes])
-    if !isempty(missing_nodes)
-        error("Invalid eBN: nodes $missing_nodes are not defined in the eBN")
-    end
-    par_nodes = filter(x -> x.name ∈ parents, net.nodes)
-    ch_nodes = filter(x -> x.name ∈ children, net.nodes)
-    add_child!(net, par_nodes, ch_nodes)
-end
-
 function discretize!(net::EnhancedBayesianNetwork)
     continuous_nodes = filter(x -> isa(x, ContinuousNode), net.nodes)
     evidence_nodes = filter(n -> !isempty(n.discretization), continuous_nodes)

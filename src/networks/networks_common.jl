@@ -1,6 +1,50 @@
-iscyclic(net::AbstractNetwork) = iscyclic(net.A)
+function order!(net::AbstractNetwork)
+    if iscyclic(net.A)
+        error("Invalid Network: network is cyclic!")
+    end
+    if !isconnected(net.A)
+        error("Invalid Network: network is not connected")
+    end
+    topologically_sort!(net)
+    foreach(n -> verify_parents(net, n), net.nodes)
+    foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
+        verify_scenarios(net, n)
+    end
+    foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
+        verify_exhaustiveness(net, n)
+    end
+end
 
-isconnected(net::AbstractNetwork) = isconnected(net.A)
+# add edges from node objects; discrete/continuous/functional parents are each verified
+# against the child type (the continuous/functional filters are empty for BN/CN)
+function add_child!(
+    net::AbstractNetwork,
+    par::Union{<:AbstractNode,Vector{<:AbstractNode}},
+    ch::Union{<:AbstractNode,Vector{<:AbstractNode}}
+)
+    parents = wrap(par)
+    children = wrap(ch)
+    assert_nodes_defined(net, [i.name for i in vcat(parents, children)])
+    loop = intersect(parents, children)
+    isempty(loop) || error("Invalid Network: nodes $(getproperty.(loop, :name)) have a loop")
+    map(dp -> verify_discrete(dp, children), filter(x -> isa(x, DiscreteNode), parents))
+    map(cfp -> verify_continuous_and_functional(cfp, children), filter(x -> isa(x, Union{ContinuousNode,FunctionalNode}), parents))
+    set_edges!(net, parents, children)
+end
+
+# add edges by node name
+function add_child!(
+    net::AbstractNetwork,
+    par::Union{Symbol,Vector{Symbol}},
+    ch::Union{Symbol,Vector{Symbol}}
+)
+    parents = wrap(par)
+    children = wrap(ch)
+    assert_nodes_defined(net, vcat(parents, children))
+    par_nodes = filter(x -> x.name ∈ parents, net.nodes)
+    ch_nodes = filter(x -> x.name ∈ children, net.nodes)
+    add_child!(net, par_nodes, ch_nodes)
+end
 
 function parents(net::AbstractNetwork, name::Symbol)
     parents_idx = findnz(net.A[:, net.topology[name]])[1]
@@ -15,6 +59,22 @@ function children(net::AbstractNetwork, name::Symbol)
 end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
+
+function markov_blanket(net::AbstractNetwork, node::Symbol)
+    blanket = Symbol[]
+    for child in children(net, node)
+        append!(blanket, setdiff(parents(net, child), [node]))
+        push!(blanket, child)
+    end
+    append!(blanket, parents(net, node))
+    return unique!(blanket)
+end
+
+markov_blanket(net::AbstractNetwork, node::AbstractNode) = markov_blanket(net, node.name)
+
+iscyclic(net::AbstractNetwork) = iscyclic(net.A)
+
+isconnected(net::AbstractNetwork) = isconnected(net.A)
 
 function discrete_ancestors(net::AbstractNetwork, name::Symbol)
     start_idx = net.topology[name]
@@ -39,23 +99,6 @@ function discrete_ancestors(net::AbstractNetwork, name::Symbol)
 end
 
 discrete_ancestors(net::AbstractNetwork, node::AbstractNode) = discrete_ancestors(net, node.name)
-
-function order!(net::AbstractNetwork)
-    if iscyclic(net.A)
-        error("Invalid Network: network is cyclic!")
-    end
-    if !isconnected(net.A)
-        error("Invalid Network: network is not connected")
-    end
-    topologically_sort!(net)
-    foreach(n -> verify_parents(net, n), net.nodes)
-    foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
-        verify_scenarios(net, n)
-    end
-    foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
-        verify_exhaustiveness(net, n)
-    end
-end
 
 function topologically_sort!(net::AbstractNetwork)
     order = topologically_sort(net.A)
@@ -120,18 +163,6 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
     end
 end
 
-function markov_blanket(net::AbstractNetwork, node::Symbol)
-    blanket = Symbol[]
-    for child in children(net, node)
-        append!(blanket, setdiff(parents(net, child), [node]))
-        push!(blanket, child)
-    end
-    append!(blanket, parents(net, node))
-    return unique!(blanket)
-end
-
-markov_blanket(net::AbstractNetwork, node::AbstractNode) = markov_blanket(net, node.name)
-
 function remove_node!(net::AbstractNetwork, node::AbstractNode)
     filter!(n -> n.name != node.name, net.nodes)
     idx = net.topology[node.name]
@@ -160,51 +191,23 @@ function add_node!(net::AbstractNetwork, node::AbstractNode)
     net.A = Anew
 end
 
-function add_child!(
-    net::Union{BayesianNetwork,CredalNetwork},
-    par::Union{DiscreteNode,Vector{DiscreteNode}},
-    ch::Union{DiscreteNode,Vector{DiscreteNode}}
-)
-    parents = wrap(par)
-    children = wrap(ch)
-    all_nodes = vcat(parents, children)
-    missing_nodes = setdiff([i.name for i in all_nodes], [i.name for i in net.nodes])
-    if !isempty(missing_nodes)
-        error("Invalid Network: nodes $missing_nodes are not defined in the network")
-    end
-    ## verify No loop
-    loop = intersect(parents, children)
-    if !isempty(loop)
-        error("Invalid Network: node '$(getproperty.(loop, :name))' has a loop")
-    end
-    ## verify Discrete parent nodes
-    map(dp -> verify_discrete(dp, children), parents)
-    pidx = getindex.(Ref(net.topology), getfield.(parents, :name))
-    cidx = getindex.(Ref(net.topology), getfield.(children, :name))
-    net.A[pidx, cidx] .= true
-end
-
-function add_child!(
-    net::Union{BayesianNetwork,CredalNetwork},
-    par::Union{Symbol,Vector{Symbol}},
-    ch::Union{Symbol,Vector{Symbol}}
-)
-    parents = wrap(par)
-    children = wrap(ch)
-    all_nodes = vcat(parents, children)
-    missing_nodes = setdiff(all_nodes, [i.name for i in net.nodes])
-    if !isempty(missing_nodes)
-        error("Invalid Network: nodes $missing_nodes are not defined in the network")
-    end
-    par_nodes = filter(x -> x.name ∈ parents, net.nodes)
-    ch_nodes = filter(x -> x.name ∈ children, net.nodes)
-    add_child!(net, par_nodes, ch_nodes)
-end
-
 # Build the (topology, adjacency) pair shared by all three network constructors:
 # topology maps each node name to its 1-based position; A is the empty n×n edge matrix.
 function topology_and_adjacency(nodes::AbstractVector{<:AbstractNode})
     topology = Dict{Symbol,Int}(node.name => i for (i, node) in enumerate(nodes))
     A = spzeros(Bool, length(nodes), length(nodes))
     return topology, A
+end
+
+# every referenced parent/child name must already be a node in the network
+function assert_nodes_defined(net::AbstractNetwork, names::AbstractVector{Symbol})
+    missing_nodes = setdiff(names, [i.name for i in net.nodes])
+    isempty(missing_nodes) || error("Invalid Network: nodes $missing_nodes are not defined in the network")
+end
+
+# flip on the parent→child edges in the adjacency matrix
+function set_edges!(net::AbstractNetwork, parents, children)
+    pidx = getindex.(Ref(net.topology), getfield.(parents, :name))
+    cidx = getindex.(Ref(net.topology), getfield.(children, :name))
+    net.A[pidx, cidx] .= true
 end
