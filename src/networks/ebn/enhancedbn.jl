@@ -66,6 +66,15 @@ function transfer_continuous_functional_node!(net::EnhancedBayesianNetwork, node
     end
 end
 
+"""
+    markov_envelope(net::EnhancedBayesianNetwork)
+
+Return the Markov envelopes of `net` as a vector of node-name vectors. Continuous nodes
+linked through their Markov blankets are first collected into groups
+([`markov_continuous_group`](@ref)); each group's envelope is the union of its members'
+Markov blankets together with the members themselves. Envelopes that are a subset of
+another envelope are discarded, so only the maximal (non-redundant) envelopes remain.
+"""
 function markov_envelope(net::EnhancedBayesianNetwork)
     Xm_groups = map(n -> markov_continuous_group(net, n), filter(x -> isa(x, AbstractContinuousNode), net.nodes))
     envelopes = Vector{Vector{Symbol}}()
@@ -76,11 +85,11 @@ function markov_envelope(net::EnhancedBayesianNetwork)
 
     sets = unique(Set.(envelopes))
     envelopes = collect.(sets)
-    keep = trues(length(envelopes))
-    for i in eachindex(sets), j in eachindex(sets)
-        if i != j && issubset(sets[i], sets[j])
+
+    keep = trues(length(sets))
+    for i in eachindex(sets)
+        if any(j -> j != i && issubset(sets[i], sets[j]), eachindex(sets))
             keep[i] = false
-            break
         end
     end
 

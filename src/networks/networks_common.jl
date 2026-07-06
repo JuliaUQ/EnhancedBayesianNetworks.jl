@@ -60,6 +60,14 @@ end
 
 children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
 
+"""
+    markov_blanket(net::AbstractNetwork, node)
+
+Return the Markov blanket of `node` (given by name as a `Symbol` or as a node object) as
+a vector of node names: its parents, its children, and its children's other parents
+(co-parents). The node itself is excluded. Conditioned on its Markov blanket, a node is
+conditionally independent of every other node in the network.
+"""
 function markov_blanket(net::AbstractNetwork, node::Symbol)
     blanket = Symbol[]
     for child in children(net, node)
