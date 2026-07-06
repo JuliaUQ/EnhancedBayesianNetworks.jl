@@ -200,3 +200,11 @@ function add_child!(
     ch_nodes = filter(x -> x.name ∈ children, net.nodes)
     add_child!(net, par_nodes, ch_nodes)
 end
+
+# Build the (topology, adjacency) pair shared by all three network constructors:
+# topology maps each node name to its 1-based position; A is the empty n×n edge matrix.
+function topology_and_adjacency(nodes::AbstractVector{<:AbstractNode})
+    topology = Dict{Symbol,Int}(node.name => i for (i, node) in enumerate(nodes))
+    A = spzeros(Bool, length(nodes), length(nodes))
+    return topology, A
+end

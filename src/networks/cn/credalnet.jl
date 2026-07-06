@@ -35,12 +35,4 @@ mutable struct CredalNetwork <: AbstractNetwork
     end
 end
 
-function CredalNetwork(nodes::AbstractVector{DiscreteNode})
-    n = length(nodes)
-    topology = Dict{Symbol,Int}()
-    for (i, n) in enumerate(nodes)
-        topology[n.name] = i
-    end
-    A = spzeros(Bool, n, n)
-    return CredalNetwork(nodes, topology, A)
-end
+CredalNetwork(nodes::AbstractVector{<:AbstractNode}) = CredalNetwork(nodes, topology_and_adjacency(nodes)...)

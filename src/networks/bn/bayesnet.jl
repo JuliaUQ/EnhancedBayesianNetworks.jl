@@ -38,15 +38,7 @@ mutable struct BayesianNetwork <: AbstractNetwork
     end
 end
 
-function BayesianNetwork(nodes::AbstractVector{DiscreteNode})
-    n = length(nodes)
-    topology = Dict{Symbol,Int}()
-    for (i, n) in enumerate(nodes)
-        topology[n.name] = i
-    end
-    A = spzeros(Bool, n, n)
-    return BayesianNetwork(nodes, topology, A)
-end
+BayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = BayesianNetwork(nodes, topology_and_adjacency(nodes)...)
 
 function joint_probability(bn::BayesianNetwork, scenario::Evidence)
     scenario = deepcopy(scenario)

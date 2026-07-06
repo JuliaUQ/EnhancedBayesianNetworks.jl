@@ -39,15 +39,7 @@ mutable struct EnhancedBayesianNetwork <: AbstractNetwork
     end
 end
 
-function EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode})
-    n = length(nodes)
-    topology = Dict{Symbol,Int}()
-    for (i, n) in enumerate(nodes)
-        topology[n.name] = i
-    end
-    A = spzeros(Bool, n, n)
-    EnhancedBayesianNetwork(nodes, topology, A)
-end
+EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = EnhancedBayesianNetwork(nodes, topology_and_adjacency(nodes)...)
 
 function add_child!(
     net::EnhancedBayesianNetwork,

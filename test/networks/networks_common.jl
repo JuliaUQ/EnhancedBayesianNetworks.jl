@@ -691,3 +691,30 @@ end
     add_child!(net, [D, C], E)
     @test_throws ErrorException("Invalid CPT: node :D is missing the following scenario [:A => :a1, :B => :b2, :D => :d2]") order!(net)
 end
+
+
+@testitem "Networks Common - topology and adjacency" setup=[ExtraDeps] begin
+    a = DiscreteNode(:A);
+    a[:A=>:a1] = 0.5;
+    a[:A=>:a2] = 0.5
+    b = DiscreteNode(:B);
+    b[:B=>:b1] = 0.5;
+    b[:B=>:b2] = 0.5
+    c = DiscreteNode(:C);
+    c[:C=>:c1] = 0.5;
+    c[:C=>:c2] = 0.5
+    nodes = [a, b, c]
+
+    topology, A = EnhancedBayesianNetworks.topology_and_adjacency(nodes)
+    # names map to their 1-based position, aligned with the empty adjacency matrix
+    @test topology == Dict(:A => 1, :B => 2, :C => 3)
+    @test all(topology[n.name] == i for (i, n) in enumerate(nodes))
+    @test size(A) == (3, 3)
+    @test nnz(A) == 0
+    @test eltype(A) == Bool
+
+    # empty node vector -> empty topology and 0×0 matrix
+    topology, A = EnhancedBayesianNetworks.topology_and_adjacency(EnhancedBayesianNetworks.AbstractNode[])
+    @test isempty(topology)
+    @test size(A) == (0, 0)
+end
