@@ -459,6 +459,9 @@ end
     add_child!(net, :W, :R)
     add_child!(net, :S, :G)
     add_child!(net, :R, :G)
+
+    @test_throws ErrorException("Invalid Network: node :W is already present in the network") EnhancedBayesianNetworks.add_node!(net, DiscreteNode(:W))
+
     net1 = deepcopy(net)
     net2 = deepcopy(net)
     net3 = deepcopy(net)

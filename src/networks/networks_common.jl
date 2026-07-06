@@ -149,6 +149,9 @@ end
 remove_node!(net::AbstractNetwork, name::Symbol) = remove_node!(net, first(filter(n -> n.name == name, net.nodes)))
 
 function add_node!(net::AbstractNetwork, node::AbstractNode)
+    if haskey(net.topology, node.name)
+        error("Invalid Network: node $(repr(node.name)) is already present in the network")
+    end
     push!(net.nodes, node)
     net.topology[node.name] = length(net.nodes)
     n = size(net.A, 1)
