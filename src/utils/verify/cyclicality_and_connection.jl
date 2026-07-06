@@ -15,16 +15,6 @@ end
 # Cyclic if Kahn's sort can't order every vertex (length(order) < n).
 iscyclic(A::SparseMatrixCSC{Bool,Int64}) = length(topologically_sort(A)) != size(A, 1)
 
-# function iscyclic(A::SparseMatrixCSC{Bool,Int64})
-#     R = transitive_closure(A)
-#     H = R .& R'
-#     if nnz(H) != 0
-#         return true
-#     else
-#         return false
-#     end
-# end
-
 # Undirected connectivity: symmetrise, take reachability, require every vertex pair connected (I covers the diagonal / self-reachability).
 function isconnected(A::SparseMatrixCSC{Bool,Int64})
     A_undirected = A .| A'
