@@ -1,3 +1,15 @@
+"""
+    EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode})
+
+An enhanced Bayesian network: the modelling front-end that may mix discrete,
+continuous, and functional nodes. Same layout as [`BayesianNetwork`](@ref)
+(`nodes`, `topology`, `A`).
+
+Validates that node names are unique and that states across discrete nodes are
+globally unique. It is progressively transformed — via `discretize!`,
+`transfer_continuous_functional_node!`, and [`reduce`](@ref) — into a
+[`BayesianNetwork`](@ref) or [`CredalNetwork`](@ref) for inference.
+"""
 mutable struct EnhancedBayesianNetwork <: AbstractNetwork
     nodes::AbstractVector{<:AbstractNode}
     topology::Dict
@@ -8,15 +20,17 @@ mutable struct EnhancedBayesianNetwork <: AbstractNetwork
         topology::Dict,
         A::SparseMatrixCSC
     )
+        # node names must be unique
         node_names = map(i -> i.name, nodes)
         dups = not_unique_elements(node_names)
         if !isempty(dups)
             error("Invalid eBN: duplicate node names $dups")
         end
         discrete_nodes = filter(x -> isa(x, DiscreteNode), nodes)
+        # states must be globally unique across nodes (init=Symbol[] handles the empty-network case)
+        states_list = reduce(vcat, states.(discrete_nodes); init=Symbol[])
+        dups = not_unique_elements(states_list)
         if !isempty(discrete_nodes)
-            states_list = mapreduce(i -> states(i), vcat, discrete_nodes)
-            dups = not_unique_elements(states_list)
             if !isempty(dups)
                 error("Invalid eBN: duplicate node states $dups")
             end

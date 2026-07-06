@@ -74,4 +74,7 @@
     add_child!(cn, :S, :L)
     @test cn.A == sparse([1, 2], [3, 4], [true, true], 5, 5)
 
+    cn = @test_logs (:warn, "All the nodes are precise; BayesianNetwork structure should be used instead") CredalNetwork(DiscreteNode[])
+    @test isempty(cn.nodes)
+    @test size(cn.A) == (0, 0)
 end

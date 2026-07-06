@@ -102,6 +102,11 @@ end
     @test_logs (:warn, "Scenario contains nodes [:N] that are not defined in the network; they are ignored in the joint probability evaluation") joint_probability(bn, scenario2)
     @test haskey(scenario2, :N)
     @test isapprox(joint_probability(bn, scenario5), 0.0016)
+
+    bn = BayesianNetwork(DiscreteNode[])
+    @test isempty(bn.nodes)
+    @test bn.topology == Dict{Symbol,Int}()
+    @test size(bn.A) == (0, 0)
 end
 
 @testitem "Bayesian Network - Sampling" setup=[ExtraDeps, SetupSprinklerBN] begin

@@ -51,6 +51,11 @@ end
     rain3[:W=>:cloudy, :R3=>:maybe] = 0.3
     nodes = [weather, rain, rain3]
     @test_throws ErrorException("Invalid eBN: duplicate node states [:yes]") EnhancedBayesianNetwork(nodes)
+
+    ebn = EnhancedBayesianNetwork(DiscreteNode[])
+    @test isempty(ebn.nodes)
+    @test ebn.topology == Dict{Symbol,Int}()
+    @test size(ebn.A) == (0, 0)
 end
 
 @testitem "EnhancedBayesianNetwork - add_child!" setup=[ExtraDeps, SetupSprinklereBN] begin

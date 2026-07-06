@@ -1,19 +1,35 @@
+"""
+    BayesianNetwork(nodes::AbstractVector{DiscreteNode})
+
+A Bayesian network: a DAG of discrete, **precise** nodes.
+
+- `nodes`: the `DiscreteNode`s, positionally aligned with `topology`/`A`.
+- `topology`: maps each node name to its index (row/column in `A`).
+- `A`: sparse boolean adjacency matrix; `A[i, j] == true` iff `i → j`.
+
+Validates that node names and states are globally unique and that every node is
+precise — any imprecise node requires a [`CredalNetwork`](@ref). Edges are added
+afterwards with [`add_child!`](@ref).
+"""
 mutable struct BayesianNetwork <: AbstractNetwork
     nodes::AbstractVector{DiscreteNode}
     topology::Dict
     A::SparseMatrixCSC
 
     function BayesianNetwork(nodes::AbstractVector{DiscreteNode}, topology::Dict, A::SparseMatrixCSC)
+        # node names must be unique
         node_names = map(i -> i.name, nodes)
         dups = not_unique_elements(node_names)
         if !isempty(dups)
             error("Invalid BN: duplicate node names $dups")
         end
-        states_list = mapreduce(i -> states(i), vcat, nodes)
+        # states must be globally unique across nodes (init=Symbol[] handles the empty-network case)
+        states_list = reduce(vcat, states.(nodes); init=Symbol[])
         dups = not_unique_elements(states_list)
         if !isempty(dups)
             error("Invalid BN: duplicate node states $dups")
         end
+        # a BayesianNetwork admits only precise nodes
         imprecise_nodes = nodes[.!isprecise.(nodes)]
         if !isempty(imprecise_nodes)
             error("Invalid BN: node/s $(getproperty.(imprecise_nodes, :name)) are imprecise; CredalNetwork structure is required")
