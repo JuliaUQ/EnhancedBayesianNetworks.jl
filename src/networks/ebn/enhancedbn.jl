@@ -162,10 +162,11 @@ end
 
 function verify_scenarios(net::EnhancedBayesianNetwork, node::FunctionalNode)
     anc = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
-    theoretical_scenarios = vec(collect(Iterators.product(states.(anc)...)))
-    filtering_elements = map(th_s -> ([i.name for i in anc] .=> th_s), theoretical_scenarios)
-    for filtering_element in filtering_elements
-        if isempty(filter(node.simulation, filtering_element...))
+    cols = [i.name for i in anc]
+    present = Set(Tuple(r[c] for c in cols) for r in eachrow(node.simulation.data))
+    for scenario in Iterators.product(states.(anc)...)
+        if scenario ∉ present
+            filtering_element = cols .=> scenario
             error("Invalid SimulationTable: node $(repr(node.name)) is missing the following scenario $(filtering_element)")
         end
     end

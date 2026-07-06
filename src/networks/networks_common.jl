@@ -135,7 +135,7 @@ function verify_scenarios(net::AbstractNetwork, node::DiscreteNode)
     par = filter(n -> n.name ∈ parents(node), net.nodes)
     v = vcat(par, node)
     cols = [n.name for n in v]
-    present = Set(Tuple(r) for r in eachrow(node.cpt.data[:, cols]))
+    present = Set(Tuple(r[c] for c in cols) for r in eachrow(node.cpt.data))
     for scenario in Iterators.product(states.(v)...)
         if scenario ∉ present
             filtering_element = cols .=> scenario
