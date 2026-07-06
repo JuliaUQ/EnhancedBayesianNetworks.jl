@@ -45,12 +45,7 @@ function discretize!(net::EnhancedBayesianNetwork)
     continuous_nodes = filter(x -> isa(x, ContinuousNode), net.nodes)
     evidence_nodes = filter(n -> !isempty(n.discretization), continuous_nodes)
     discretization_tuples = map(n -> (n, parents(net, n), children(net, n), EnhancedBayesianNetworks._discretize(n)), evidence_nodes)
-    for tup in discretization_tuples
-        node = tup[1]
-        pars = tup[2]
-        chs = tup[3]
-        discretized_node = tup[4][1]
-        new_continuous = tup[4][2]
+    for (node, pars, chs, (discretized_node, new_continuous)) in discretization_tuples
         EnhancedBayesianNetworks.remove_node!(net, node)
         EnhancedBayesianNetworks.add_node!(net, discretized_node)
         EnhancedBayesianNetworks.add_node!(net, new_continuous)
