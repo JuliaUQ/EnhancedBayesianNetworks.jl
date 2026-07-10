@@ -142,7 +142,7 @@ function build_simulations!(net::EnhancedBayesianNetwork, node::FunctionalNode)
             st = EnhancedBayesianNetworks.ScenariosTable{DiscreteSimulation}(anc, :sim)
         end
         theoretical_scenarios = vec(collect(Iterators.product(states.(anc_nodes)...)))
-        map(th_s -> st[([i.name for i in anc_nodes] .=> th_s)...] = node.simulation, theoretical_scenarios)
+        map(th_s -> st[(anc .=> th_s)...] = node.simulation, theoretical_scenarios)
         node.simulation = st
     end
 end
