@@ -1,3 +1,29 @@
+"""
+    DiscreteNode(name, parents=Symbol[], parameters=[], results=nothing)
+    DiscreteNode(cpt::ScenariosTable, parameters=[], results=nothing)
+
+A discrete-state node. Holds a conditional probability table (`cpt`) over its parents' state
+combinations and its own states. Optional per-state `parameters` (used when it feeds a
+functional node) and optional stored `results` when a FunctionalNode is evaluated into a
+DiscreteNode. Entries may be precise (`Real`) or imprecise/credal (`Interval`).
+Build by name and fill with `node[parent1 => sₚ1, ..., name => sₙ] = p`.
+
+# Examples
+```julia
+W = DiscreteNode(:W)                     # root node
+W[:W => :sunny]  = 0.5
+W[:W => :cloudy] = 0.5
+
+S = DiscreteNode(:S, [:W])               # child of :W
+S[:W => :sunny,  :S => :on]  = 0.9
+S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on]  = 0.2
+S[:W => :cloudy, :S => :off] = 0.8
+
+# credal (imprecise) entries use an Interval instead of a Real:
+S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)
+```
+"""
 struct DiscreteNode <: AbstractDiscreteNode
     name::Symbol
     cpt::ScenariosTable{DiscreteProbability}
