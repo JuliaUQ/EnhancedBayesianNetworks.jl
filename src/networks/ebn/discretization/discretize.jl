@@ -4,20 +4,19 @@ function _discretize(node::ContinuousNode)
     discretized_node = DiscreteNode(name_discrete, parents(node))
     new_continuous = ContinuousNode(node.name, [name_discrete])
     if isroot(node)
-        map(i -> discretized_node[(name_discrete.=>Symbol(i))] = _discretize(node[], i), intervals)
-        map(i -> new_continuous[(name_discrete.=>Symbol(i))] = _truncate(node[], Tuple(i)), intervals)
+        map(i -> discretized_node[(name_discrete .=> Symbol(i))] = _discretize(node[], i), intervals)
+        map(i -> new_continuous[(name_discrete .=> Symbol(i))] = _truncate(node[], Tuple(i)), intervals)
     else
         for i in intervals
             map((sc) -> discretized_node[(vcat(first.(sc), name_discrete) .=> vcat(last.(sc), Symbol(i)))...] = _discretize(node[(sc)...], i), scenarios(node))
         end
-        map(i -> new_continuous[(name_discrete.=>Symbol(i))] = _approximate(i, node.discretization.sigma), intervals)
+        map(i -> new_continuous[(name_discrete .=> Symbol(i))] = _approximate(i, node.discretization.sigma), intervals)
     end
     return (discretized_node, new_continuous)
 end
 
 function _format_interval(node::ContinuousNode)
-    intervals = node.discretization.intervals
-    intervals = convert(Vector{Float64}, intervals)
+    intervals = Float64.(node.discretization.intervals)
     min = node.discretization.intervals[1]
     max = node.discretization.intervals[end]
     lower_bound, upper_bound = _distribution_bounds(node)
@@ -39,7 +38,7 @@ function _format_interval(node::ContinuousNode)
         deleteat!(intervals, intervals .>= upper_bound)
         push!(intervals, upper_bound)
     end
-    return [[intervals[i], intervals[i+1]] for i in 1:length(intervals)-1]
+    return [[intervals[i], intervals[i+1]] for i in 1:(length(intervals)-1)]
 end
 
 function _approximate(i::AbstractVector{<:Real}, λ::Real)
