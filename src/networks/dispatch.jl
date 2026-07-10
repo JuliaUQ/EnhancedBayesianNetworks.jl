@@ -4,22 +4,16 @@ function dispatch(ebn::EnhancedBayesianNetwork)
     else
         nodes = Vector{DiscreteNode}(ebn.nodes)
         if all(isprecise.(ebn.nodes))
-            net = BayesianNetwork(nodes)
+            return BayesianNetwork(nodes, ebn.topology, ebn.A)
         else
-            net = CredalNetwork(nodes)
+            return CredalNetwork(nodes, ebn.topology, ebn.A)
         end
-        net.A = ebn.A
-        net.topology = ebn.topology
-        return net
     end
 end
 
 function dispatch(cn::CredalNetwork)
     if all(isprecise.(cn.nodes))
-        bn = BayesianNetwork(Vector{DiscreteNode}(cn.nodes))
-        bn.A = cn.A
-        bn.topology = cn.topology
-        return bn
+        return BayesianNetwork(Vector{DiscreteNode}(cn.nodes), cn.topology, cn.A)
     else
         return cn
     end
