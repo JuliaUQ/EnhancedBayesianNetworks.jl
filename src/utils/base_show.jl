@@ -1,3 +1,7 @@
+# Pretty-printing for the library's public types. Each type gets two methods: a compact one-line
+# `show(io, x)` (used in arrays, REPL echo of a field) and a full `show(io, ::MIME"text/plain", x)`
+# (used when the object is displayed on its own) that lays out its structure and underlying table.
+
 # Discrete Nodes
 function Base.show(io::IO, node::DiscreteNode)
     print(io, "DiscreteNode(", node.name, ", parents=", parents(node), ", states=", states(node), ")")
@@ -191,7 +195,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::CredalPosterior)
     println(io, "Extreme posteriors: ", length(p.posteriors))
 end
 
-# EhancedBayesianNetworks
+# EhancedBayesianNetwork
 function Base.show(io::IO, net::EnhancedBayesianNetwork)
     print(io, "EnhancedBayesianNetwork(", length(net.nodes), " nodes)")
 end
