@@ -1,3 +1,5 @@
+# Variable elimination: restrict evidence, then eliminate every non-query, non-evidence variable in the
+# given order, multiply what remains, reorder to the query, and normalise into a posterior.
 function ve(
     factors::Vector{<:Factor},
     order::Vector{Int},
@@ -21,6 +23,7 @@ function ve(
     return normalize(result)
 end
 
+# Apply evidence in place: restrict every factor that mentions an observed variable to its observed state.
 function apply_evidence!(factors::Vector{<:Factor}, evidence_idx::Vector{Tuple{Int,Int}})
     for (node, state) ∈ evidence_idx
         for i ∈ eachindex(factors)
@@ -32,6 +35,8 @@ function apply_evidence!(factors::Vector{<:Factor}, evidence_idx::Vector{Tuple{I
     end
 end
 
+# Eliminate one variable: multiply together the factors that mention it, sum it out, and return the new
+# factor set (unmentioned factors untouched).
 function eliminate_var(factors::Vector{<:Factor}, var::Int)
     involved = similar(factors, 0)
     remaining = similar(factors, 0)

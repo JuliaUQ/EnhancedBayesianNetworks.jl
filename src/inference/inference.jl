@@ -1,3 +1,6 @@
+# Bidirectional name/state ↔ integer-id maps for a network, so inference can run on dense integer-
+# indexed factors: node_to_idx/idx_to_node map node names ↔ ids; state_to_idx/idx_to_state map each
+# node's state symbols ↔ their 1-based positions.
 struct NetworkSchema
     node_to_idx::Dict{Symbol,Int}
     idx_to_node::Vector{Symbol}
@@ -5,6 +8,7 @@ struct NetworkSchema
     idx_to_state::Vector{Vector{Symbol}}
 end
 
+# Build the schema from a network: node ids come from bn.topology, each node's states from states(node).
 function NetworkSchema(bn::BayesianNetwork)
     node_to_idx = copy(bn.topology)
 
@@ -25,10 +29,13 @@ function NetworkSchema(bn::BayesianNetwork)
     NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
 end
 
+# The moral graph of a network as adjacency sets: each node linked to its parents and children, and each
+# node's parents "married" to one another (moral edges). Drives the elimination-ordering heuristics.
 struct InteractionGraph
     neighbors::Vector{Set{Int}}
 end
 
+# Build the moral graph: for every node add its parent-child edges, then connect every pair of its parents.
 function InteractionGraph(bn::BayesianNetwork)
     n = size(bn.A, 1)
     neighbors = [Set{Int}() for _ in 1:n]
@@ -50,7 +57,6 @@ function InteractionGraph(bn::BayesianNetwork)
             end
         end
     end
-
     InteractionGraph(neighbors)
 end
 

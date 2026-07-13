@@ -1,3 +1,4 @@
+# Fix `node` to `state`: slice that dimension out of the table and drop the variable from the factor.
 function restrict(f::Factor, node::Int, state::Int)
     pos = varpos(f, node)
     if isnothing(pos)
@@ -8,6 +9,7 @@ function restrict(f::Factor, node::Int, state::Int)
     Factor(newvars, newtable)
 end
 
+# Marginalise `node` out: sum the table over its dimension and drop the variable from the factor.
 function sumout(f::Factor, node::Int)
     pos = varpos(f, node)
     if isnothing(pos)
@@ -19,6 +21,8 @@ function sumout(f::Factor, node::Int)
     Factor(newvars, newtable)
 end
 
+# Factor product: broadcast-multiply two factors over the union of their variables (each expanded to the
+# shared variable layout), yielding a factor over all of them.
 function multiply(f1::Factor, f2::Factor)
     # Compute all variables
     allvars = union(f1.vars, f2.vars)
@@ -27,11 +31,11 @@ function multiply(f1::Factor, f2::Factor)
     # Expand and multiply factors
     A = expand(f1, allvars, allpos)
     B = expand(f2, allvars, allpos)
-
     table = A .* B
     return Factor(allvars, table)
 end
 
+# Product of many factors, left to right; errors on an empty set (no identity factor is assumed).
 function multiply(factors::Vector{<:Factor})
     if isempty(factors)
         error("Cannot multiply an empty factor set")
@@ -39,6 +43,7 @@ function multiply(factors::Vector{<:Factor})
     return reduce(multiply, factors)
 end
 
+# Rescale a factor so its entries sum to 1 (turns an unnormalised marginal into a distribution).
 function normalize(f::Factor)
     invZ = inv(sum(f.table))
     Factor(
@@ -47,6 +52,8 @@ function normalize(f::Factor)
     )
 end
 
+# Reshape a factor's table into the shared `allvars` layout — its dimensions placed at their target
+# positions, singleton dimensions elsewhere — so two factors can be broadcast together.
 function expand(f::Factor, allvars::Vector{Int}, allpos::Dict{Int,Int})
     # Factor positions
     positions = [allpos[v] for v in f.vars]
@@ -62,6 +69,7 @@ function expand(f::Factor, allvars::Vector{Int}, allpos::Dict{Int,Int})
     return reshape(A, shape...)
 end
 
+# Permute a factor's dimensions so its variables appear in the given order (used to align the result).
 function reorder(f::Factor, vars::Vector{Int})
     isempty(vars) && return f
     isempty(f.vars) && return f
