@@ -20,10 +20,13 @@ function infer(
     evidence::Evidence,
     scorefun=fill_factor_score
 )
+    query = wrap(query)
+    verify_query(query, bn, evidence)
+    verify_evidence(evidence, bn)
+
     ns = NetworkSchema(bn)
     ig = InteractionGraph(bn)
     factors = factorize(bn)
-    query = wrap(query)
     query_vars = query_to_idx(query, ns)
     evidence_idx = evidence_to_idx(evidence, ns)
     order = sort_nodes(ig, ns, scorefun)
@@ -33,10 +36,14 @@ end
 
 function infer(
     cn::CredalNetwork,
-    query::Vector{Symbol},
+    query::Union{Symbol,Vector{Symbol}},
     evidence::Evidence,
     scorefun=fill_factor_score
 )
+    query = wrap(query)
+    verify_query(query, cn, evidence)
+    verify_evidence(evidence, cn)
+
     posteriors = Posterior[]
     bns = extreme_bayesian_networks(cn)
     @info("Perfoming inference over $(length(collect(bns))) BNs")

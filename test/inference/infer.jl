@@ -86,6 +86,12 @@ end
     R[:Leaving=>:NoL, :Report=>:NoR] = Interval(0.8, 0.99)
     nodes = [T, F, A, S, L, R]
     cn = CredalNetwork(nodes)
+    add_child!(cn, :Tampering, :Alarm)
+    add_child!(cn, :Fire, :Alarm)
+    add_child!(cn, :Fire, :Smoke)
+    add_child!(cn, :Alarm, :Leaving)
+    add_child!(cn, :Leaving, :Report)
+    order!(cn)
 end
 
 @testitem "Inference - Posterior" setup=[SetupAsiaBN] begin
@@ -164,8 +170,8 @@ end
     @test p.factor.table[1] ≈ 0.0
     @test p.factor.table[2] ≈ 1.0
 
-    p = infer(bn, [:E], Evidence(:E => :YesE))
-    @test p.factor.table[1] ≈ 1.0
+
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:E] contains Symbols [:E] that are already part of the evidence [:E => :YesE]") infer(bn, [:E], Evidence(:E => :YesE))
 
     p = infer(bn, [:T, :L], Evidence())
     @test size(p.factor.table) == (2, 2)
@@ -178,13 +184,7 @@ end
     @test p1.factor.table ≈ p2.factor.table
     @test p1.factor.table ≈ p3.factor.table
 
-
-    p = infer(bn, [:T, :E], Evidence(:E => :YesE))
-    # E removed from query because it is evidence
-    @test p.factor.vars == [3]   # T
-    @test sum(p.factor.table) ≈ 1.0
-    @test p.factor.table[1] ≈ 0.49087538184440765
-    @test p.factor.table[2] ≈ 0.5091246181555923
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:T, :E] contains Symbols [:E] that are already part of the evidence [:E => :YesE]") infer(bn, [:T, :E], Evidence(:E => :YesE))
 
     # Credal Inference
     p = @suppress infer(cn, [:Fire], Evidence())
@@ -193,18 +193,9 @@ end
     @test p.lower.table[2] ≈ 0.01
     @test p.upper.table[2] ≈ 0.02
 
-    p = @suppress infer(cn, [:Alarm], Evidence(:Alarm => :YesA))
-    @test isempty(p.lower.vars)
-    @test isempty(p.upper.vars)
-    @test p.lower.table[] ≈ 1.0
-    @test p.upper.table[] ≈ 1.0
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:Alarm] contains Symbols [:Alarm] that are already part of the evidence [:Alarm => :YesA]") infer(cn, [:Alarm], Evidence(:Alarm => :YesA))
 
-    p = @suppress infer(cn, [:Fire, :Alarm], Evidence(:Alarm => :YesA))
-    @test length(p.lower.vars) == 1
-    @test length(p.upper.vars) == 1
-    ns = EnhancedBayesianNetworks.NetworkSchema(first(EnhancedBayesianNetworks.extreme_bayesian_networks(cn)))
-    @test p.lower.vars == [ns.node_to_idx[:Fire]]
-    @test p.upper.vars == [ns.node_to_idx[:Fire]]
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:Fire, :Alarm] contains Symbols [:Alarm] that are already part of the evidence [:Alarm => :YesA]") infer(cn, [:Fire, :Alarm], Evidence(:Alarm => :YesA))
 
     p = @suppress infer(cn, [:Fire], Evidence(:Smoke => :YesS))
     @test p.lower.table[1] ≈ 0.997659723847414
