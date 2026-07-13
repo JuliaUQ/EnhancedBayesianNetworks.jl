@@ -1,3 +1,4 @@
+
 """
     BayesianNetwork(nodes::AbstractVector{DiscreteNode})
 
@@ -10,6 +11,18 @@ A Bayesian network: a DAG of discrete, **precise** nodes.
 Validates that node names and states are globally unique and that every node is
 precise — any imprecise node requires a [`CredalNetwork`](@ref). Edges are added
 afterwards with [`add_child!`](@ref).
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+
+bn = BayesianNetwork([W, S])
+add_child!(bn, :W, :S)                      # wire parents to children
+order!(bn)                                  # sort and validate
+```
 """
 mutable struct BayesianNetwork <: AbstractNetwork
     nodes::AbstractVector{DiscreteNode}
@@ -40,6 +53,25 @@ end
 
 BayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = BayesianNetwork(nodes, topology_and_adjacency(nodes)...)
 
+"""
+    joint_probability(bn::BayesianNetwork, scenario::Evidence)
+
+Return the joint probability of a **complete** `scenario` (one state per node) as the product of each
+node's CPT entry given its parents. Errors if any node is missing from the scenario (use [`infer`](@ref)
+for marginals or partial evidence) or if a state is invalid; nodes not in the network are dropped with
+a warning.
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
+
+joint_probability(bn, Evidence(:W => :sunny, :S => :on))    # 0.5 * 0.9 = 0.45
+```
+"""
 function joint_probability(bn::BayesianNetwork, scenario::Evidence)
     scenario = deepcopy(scenario)
     missing_names = setdiff(getproperty.(bn.nodes, :name), keys(scenario))

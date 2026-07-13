@@ -7,6 +7,18 @@ A credal network: a DAG of discrete nodes whose CPTs may be **imprecise**
 
 Validates that node names and states are globally unique; warns if every node is
 precise, since a [`BayesianNetwork`](@ref) is the better fit in that case.
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+S = DiscreteNode(:S, [:W])
+# imprecise (interval-valued) entries make this a credal, not a Bayesian, network:
+S[:W => :sunny,  :S => :on]  = Interval(0.8, 0.95); S[:W => :sunny,  :S => :off] = Interval(0.05, 0.2)
+S[:W => :cloudy, :S => :on]  = 0.2;                 S[:W => :cloudy, :S => :off] = 0.8
+
+cn = CredalNetwork([W, S])
+add_child!(cn, :W, :S); order!(cn)
+```
 """
 mutable struct CredalNetwork <: AbstractNetwork
     nodes::AbstractVector{DiscreteNode}
