@@ -33,7 +33,6 @@ const Evidence = Dict{Symbol,Symbol}
 export add_child!
 export children
 export discrete_ancestors
-export factorize
 export factor_score
 export fill_factor_score
 export fill_score
