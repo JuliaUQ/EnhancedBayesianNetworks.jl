@@ -1,3 +1,21 @@
+"""
+    order!(net::AbstractNetwork)
+
+Topologically sort `net`'s nodes in place and validate it. Errors if the network is cyclic or
+disconnected, if a node's CPT lists parents that were never linked with [`add_child!`](@ref), or if
+a discrete node's CPT is not exhaustive over all parent/own-state combinations. Run it before
+inference or sampling.
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S)
+order!(bn)                                  # sorts nodes and validates the network
+```
+"""
 function order!(net::AbstractNetwork)
     if iscyclic(net.A)
         error("Invalid Network: network is cyclic!")
@@ -15,9 +33,26 @@ function order!(net::AbstractNetwork)
     end
 end
 
-# add edges from node objects; discrete/continuous/functional parents are each verified
-# against the child type (the continuous/functional filters are empty for BN/CN)
+"""
+    add_child!(net, parent, child)
+
+Add directed edge(s) `parent → child` to `net`. Each of `parent`/`child` may be a single node or a
+vector, given as node objects or by name (`Symbol`). Validates that all referenced nodes exist, that
+no edge forms a self-loop, that a discrete parent appears in each non-functional child's CPT, and
+that continuous/functional parents feed only functional children.
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+bn = BayesianNetwork([W, S])
+add_child!(bn, :W, :S)                      # by name; also accepts node objects
+```
+"""
 function add_child!(
+    # add edges from node objects; discrete/continuous/functional parents are each verified against the child type (the continuous/functional filters are empty for BN/CN)
     net::AbstractNetwork,
     par::Union{<:AbstractNode,Vector{<:AbstractNode}},
     ch::Union{<:AbstractNode,Vector{<:AbstractNode}}
@@ -46,20 +81,6 @@ function add_child!(
     add_child!(net, par_nodes, ch_nodes)
 end
 
-function parents(net::AbstractNetwork, name::Symbol)
-    parents_idx = findnz(net.A[:, net.topology[name]])[1]
-    return Symbol[net.nodes[idx].name for idx in parents_idx]
-end
-
-parents(net::AbstractNetwork, node::AbstractNode) = parents(net, node.name)
-
-function children(net::AbstractNetwork, name::Symbol)
-    children_idx = findnz(net.A[net.topology[name], :])[1]
-    return Symbol[net.nodes[idx].name for idx in children_idx]
-end
-
-children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
-
 """
     markov_blanket(net::AbstractNetwork, node)
 
@@ -67,6 +88,25 @@ Return the Markov blanket of `node` (given by name as a `Symbol` or as a node ob
 a vector of node names: its parents, its children, and its children's other parents
 (co-parents). The node itself is excluded. Conditioned on its Markov blanket, a node is
 conditionally independent of every other node in the network.
+
+# Examples
+```julia
+# A -> C -> D <- B
+A = DiscreteNode(:A); A[:A => :a1] = 0.5; A[:A => :a2] = 0.5
+B = DiscreteNode(:B); B[:B => :b1] = 0.5; B[:B => :b2] = 0.5
+C = DiscreteNode(:C, [:A])
+C[:A => :a1, :C => :c1] = 0.5; C[:A => :a1, :C => :c2] = 0.5
+C[:A => :a2, :C => :c1] = 0.5; C[:A => :a2, :C => :c2] = 0.5
+D = DiscreteNode(:D, [:C, :B])
+for c in (:c1, :c2), b in (:b1, :b2)
+    D[:C => c, :B => b, :D => :d1] = 0.5; D[:C => c, :B => b, :D => :d2] = 0.5
+end
+bn = BayesianNetwork([A, B, C, D])
+add_child!(bn, :A, :C); add_child!(bn, :C, :D); add_child!(bn, :B, :D); order!(bn)
+
+# blanket of C = its parent A, its child D, and D's other parent (co-parent) B:
+markov_blanket(bn, :C)                      # [:B, :D, :A]
+```
 """
 function markov_blanket(net::AbstractNetwork, node::Symbol)
     blanket = Symbol[]
@@ -80,10 +120,24 @@ end
 
 markov_blanket(net::AbstractNetwork, node::AbstractNode) = markov_blanket(net, node.name)
 
-iscyclic(net::AbstractNetwork) = iscyclic(net.A)
 
-isconnected(net::AbstractNetwork) = isconnected(net.A)
+"""
+    discrete_ancestors(net, name::Symbol)
+    discrete_ancestors(net, node)
 
+Return the nearest **discrete** ancestors of a node as a `Vector{Symbol}`: walking upstream, each
+branch stops at the first discrete node it meets, descending through continuous and functional nodes
+along the way. These are the discrete nodes that form the scenario grid of a functional node once the
+network is reduced.
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+X = ContinuousNode(:X, [:W]); X[:W => :sunny] = Normal(); X[:W => :cloudy] = Normal(2, 1)
+net = EnhancedBayesianNetwork([W, X]); add_child!(net, :W, :X); order!(net)
+discrete_ancestors(net, :X)                 # [:W]  (nearest discrete ancestor of continuous X)
+```
+"""
 function discrete_ancestors(net::AbstractNetwork, name::Symbol)
     start_idx = net.topology[name]
     visited = Set{Int}()
@@ -108,6 +162,43 @@ end
 
 discrete_ancestors(net::AbstractNetwork, node::AbstractNode) = discrete_ancestors(net, node.name)
 
+"""
+    children(net, name::Symbol)
+    children(net, node)
+
+Return the names of the direct children of a node in `net` as a `Vector{Symbol}` (empty for a leaf).
+The counterpart of [`parents`](@ref).
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
+children(bn, :W)                            # [:S]
+```
+"""
+function children(net::AbstractNetwork, name::Symbol)
+    children_idx = findnz(net.A[net.topology[name], :])[1]
+    return Symbol[net.nodes[idx].name for idx in children_idx]
+end
+
+children(net::AbstractNetwork, node::AbstractNode) = children(net, node.name)
+
+function parents(net::AbstractNetwork, name::Symbol)
+    parents_idx = findnz(net.A[:, net.topology[name]])[1]
+    return Symbol[net.nodes[idx].name for idx in parents_idx]
+end
+
+parents(net::AbstractNetwork, node::AbstractNode) = parents(net, node.name)
+
+# Whole-network forwards to the adjacency-matrix predicates.
+iscyclic(net::AbstractNetwork) = iscyclic(net.A)
+isconnected(net::AbstractNetwork) = isconnected(net.A)
+
+# Reorder nodes into a topological order in place, permuting the node vector, the adjacency matrix,
+# and the name→index map together so they stay consistent.
 function topologically_sort!(net::AbstractNetwork)
     order = topologically_sort(net.A)
     net.nodes = net.nodes[order]
@@ -117,11 +208,14 @@ function topologically_sort!(net::AbstractNetwork)
     end
 end
 
-function verify_parents(_::AbstractNetwork, _::AbstractNode) ## verify if all the parents in the CPT have been added via add_child!
+# Verify that every parent named in a node's CPT was actually linked via add_child!. The fallback
+# method is a no-op for node types without a CPT (e.g. functional nodes, whose ancestors are checked
+# separately by verify_ancestors).
+function verify_parents(_::AbstractNetwork, _::AbstractNode)
     return
 end
 
-function verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,ContinuousNode}) ## verify if all the parents in the CPT have been added via add_child!
+function verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,ContinuousNode})
     cpt_parents = parents(node)
     net_parents = parents(net, node.name)
     only_in_cpt = setdiff(cpt_parents, net_parents)
@@ -171,6 +265,7 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
     end
 end
 
+# Drop a node and all its edges, then shift every higher index down by one so topology stays contiguous.
 function remove_node!(net::AbstractNetwork, node::AbstractNode)
     filter!(n -> n.name != node.name, net.nodes)
     idx = net.topology[node.name]
@@ -187,6 +282,7 @@ end
 
 remove_node!(net::AbstractNetwork, name::Symbol) = remove_node!(net, first(filter(n -> n.name == name, net.nodes)))
 
+# Append a disconnected node (errors on a duplicate name) and grow the adjacency matrix by one row/column.
 function add_node!(net::AbstractNetwork, node::AbstractNode)
     if haskey(net.topology, node.name)
         error("Invalid Network: node $(repr(node.name)) is already present in the network")
