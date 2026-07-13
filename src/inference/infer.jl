@@ -46,7 +46,7 @@ function infer(
 
     posteriors = Posterior[]
     bns = extreme_bayesian_networks(cn)
-    @info("Perfoming inference over $(length(collect(bns))) BNs")
+    @info("Performing inference over $(length(bns)) BNs")
     for bn in bns
         push!(posteriors, infer(bn, query, evidence, scorefun))
     end
