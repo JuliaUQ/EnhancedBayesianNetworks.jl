@@ -1,3 +1,7 @@
+# Final step of `reduce`: pick the concrete network type for a (reduced) enhanced network. If any node
+# is still continuous it cannot become a purely discrete network, so return the eBN unchanged; otherwise
+# all nodes are discrete, giving a BayesianNetwork when every node is precise and a CredalNetwork when
+# some are imprecise.
 function dispatch(ebn::EnhancedBayesianNetwork)
     if any(isa.(ebn.nodes, EnhancedBayesianNetworks.AbstractContinuousNode))
         return ebn
@@ -11,6 +15,7 @@ function dispatch(ebn::EnhancedBayesianNetwork)
     end
 end
 
+# Reached via `reduce`/`dispatch`: narrow a CredalNetwork to a BayesianNetwork when all its nodes turn out precise; otherwise keep it credal.
 function dispatch(cn::CredalNetwork)
     if all(isprecise.(cn.nodes))
         return BayesianNetwork(Vector{DiscreteNode}(cn.nodes), cn.topology, cn.A)
