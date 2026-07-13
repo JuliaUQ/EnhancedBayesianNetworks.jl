@@ -71,9 +71,7 @@ function extreme_bayesian_networks(cn::CredalNetwork)
     combinations = Iterators.product(node_extremes...)
     bns = BayesianNetwork[]
     for nodes in combinations
-        bn = BayesianNetwork(collect(nodes))
-        bn.A = copy(cn.A)
-        bn.topology = copy(cn.topology)
+        bn = BayesianNetwork(collect(nodes), copy(cn.topology), copy(cn.A))
         push!(bns, bn)
     end
     return bns

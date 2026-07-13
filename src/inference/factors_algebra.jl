@@ -29,9 +29,6 @@ function multiply(f1::Factor, f2::Factor)
     B = expand(f2, allvars, allpos)
 
     table = A .* B
-    if !(table isa AbstractArray)
-        table = fill(table)
-    end
     return Factor(allvars, table)
 end
 
