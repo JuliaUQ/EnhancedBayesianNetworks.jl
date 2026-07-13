@@ -1,15 +1,20 @@
+# Probability value families: what may fill the value column of a ScenariosTable.
 const ContinuousProbability = Union{UnivariateDistribution,ProbabilityBox,Interval,Vector{Pair{Symbol,EmpiricalDistribution}}}
 const DiscreteProbability = Union{Real,Interval}
 const Probability = Union{ContinuousProbability,DiscreteProbability}
 
+# Simulation families: the strategies a functional node stores per scenario.
 const ContinuousSimulation = AbstractMonteCarlo
 const DiscreteSimulation = Union{AbstractSimulation,DoubleLoop,RandomSlicing}
 const Simulation = Union{ContinuousSimulation,DiscreteSimulation}
 
-# ScenarioTable is the basic constructur for ConditionalProbabilityTable and SimulationTable
+# A small table backing both conditional probability tables and simulation tables: a DataFrame with
+# one Symbol column per parent (holding states) plus a single value column named `n` (`:Π` for
+# probabilities, `:sim` for simulations), typed by `T`.
 struct ScenariosTable{T<:Union{<:Probability,<:Simulation,Any}}
     data::DataFrame
     n::Symbol
+    # Build an empty table: Symbol columns for each parent, plus an empty T-typed value column `n`.
     function ScenariosTable{T}(columns::Union{Symbol,Vector{Symbol}}, n::Symbol) where {T<:Union{<:Probability,<:Simulation,Any}}
         columns = wrap(columns)
         data = DataFrame([col => Symbol[] for col in columns])
@@ -18,6 +23,9 @@ struct ScenariosTable{T<:Union{<:Probability,<:Simulation,Any}}
     end
 end
 
+# Set (or overwrite) the value for a full parent-state key. 
+# Probabilities are range-checked; the key must name exactly the table's parent columns, otherwise it errors. 
+# A new row is pushed if the combination is absent, else the existing single matching row is updated.
 function Base.setindex!(st::ScenariosTable{T}, value::T, key::Pair{Symbol,Symbol}...) where {T<:Union{<:Probability,<:Simulation,Any}}
     if T == DiscreteProbability
         verify_probability_value(value)
@@ -38,6 +46,7 @@ function Base.setindex!(st::ScenariosTable{T}, value::T, key::Pair{Symbol,Symbol
     end
 end
 
+# Look up the single value whose row matches the full parent-state key; errors if absent.
 function Base.getindex(st::ScenariosTable, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     cp = subset(st.data, selector, view=true)
@@ -49,11 +58,13 @@ function Base.getindex(st::ScenariosTable, key::Pair{Symbol,Symbol}...)
     end
 end
 
+# Return (a view of) the sub-rows matching a partial key — e.g. all rows for a given parent state.
 function Base.filter(st::ScenariosTable, key::Pair{Symbol,Symbol}...)
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     return subset(st.data, selector, view=true)
 end
 
+# A probability entry must lie in [0, 1] — checked for both precise Reals and Interval bounds.
 function verify_probability_value(value::Real)
     if !(0 <= value <= 1)
         throw(ArgumentError("Probability $value must be >= 0 and <= 1"))

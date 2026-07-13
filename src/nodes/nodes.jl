@@ -1,14 +1,27 @@
+# Node type hierarchy: every node is discrete- or continuous-flavoured;
 abstract type AbstractNode end
 abstract type AbstractContinuousNode <: AbstractNode end
 abstract type AbstractDiscreteNode <: AbstractNode end
 
+# Discretization strategy attached to a continuous node (see ExactDiscretization / ApproximatedDiscretization).
 abstract type AbstractDiscretization end
 
-""" ExactDiscretization
+"""
+    ExactDiscretization(intervals=Real[])
 
-    Used for ContinuousRootNode whenever evidence can be available on them.
-        intervals: vector of Float64 that discretize initial distribution support
+Discretization strategy for a continuous **root** node, allowing evidence to be observed on it.
+The node's distribution support is partitioned exactly at the sorted `intervals` edges, turning the
+continuous root into discrete bins. The default (empty `intervals`) leaves the node continuous, i.e.
+no discretization is applied. The edges must be sorted.
 
+# Examples
+```julia
+# discretize a root node's support at the edges -2, 0, 2:
+disc = ExactDiscretization([-2.0, 0.0, 2.0])
+T = ContinuousNode(:T, Normal(), disc)
+
+ExactDiscretization()            # empty: the root stays continuous
+```
 """
 struct ExactDiscretization <: AbstractDiscretization
     intervals::Vector{<:Real}
@@ -23,12 +36,21 @@ end
 
 ExactDiscretization() = ExactDiscretization(Vector{Real}())
 
-""" ApproximatedDiscretization
+"""
+    ApproximatedDiscretization(intervals=Real[], sigma=0)
 
-    Used for continuous Non-Root nodes whenever evidence can be available on them.
-        intervals: vector of Float64 that discretize initial distribution support
-        sigma: variance of the normal distribution used for approximate initial continuous distribution
+Discretization strategy for a continuous **non-root (child)** node, allowing evidence to be observed
+on it. The sorted `intervals` edges partition the support into discrete bins, while `sigma` is the
+spread of the normal distribution used to approximate the original continuous distribution's tails
+when a discrete state is mapped back to a continuous range. `sigma` must be non-negative; a value
+above `2` is accepted but warns, as it tends to give an unrealistic tail approximation.
 
+# Examples
+```julia
+# discretize a child node at edges -1, 0, 1, approximating tails with spread 1.5:
+disc = ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5)
+C = ContinuousNode(:C, [:W], disc)
+```
 """
 struct ApproximatedDiscretization <: AbstractDiscretization
     intervals::Vector{<:Real}
