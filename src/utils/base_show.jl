@@ -2,7 +2,7 @@
 # `show(io, x)` (used in arrays, REPL echo of a field) and a full `show(io, ::MIME"text/plain", x)`
 # (used when the object is displayed on its own) that lays out its structure and underlying table.
 
-# Discrete Nodes
+# Discrete nodes: header line + parents/states/precision, then the CPT and any parameters.
 function Base.show(io::IO, node::DiscreteNode)
     print(io, "DiscreteNode(", node.name, ", parents=", parents(node), ", states=", states(node), ")")
 end
@@ -30,7 +30,7 @@ function Base.show(io::IO, ::MIME"text/plain", node::DiscreteNode)
     show(io, MIME"text/plain"(), node.cpt.data)
 end
 
-# Continuous Nodes
+# Continuous nodes: header + parents/discretization/precision/support, then the CPT.
 function Base.show(io::IO, node::ContinuousNode)
     print(io, "ContinuousNode(", node.name, ", parents=", parents(node), ", discretization=", typeof(node.discretization).name.name, ")"
     )
@@ -63,7 +63,7 @@ function Base.show(io::IO, ::MIME"text/plain", node::ContinuousNode)
     show(io, MIME"text/plain"(), node.cpt.data)
 end
 
-# Functional Nodes
+# Functional nodes: header + models/discretization/simulation (+ parameters for discrete), then the per-scenario simulation table.
 function Base.show(io::IO, node::ContinuousFunctionalNode)
     print(
         io, "ContinuousFunctionalNode(", node.name, ", models=", length(node.models), ", nbins=", node.nbins, ")")
@@ -117,7 +117,7 @@ function Base.show(io::IO, ::MIME"text/plain", node::DiscreteFunctionalNode)
     end
 end
 
-# Posterior
+# Posterior: "P(query | evidence)" header, then the probability table row per state combination.
 function Base.show(io::IO, p::Posterior)
     q = join(string.(p.query), ", ")
     if isempty(p.evidence)
@@ -154,7 +154,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::Posterior)
     end
 end
 
-# CredalPosterior
+# CredalPosterior: like Posterior but printing [lower, upper] bounds, plus the count of extreme posteriors.
 function Base.show(io::IO, p::CredalPosterior)
     q = join(string.(p.query), ", ")
     if isempty(p.evidence)
@@ -195,7 +195,7 @@ function Base.show(io::IO, ::MIME"text/plain", p::CredalPosterior)
     println(io, "Extreme posteriors: ", length(p.posteriors))
 end
 
-# EhancedBayesianNetwork
+# EnhancedBayesianNetwork: counts by node kind, then a topology table (node, type, precision, parents).
 function Base.show(io::IO, net::EnhancedBayesianNetwork)
     print(io, "EnhancedBayesianNetwork(", length(net.nodes), " nodes)")
 end
@@ -253,7 +253,7 @@ function Base.show(io::IO, ::MIME"text/plain", net::EnhancedBayesianNetwork)
     end
 end
 
-# BayesianNetwork
+# BayesianNetwork: node/edge counts, then a topology table (index, node, states, parents).
 function Base.show(io::IO, bn::BayesianNetwork)
     print(io, "BayesianNetwork(", length(bn.nodes), " nodes)")
 end
@@ -299,7 +299,7 @@ function Base.show(io::IO, ::MIME"text/plain", bn::BayesianNetwork)
     end
 end
 
-# CredalNetwork
+# CredalNetwork: precise/credal counts, then a topology table (index, node, precision, parents).
 function Base.show(io::IO, cn::CredalNetwork)
     print(io, "CredalNetwork(", length(cn.nodes), " nodes)")
 end
