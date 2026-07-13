@@ -1,17 +1,17 @@
 @testitem "Inference - Factor & factorize" setup=[ExtraDeps] begin
-    f = Factor(
+    f = EnhancedBayesianNetworks.Factor(
         [1],
         [0.5, 0.5]
     )
-    @test isa(f, Factor)
+    @test isa(f, EnhancedBayesianNetworks.Factor)
     @test f.vars == [1]
     @test f.table == [0.5, 0.5]
 
-    f = Factor(
+    f = EnhancedBayesianNetworks.Factor(
         [1, 2],
         reshape(collect(1:4), 2, 2)
     )
-    @test isa(f, Factor)
+    @test isa(f, EnhancedBayesianNetworks.Factor)
     @test f.vars == [1, 2]
     @test f.table == reshape(collect(1:4), 2, 2)
 
