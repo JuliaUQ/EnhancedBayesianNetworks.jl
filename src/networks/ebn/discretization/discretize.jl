@@ -1,3 +1,6 @@
+# Split a continuous node into a discrete surrogate (probability mass per interval) and a residual
+# continuous node (the distribution restricted to / approximated on each interval). A root uses its
+# exact distribution and truncation; a child is handled per parent scenario, approximating each interval.
 function _discretize(node::ContinuousNode)
     intervals = _format_interval(node)
     name_discrete = Symbol(string(node.name) * "_d")
@@ -15,6 +18,8 @@ function _discretize(node::ContinuousNode)
     return (discretized_node, new_continuous)
 end
 
+# Turn the node's discretization edges into consecutive [lo, hi] interval pairs, clamped to the
+# distribution's actual support (warning, and trimming/extending, when an edge falls outside it).
 function _format_interval(node::ContinuousNode)
     intervals = Float64.(node.discretization.intervals)
     min = node.discretization.intervals[1]
@@ -41,6 +46,8 @@ function _format_interval(node::ContinuousNode)
     return [[intervals[i], intervals[i+1]] for i in 1:(length(intervals)-1)]
 end
 
+# Reconstruct a continuous distribution over one interval: Uniform for a bounded interval, a shifted
+# Exponential (rate λ) for a one-sided infinite tail (left tail below an upper edge, right tail above a lower edge).
 function _approximate(i::AbstractVector{<:Real}, λ::Real)
     if all(isfinite.(i))
         return Uniform(i...)
@@ -51,6 +58,8 @@ function _approximate(i::AbstractVector{<:Real}, λ::Real)
     end
 end
 
+# Probability mass assigned to an interval: a CDF difference for a distribution, an interval-valued mass
+# for a ProbabilityBox, and the whole [0, 1] for an (already imprecise) Interval entry.
 function _discretize(dist::UnivariateDistribution, interval::Vector{<:Real})
     return cdf(dist, getindex(interval, 2)) - cdf(dist, getindex(interval, 1))
 end
