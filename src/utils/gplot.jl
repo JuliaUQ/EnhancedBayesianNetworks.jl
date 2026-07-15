@@ -8,7 +8,7 @@ const _BASE_TITLESIZE = 18pt   # title font size
 const _BORDER_PAD = 0.12   # fraction of canvas kept free at each edge
 
 
-function gplot(net::EnhancedBayesianNetworks.AbstractNetwork;
+function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     node_scale::Float64=1.0,
     label_scale::Float64=1.0,
     title::String="",

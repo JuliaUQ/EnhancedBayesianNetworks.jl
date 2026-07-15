@@ -19,6 +19,7 @@ export ContinuousFunctionalNode
 export ContinuousNode
 export CredalNetwork
 export CredalPosterior
+export DirectAcyclicGraph
 export DiscreteFunctionalNode
 export DiscreteNode
 export ExactDiscretization
@@ -31,6 +32,7 @@ const Evidence = Dict{Symbol,Symbol}
 
 # Functions
 export add_child!
+export add_node!
 export children
 export discrete_ancestors
 export factor_score
@@ -54,7 +56,7 @@ export states
 include("nodes/nodes.jl")
 include("networks/networks.jl")
 include("inference/inference.jl")
-# include("learning/learning.jl")
+include("learning/learning.jl")
 include("utils/base_show.jl")
 include("utils/gplot.jl")
 end
