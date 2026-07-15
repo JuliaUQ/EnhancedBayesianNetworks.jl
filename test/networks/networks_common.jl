@@ -460,7 +460,7 @@ end
     add_child!(net, :S, :G)
     add_child!(net, :R, :G)
 
-    @test_throws ErrorException("Invalid Network: node :W is already present in the network") EnhancedBayesianNetworks.add_node!(net, DiscreteNode(:W))
+    @test_throws ErrorException("Invalid Network: node :W is already present in the network") EnhancedBayesianNetworks.push_node!(net, DiscreteNode(:W))
 
     net1 = deepcopy(net)
     net2 = deepcopy(net)
@@ -481,7 +481,7 @@ end
     net4 = deepcopy(net1)
     net5 = deepcopy(net1)
 
-    EnhancedBayesianNetworks.add_node!(net4, grass)
+    EnhancedBayesianNetworks.push_node!(net4, grass)
     @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
     adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
     @test net4.A == adj
@@ -516,7 +516,7 @@ end
     net4 = deepcopy(net1)
     net5 = deepcopy(net1)
 
-    EnhancedBayesianNetworks.add_node!(net4, grass)
+    EnhancedBayesianNetworks.push_node!(net4, grass)
     @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
     adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
     @test net4.A == adj
@@ -548,7 +548,7 @@ end
     net4 = deepcopy(net1)
     net5 = deepcopy(net1)
 
-    EnhancedBayesianNetworks.add_node!(net4, grass)
+    EnhancedBayesianNetworks.push_node!(net4, grass)
     @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
     adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
     @test net4.A == adj

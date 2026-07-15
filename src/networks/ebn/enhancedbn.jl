@@ -104,11 +104,11 @@ end
 function discretize!(net::EnhancedBayesianNetwork)
     continuous_nodes = filter(x -> isa(x, ContinuousNode), net.nodes)
     evidence_nodes = filter(n -> !isempty(n.discretization), continuous_nodes)
-    discretization_tuples = map(n -> (n, parents(net, n), children(net, n), EnhancedBayesianNetworks._discretize(n)), evidence_nodes)
+    discretization_tuples = map(n -> (n, parents(net, n), children(net, n), _discretize(n)), evidence_nodes)
     for (node, pars, chs, (discretized_node, new_continuous)) in discretization_tuples
-        EnhancedBayesianNetworks.remove_node!(net, node)
-        EnhancedBayesianNetworks.add_node!(net, discretized_node)
-        EnhancedBayesianNetworks.add_node!(net, new_continuous)
+        remove_node!(net, node)
+        push_node!(net, discretized_node)
+        push_node!(net, new_continuous)
         add_child!(net, discretized_node, new_continuous)
         map(p -> add_child!(net, p, discretized_node.name), pars)
         map(c -> add_child!(net, new_continuous.name, c), chs)
@@ -176,9 +176,9 @@ function build_simulations!(net::EnhancedBayesianNetwork, node::FunctionalNode)
         anc_nodes = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
         anc = Symbol[i.name for i in anc_nodes]
         if isa(node, AbstractContinuousNode)
-            st = EnhancedBayesianNetworks.ScenariosTable{ContinuousSimulation}(anc, :sim)
+            st = ScenariosTable{ContinuousSimulation}(anc, :sim)
         else
-            st = EnhancedBayesianNetworks.ScenariosTable{DiscreteSimulation}(anc, :sim)
+            st = ScenariosTable{DiscreteSimulation}(anc, :sim)
         end
         theoretical_scenarios = vec(collect(Iterators.product(states.(anc_nodes)...)))
         map(th_s -> st[(anc .=> th_s)...] = node.simulation, theoretical_scenarios)

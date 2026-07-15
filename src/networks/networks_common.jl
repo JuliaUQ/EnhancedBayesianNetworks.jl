@@ -283,7 +283,7 @@ end
 remove_node!(net::AbstractNetwork, name::Symbol) = remove_node!(net, first(filter(n -> n.name == name, net.nodes)))
 
 # Append a disconnected node (errors on a duplicate name) and grow the adjacency matrix by one row/column.
-function add_node!(net::AbstractNetwork, node::AbstractNode)
+function push_node!(net::AbstractNetwork, node::AbstractNode)
     if haskey(net.topology, node.name)
         error("Invalid Network: node $(repr(node.name)) is already present in the network")
     end
