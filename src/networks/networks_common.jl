@@ -23,7 +23,7 @@ function order!(net::AbstractNetwork)
     if !isconnected(net.A)
         error("Invalid Network: network is not connected")
     end
-    topologically_sort!(net)
+    _topologically_sort!(net)
     foreach(n -> verify_parents(net, n), net.nodes)
     foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
         verify_scenarios(net, n)
@@ -199,8 +199,8 @@ isconnected(net::AbstractNetwork) = isconnected(net.A)
 
 # Reorder nodes into a topological order in place, permuting the node vector, the adjacency matrix,
 # and the name→index map together so they stay consistent.
-function topologically_sort!(net::AbstractNetwork)
-    order = topologically_sort(net.A)
+function _topologically_sort!(net::AbstractNetwork)
+    order = _topologically_sort(net.A)
     net.nodes = net.nodes[order]
     net.A = net.A[order, order]
     for (i, node) in enumerate(net.nodes)

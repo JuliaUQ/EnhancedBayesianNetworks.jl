@@ -1,5 +1,5 @@
 # Kahn's algorithm (A. B. Kahn, CACM 1962): repeatedly remove in-degree-0 vertices. A cyclic graph yields length(order) < size(A, 1).
-function topologically_sort(A::SparseMatrixCSC)
+function _topologically_sort(A::SparseMatrixCSC)
     # in-degree of each vertex (column sums)
     indeg = vec(sum(A, dims=1))
     # sources: in-degree 0
