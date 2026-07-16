@@ -62,7 +62,7 @@ add_child!(bn, E, X)
 order!(bn)
 
 
-df = sample(bn, 100)
+df = sample(bn, 300)
 
 
 
@@ -75,3 +75,5 @@ add_node!(dag, :B, parents=[:S])
 add_node!(dag, :E, parents=[:L, :T])
 add_node!(dag, :D, parents=[:B, :E])
 add_node!(dag, :X, parents=[:E])
+
+a = EnhancedBayesianNetworks.learn_parameters_mle(dag, df, alpha=0.01)

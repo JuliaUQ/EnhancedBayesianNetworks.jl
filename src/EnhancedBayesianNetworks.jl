@@ -43,6 +43,7 @@ export infer
 export isprecise
 export isroot
 export joint_probability
+export learn_parameters_mle
 export markov_blanket
 export markov_envelope
 export order!

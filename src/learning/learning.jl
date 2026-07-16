@@ -3,24 +3,22 @@
 
 A directed acyclic graph: network **structure plus optional declared states**, without any
 probabilities. It is the input to parameter learning ([`learn_parameters_mle`](@ref)) — declare the
-nodes with [`add_node!`](@ref), wire the edges with [`add_child!`](@ref), then learn the CPTs from
-data to obtain a fully-specified [`BayesianNetwork`](@ref).
+nodes and their parents with [`add_node!`](@ref) (edges are wired as you go), then learn the CPTs
+from data to obtain a fully-specified [`BayesianNetwork`](@ref).
 
 Each node's domain is taken from the data at learn time; any states passed to [`add_node!`](@ref) are
 *added* to that domain, letting a node keep states that never occur in the dataset (they end up in
 the learned CPT with probability `0`). It is a standalone type (not an `AbstractNetwork`): it
-supports [`add_node!`](@ref), [`add_child!`](@ref), [`parents`](@ref), and [`children`](@ref), but
-none of the network operations that require CPTs (`order!`, `infer`, `sample`).
+supports [`add_node!`](@ref), [`parents`](@ref), [`children`](@ref), and `gplot`, but none of the
+network operations that require CPTs (`order!`, `infer`, `sample`).
 
 # Examples
 ```julia
 dag = DirectAcyclicGraph()
 add_node!(dag, :W, [:Foggy])                     # :Sunny/:Cloudy come from data; :Foggy guaranteed
-add_node!(dag, :R; parents = [:W])               # domain taken entirely from the data
+add_node!(dag, :R; parents = [:W])               # domain from data; edge :W -> :R wired here
 add_node!(dag, :P; parents = [:W])
 add_node!(dag, :G; parents = [:R, :P])
-add_child!(dag, :W, [:R, :P])
-add_child!(dag, [:R, :P], :G)
 
 learned = learn_parameters_mle(dag, df)          # -> BayesianNetwork
 order!(learned)
@@ -52,6 +50,7 @@ dag = DirectAcyclicGraph()
 add_node!(dag, :W, [:Foggy])              # root; :Sunny/:Cloudy from data, :Foggy guaranteed
 add_node!(dag, :R; parents = [:W])        # edge :W -> :R created here
 add_node!(dag, :G; parents = [:R])
+```
 """
 function add_node!(
     dag::DirectAcyclicGraph,
@@ -63,7 +62,9 @@ function add_node!(
         error("Invalid DAG: node $(repr(name)) is already present")
     end
     undefined = setdiff(parents, [n.name for n in dag.nodes])
-    isempty(undefined) || error("Invalid DAG: parent(s) $undefined of $(repr(name)) are not defined; add them first")
+    if !isempty(undefined)
+        error("Invalid DAG: parent(s) $undefined of $(repr(name)) are not defined; add them first")
+    end
     push!(dag.nodes, DiscreteNode(name, parents))
     idx = length(dag.nodes)
     dag.topology[name] = idx
@@ -71,7 +72,9 @@ function add_node!(
     Anew = spzeros(Bool, m + 1, m + 1)
     Anew[1:m, 1:m] = dag.A
     dag.A = Anew
-    isempty(parents) || (dag.A[getindex.(Ref(dag.topology), parents), idx] .= true)
+    if !isempty(parents)
+        (dag.A[getindex.(Ref(dag.topology), parents), idx] .= true)
+    end
     if !isempty(node_states)
         dag.states[name] = node_states
     end
@@ -98,8 +101,8 @@ to a uniform distribution. `dag` is left untouched.
 # Examples
 ```julia
 dag = DirectAcyclicGraph()
-add_node!(dag, :V, [:maybe]); add_node!(dag, :T; parents = [:V])
-add_child!(dag, :V, :T)
+add_node!(dag, :V, [:maybe])
+add_node!(dag, :T; parents = [:V])
 
 learned = learn_parameters_mle(dag, df)
 order!(learned)
