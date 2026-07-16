@@ -17,11 +17,11 @@ infer(bn, :S, Evidence(:W => :sunny), fill_score)
 ```
 """
 function fill_score(ig::InteractionGraph, _::NetworkSchema, node::Int)
-    ed = deleted_edges(ig, node)
+    ed = _deleted_edges(ig, node)
     if ed == 0
         return 0.0
     end
-    ea = added_edges(ig, node)
+    ea = _added_edges(ig, node)
     return ea / ed
 end
 
@@ -80,20 +80,20 @@ end
 
 # Greedy elimination ordering: repeatedly pick the lowest-scoring remaining node, record it, and
 # eliminate it from the interaction graph until none remain.
-function sort_nodes(ig::InteractionGraph, ns::NetworkSchema, scorefun)
+function _sort_nodes(ig::InteractionGraph, ns::NetworkSchema, scorefun)
     remaining = Set(1:length(ig.neighbors))
     order = Int[]
     while !isempty(remaining)
-        node = best_node(ig, ns, remaining, scorefun)
+        node = _best_node(ig, ns, remaining, scorefun)
         push!(order, node)
         delete!(remaining, node)
-        eliminate!(ig, node)
+        _eliminate!(ig, node)
     end
     return order
 end
 
 # The remaining node with the smallest `scorefun` value (ties broken by whatever the score encodes).
-function best_node(ig::InteractionGraph, ns::NetworkSchema, remaining::Set{Int}, scorefun)
+function _best_node(ig::InteractionGraph, ns::NetworkSchema, remaining::Set{Int}, scorefun)
     best = minimum(remaining)
     best_score = scorefun(ig, ns, best)
     for node ∈ remaining
@@ -111,7 +111,7 @@ end
 
 # Eliminate a node from the moral graph: connect all its neighbours pairwise (fill-in edges), then
 # remove the node from its neighbours and clear its own adjacency.
-function eliminate!(ig::InteractionGraph, node::Int)
+function _eliminate!(ig::InteractionGraph, node::Int)
     neigh = collect(ig.neighbors[node])
     # add fill-in edges
     for i ∈ eachindex(neigh)
@@ -131,7 +131,7 @@ function eliminate!(ig::InteractionGraph, node::Int)
 end
 
 # Number of fill-in edges eliminating `node` would introduce (neighbour pairs not already adjacent).
-function added_edges(ig::InteractionGraph, node::Int)
+function _added_edges(ig::InteractionGraph, node::Int)
     neigh = collect(ig.neighbors[node])
     missing = 0
     for i ∈ eachindex(neigh)
@@ -145,5 +145,5 @@ function added_edges(ig::InteractionGraph, node::Int)
 end
 
 # Edges removed by eliminating `node` = its current neighbour count.
-@inline deleted_edges(ig::InteractionGraph, node::Int) = length(ig.neighbors[node])
+@inline _deleted_edges(ig::InteractionGraph, node::Int) = length(ig.neighbors[node])
 

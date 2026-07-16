@@ -53,9 +53,9 @@ end
     state_to_idx = [Dict(:Cloudy => 1, :Sunny => 2), Dict(:No => 2, :Yes => 1), Dict(:broken => 3, :Off => 2, :On => 1), Dict(:Dry => 1, :Wet => 2)]
     ns = EnhancedBayesianNetworks.NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
 
-    @test EnhancedBayesianNetworks.query_to_idx(:W, ns) == [1]
-    @test EnhancedBayesianNetworks.query_to_idx([:W, :S], ns) == [1, 3]
+    @test EnhancedBayesianNetworks._query_to_idx(:W, ns) == [1]
+    @test EnhancedBayesianNetworks._query_to_idx([:W, :S], ns) == [1, 3]
 
-    @test EnhancedBayesianNetworks.evidence_to_idx(Evidence(:W=>:Sunny), ns) == [(1, 2)]
-    @test issetequal(EnhancedBayesianNetworks.evidence_to_idx(Evidence(:W=>:Sunny, :G=>:Wet), ns), [(1, 2), (4, 2)])
+    @test EnhancedBayesianNetworks._evidence_to_idx(Evidence(:W=>:Sunny), ns) == [(1, 2)]
+    @test issetequal(EnhancedBayesianNetworks._evidence_to_idx(Evidence(:W=>:Sunny, :G=>:Wet), ns), [(1, 2), (4, 2)])
 end

@@ -5,8 +5,8 @@
         Set([1]),
         Set([1])
     ])
-    @test EnhancedBayesianNetworks.deleted_edges(ig, 1) == 3
-    @test EnhancedBayesianNetworks.added_edges(ig, 1) == 3
+    @test EnhancedBayesianNetworks._deleted_edges(ig, 1) == 3
+    @test EnhancedBayesianNetworks._added_edges(ig, 1) == 3
 
     # 1 missing edge
     ig = EnhancedBayesianNetworks.InteractionGraph([
@@ -15,8 +15,8 @@
         Set([1, 2]),
         Set([1])
     ])
-    @test EnhancedBayesianNetworks.deleted_edges(ig, 1) == 3
-    @test EnhancedBayesianNetworks.added_edges(ig, 1) == 2
+    @test EnhancedBayesianNetworks._deleted_edges(ig, 1) == 3
+    @test EnhancedBayesianNetworks._added_edges(ig, 1) == 2
 
     # already a clique
     ig = EnhancedBayesianNetworks.InteractionGraph([
@@ -25,33 +25,33 @@
         Set([1, 2, 4]),
         Set([1, 2, 3])
     ])
-    @test EnhancedBayesianNetworks.deleted_edges(ig, 1) == 3
-    @test EnhancedBayesianNetworks.added_edges(ig, 1) == 0
+    @test EnhancedBayesianNetworks._deleted_edges(ig, 1) == 3
+    @test EnhancedBayesianNetworks._added_edges(ig, 1) == 0
 
     # isolated node
     ig = EnhancedBayesianNetworks.InteractionGraph([
         Set{Int}(),
         Set{Int}()
     ])
-    @test EnhancedBayesianNetworks.deleted_edges(ig, 1) == 0
-    @test EnhancedBayesianNetworks.added_edges(ig, 1) == 0
+    @test EnhancedBayesianNetworks._deleted_edges(ig, 1) == 0
+    @test EnhancedBayesianNetworks._added_edges(ig, 1) == 0
 
     # single neighbor
     ig = EnhancedBayesianNetworks.InteractionGraph([
         Set([2]),
         Set([1])
     ])
-    @test EnhancedBayesianNetworks.deleted_edges(ig, 1) == 1
-    @test EnhancedBayesianNetworks.added_edges(ig, 1) == 0
+    @test EnhancedBayesianNetworks._deleted_edges(ig, 1) == 1
+    @test EnhancedBayesianNetworks._added_edges(ig, 1) == 0
 end
 
-@testitem "Sorting - eliminate!" begin
+@testitem "Sorting - _eliminate!" begin
     ig = EnhancedBayesianNetworks.InteractionGraph([
         Set([2]),
         Set([1, 3]),
         Set([2])
     ])
-    EnhancedBayesianNetworks.eliminate!(ig, 2)
+    EnhancedBayesianNetworks._eliminate!(ig, 2)
     @test ig.neighbors[1] == Set([3])
     @test ig.neighbors[2] == Set()
     @test ig.neighbors[3] == Set([1])
@@ -62,7 +62,7 @@ end
         Set([1]),
         Set([1])
     ])
-    EnhancedBayesianNetworks.eliminate!(ig, 1)
+    EnhancedBayesianNetworks._eliminate!(ig, 1)
     @test ig.neighbors[1] == Set()
     @test ig.neighbors[2] == Set([3, 4])
     @test ig.neighbors[3] == Set([2, 4])
@@ -75,7 +75,7 @@ end
         Set([1, 2, 4]),
         Set([1, 2, 3])
     ])
-    EnhancedBayesianNetworks.eliminate!(ig, 1)
+    EnhancedBayesianNetworks._eliminate!(ig, 1)
     @test ig.neighbors[1] == Set()
     @test ig.neighbors[2] == Set([3, 4])
     @test ig.neighbors[3] == Set([2, 4])
@@ -87,7 +87,7 @@ end
         Set([3]),
         Set([2])
     ])
-    EnhancedBayesianNetworks.eliminate!(ig, 1)
+    EnhancedBayesianNetworks._eliminate!(ig, 1)
     @test ig.neighbors[1] == Set()
     @test ig.neighbors[2] == Set([3])
     @test ig.neighbors[3] == Set([2])
@@ -300,7 +300,7 @@ end
     # ic
     remaining = Set(1:8)
     scorefun = EnhancedBayesianNetworks.fill_score
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -309,7 +309,7 @@ end
     @test node == 1
 
     remaining = Set([7, 8])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -318,7 +318,7 @@ end
     @test node == 7
 
     remaining = Set([6])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -327,7 +327,7 @@ end
     @test node == 6
 
     remaining = Set([3, 4, 6])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -338,7 +338,7 @@ end
     # complexity
     remaining = Set(1:8)
     scorefun = EnhancedBayesianNetworks.factor_score
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -347,7 +347,7 @@ end
     @test node == 1
 
     remaining = Set([7, 8])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -356,7 +356,7 @@ end
     @test node == 8
 
     remaining = Set([6])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -365,7 +365,7 @@ end
     @test node == 6
 
     remaining = Set([3, 4, 6])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -376,7 +376,7 @@ end
     # ic-complexity
     remaining = Set(1:8)
     scorefun = EnhancedBayesianNetworks.fill_factor_score
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -385,7 +385,7 @@ end
     @test node == 1
 
     remaining = Set([7, 8])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -394,7 +394,7 @@ end
     @test node == 8
 
     remaining = Set([6])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -403,7 +403,7 @@ end
     @test node == 6
 
     remaining = Set([3, 4, 6])
-    node = EnhancedBayesianNetworks.best_node(
+    node = EnhancedBayesianNetworks._best_node(
         ig,
         ns,
         remaining,
@@ -412,7 +412,7 @@ end
     @test node == 3
 end
 
-@testitem "Sorting - sort_nodes" begin
+@testitem "Sorting - _sort_nodes" begin
     idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
     idx_to_state = [
         [:YesV, :NoV],
@@ -446,7 +446,7 @@ end
         Set([5, 6])
         Set([6])
     ])
-    @test EnhancedBayesianNetworks.sort_nodes(ig, ns, EnhancedBayesianNetworks.fill_score) == [1, 7, 8, 3, 2, 4, 5, 6]
+    @test EnhancedBayesianNetworks._sort_nodes(ig, ns, EnhancedBayesianNetworks.fill_score) == [1, 7, 8, 3, 2, 4, 5, 6]
 
     idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
     idx_to_state = [
@@ -481,7 +481,7 @@ end
         Set([5, 6])
         Set([6])
     ])
-    @test EnhancedBayesianNetworks.sort_nodes(ig, ns, EnhancedBayesianNetworks.factor_score) == [1, 8, 2, 3, 4, 5, 6, 7]
+    @test EnhancedBayesianNetworks._sort_nodes(ig, ns, EnhancedBayesianNetworks.factor_score) == [1, 8, 2, 3, 4, 5, 6, 7]
 
     idx_to_node = [:V, :S, :T, :L, :B, :E, :D, :X]
     idx_to_state = [
@@ -516,5 +516,5 @@ end
         Set([5, 6])
         Set([6])
     ])
-    @test EnhancedBayesianNetworks.sort_nodes(ig, ns, EnhancedBayesianNetworks.fill_factor_score) == [1, 8, 3, 7, 2, 4, 5, 6]
+    @test EnhancedBayesianNetworks._sort_nodes(ig, ns, EnhancedBayesianNetworks.fill_factor_score) == [1, 8, 3, 7, 2, 4, 5, 6]
 end

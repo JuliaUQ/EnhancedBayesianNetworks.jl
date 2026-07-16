@@ -89,9 +89,9 @@ function infer(
     ns = NetworkSchema(bn)
     ig = InteractionGraph(bn)
     factors = _factorize(bn)
-    query_vars = query_to_idx(query, ns)
-    evidence_idx = evidence_to_idx(evidence, ns)
-    order = sort_nodes(ig, ns, scorefun)
+    query_vars = _query_to_idx(query, ns)
+    evidence_idx = _evidence_to_idx(evidence, ns)
+    order = _sort_nodes(ig, ns, scorefun)
     result = _ve(factors, order, query_vars, evidence_idx)
     return Posterior(result, ns, query, evidence)
 end

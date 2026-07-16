@@ -40,7 +40,7 @@
 
     factors = EnhancedBayesianNetworks._factorize(bn)
     evidence_idx = [(4, 2)]
-    EnhancedBayesianNetworks.apply_evidence!(factors, evidence_idx)
+    EnhancedBayesianNetworks._apply_evidence!(factors, evidence_idx)
     @test factors[1].vars == [1]
     @test factors[2].vars == [1, 2]
     @test factors[3].vars == [1, 3]
@@ -91,15 +91,15 @@ end
     @suppress order!(bn)
 
     factors = EnhancedBayesianNetworks._factorize(bn)
-    newfactors = EnhancedBayesianNetworks.eliminate_var(factors, 10)
+    newfactors = EnhancedBayesianNetworks._eliminate_var(factors, 10)
     @test newfactors === factors
 
-    newfactors = EnhancedBayesianNetworks.eliminate_var(factors, 2)
+    newfactors = EnhancedBayesianNetworks._eliminate_var(factors, 2)
     @test length(newfactors) == 3
-    @test all(!EnhancedBayesianNetworks.containsvar(f, 2) for f in newfactors)
+    @test all(!EnhancedBayesianNetworks._containsvar(f, 2) for f in newfactors)
     @test sort.(getproperty.(newfactors, :vars)) == [[1], [1, 3], [1, 3, 4]]
 
-    newfactors = EnhancedBayesianNetworks.eliminate_var(factors, 2)
+    newfactors = EnhancedBayesianNetworks._eliminate_var(factors, 2)
     @test size(newfactors[3].table) == (2, 3, 2)
     expected = zeros(2, 3, 2)
     # W=Cloudy
@@ -160,7 +160,7 @@ end
     @suppress order!(bn)
 
     factors = EnhancedBayesianNetworks._factorize(bn)
-    node_order = EnhancedBayesianNetworks.sort_nodes(
+    node_order = EnhancedBayesianNetworks._sort_nodes(
         EnhancedBayesianNetworks.InteractionGraph(bn),
         EnhancedBayesianNetworks.NetworkSchema(bn),
         EnhancedBayesianNetworks.fill_score

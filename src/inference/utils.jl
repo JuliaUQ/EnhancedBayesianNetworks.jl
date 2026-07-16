@@ -30,13 +30,13 @@ function _verify_evidence(evidence::Evidence, net::Union{BayesianNetwork,CredalN
 end
 
 # Map query node names to their integer ids in the schema.
-function query_to_idx(query::Union{Symbol,Vector{Symbol}}, ns::NetworkSchema)
+function _query_to_idx(query::Union{Symbol,Vector{Symbol}}, ns::NetworkSchema)
     query = _wrap(query)
     return [ns.node_to_idx[q] for q in query]
 end
 
 # Map evidence (name => state) pairs to (node id, state id) pairs in the schema.
-function evidence_to_idx(evidence::Evidence, ns::NetworkSchema)
+function _evidence_to_idx(evidence::Evidence, ns::NetworkSchema)
     result = Tuple{Int,Int}[]
     for (node, state) in evidence
         nodeid = ns.node_to_idx[node]

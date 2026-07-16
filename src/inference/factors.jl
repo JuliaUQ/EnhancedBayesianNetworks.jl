@@ -32,9 +32,9 @@ function _factorize(bn::BayesianNetwork)
 end
 
 # Position (dimension index) of variable var in factor f, or nothing if f doesn't range over it.
-@inline function varpos(f::Factor, var::Int)
+@inline function _varpos(f::Factor, var::Int)
     findfirst(==(var), f.vars)
 end
 
 # Whether factor f ranges over variable var.
-@inline containsvar(f::Factor, var::Int) = var ∈ f.vars
+@inline _containsvar(f::Factor, var::Int) = var ∈ f.vars

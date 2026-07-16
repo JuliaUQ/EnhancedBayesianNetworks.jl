@@ -70,9 +70,9 @@
     @test factors[4].vars == [3, 2, 4]
     @test factors[4].table == [0.4 0.2; 0.45 0.8; 0.42 0.9;;; 0.6 0.8; 0.55 0.2; 0.58 0.1]
 
-    @test EnhancedBayesianNetworks.varpos(factors[1], 1) == 1
-    @test EnhancedBayesianNetworks.varpos(factors[4], 2) == 2
-    @test isnothing(EnhancedBayesianNetworks.varpos(factors[1], 2))
-    @test EnhancedBayesianNetworks.containsvar(factors[1], 1)
-    @test !EnhancedBayesianNetworks.containsvar(factors[1], 2)
+    @test EnhancedBayesianNetworks._varpos(factors[1], 1) == 1
+    @test EnhancedBayesianNetworks._varpos(factors[4], 2) == 2
+    @test isnothing(EnhancedBayesianNetworks._varpos(factors[1], 2))
+    @test EnhancedBayesianNetworks._containsvar(factors[1], 1)
+    @test !EnhancedBayesianNetworks._containsvar(factors[1], 2)
 end
