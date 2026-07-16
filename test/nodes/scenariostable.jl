@@ -194,6 +194,6 @@ end
 end
 
 @testitem "verify probability values" begin
-    @test_throws ArgumentError EnhancedBayesianNetworks.verify_probability_value(1.1)
-    @test_throws ArgumentError EnhancedBayesianNetworks.verify_probability_value(Interval(0.5, 1.2))
+    @test_throws ArgumentError EnhancedBayesianNetworks._verify_probability_value(1.1)
+    @test_throws ArgumentError EnhancedBayesianNetworks._verify_probability_value(Interval(0.5, 1.2))
 end

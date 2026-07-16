@@ -42,13 +42,13 @@
     net = EnhancedBayesianNetwork(nodes)
     par = weather
     ch = [sprinkler, storm, grass]
-    @test_throws ErrorException("Invalid Network: node :G does not have the node :W in its CPT") EnhancedBayesianNetworks.verify_discrete(par, ch)
+    @test_throws ErrorException("Invalid Network: node :G does not have the node :W in its CPT") EnhancedBayesianNetworks._verify_discrete(par, ch)
 
     par = storm
     ch = [sprinkler]
-    @test_throws ErrorException("Invalid Network: nodes [:S] are not functional nodes and cannot be children of the continuous/functional node :St") EnhancedBayesianNetworks.verify_continuous_and_functional(par, ch)
+    @test_throws ErrorException("Invalid Network: nodes [:S] are not functional nodes and cannot be children of the continuous/functional node :St") EnhancedBayesianNetworks._verify_continuous_and_functional(par, ch)
 
     par = bush
     ch = [sprinkler]
-    @test_throws ErrorException("Invalid Network: nodes [:S] are not functional nodes and cannot be children of the continuous/functional node :B") EnhancedBayesianNetworks.verify_continuous_and_functional(par, ch)
+    @test_throws ErrorException("Invalid Network: nodes [:S] are not functional nodes and cannot be children of the continuous/functional node :B") EnhancedBayesianNetworks._verify_continuous_and_functional(par, ch)
 end

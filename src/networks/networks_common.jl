@@ -17,19 +17,19 @@ order!(bn)                                  # sorts nodes and validates the netw
 ```
 """
 function order!(net::AbstractNetwork)
-    if iscyclic(net.A)
+    if _iscyclic(net.A)
         error("Invalid Network: network is cyclic!")
     end
-    if !isconnected(net.A)
+    if !_isconnected(net.A)
         error("Invalid Network: network is not connected")
     end
     _topologically_sort!(net)
-    foreach(n -> verify_parents(net, n), net.nodes)
+    foreach(n -> _verify_parents(net, n), net.nodes)
     foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
-        verify_scenarios(net, n)
+        _verify_scenarios(net, n)
     end
     foreach(filter(x -> isa(x, DiscreteNode), net.nodes)) do n
-        verify_exhaustiveness(net, n)
+        _verify_exhaustiveness(net, n)
     end
 end
 
@@ -62,8 +62,8 @@ function add_child!(
     assert_nodes_defined(net, [i.name for i in vcat(parents, children)])
     loop = intersect(parents, children)
     isempty(loop) || error("Invalid Network: nodes $(getproperty.(loop, :name)) have a loop")
-    map(dp -> verify_discrete(dp, children), filter(x -> isa(x, DiscreteNode), parents))
-    map(cfp -> verify_continuous_and_functional(cfp, children), filter(x -> isa(x, Union{ContinuousNode,FunctionalNode}), parents))
+    map(dp -> _verify_discrete(dp, children), filter(x -> isa(x, DiscreteNode), parents))
+    map(cfp -> _verify_continuous_and_functional(cfp, children), filter(x -> isa(x, Union{ContinuousNode,FunctionalNode}), parents))
     set_edges!(net, parents, children)
 end
 
@@ -194,8 +194,8 @@ end
 parents(net::AbstractNetwork, node::AbstractNode) = parents(net, node.name)
 
 # Whole-network forwards to the adjacency-matrix predicates.
-iscyclic(net::AbstractNetwork) = iscyclic(net.A)
-isconnected(net::AbstractNetwork) = isconnected(net.A)
+_iscyclic(net::AbstractNetwork) = _iscyclic(net.A)
+_isconnected(net::AbstractNetwork) = _isconnected(net.A)
 
 # Reorder nodes into a topological order in place, permuting the node vector, the adjacency matrix,
 # and the name→index map together so they stay consistent.
@@ -210,12 +210,12 @@ end
 
 # Verify that every parent named in a node's CPT was actually linked via add_child!. The fallback
 # method is a no-op for node types without a CPT (e.g. functional nodes, whose ancestors are checked
-# separately by verify_ancestors).
-function verify_parents(_::AbstractNetwork, _::AbstractNode)
+# separately by _verify_ancestors).
+function _verify_parents(_::AbstractNetwork, _::AbstractNode)
     return
 end
 
-function verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,ContinuousNode})
+function _verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,ContinuousNode})
     cpt_parents = parents(node)
     net_parents = parents(net, node.name)
     only_in_cpt = setdiff(cpt_parents, net_parents)
@@ -225,7 +225,7 @@ function verify_parents(net::AbstractNetwork, node::Union{DiscreteNode,Continuou
 end
 
 # Every combination of (parent states × own states) must appear in the CPT. Build the set of present rows once, then membership-test each theoretical scenario
-function verify_scenarios(net::AbstractNetwork, node::DiscreteNode)
+function _verify_scenarios(net::AbstractNetwork, node::DiscreteNode)
     par = filter(n -> n.name ∈ parents(node), net.nodes)
     v = vcat(par, node)
     cols = [n.name for n in v]
@@ -240,8 +240,8 @@ end
 
 # For each parent-state combination the own-state probabilities must be exhaustive: sum ≈ 1 (precise) or the interval sum must bracket 1 (imprecise). 
 # groupby partitions the CPT by parent columns in a single pass. Assumes every combination is present.
-# order! runs verify_scenarios first, so a missing group cannot reach here.
-function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
+# order! runs _verify_scenarios first, so a missing group cannot reach here.
+function _verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
     par = [n.name for n in filter(n -> n.name ∈ parents(node), net.nodes)]
     groups = isempty(par) ? (node.cpt.data,) : groupby(node.cpt.data, par)
     precise = isprecise(node)

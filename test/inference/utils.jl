@@ -39,11 +39,11 @@ end
 @testitem "Inference - verify query & evidence" setup=[ExtraDeps, SetupModifiedSprinklerBN] begin
     @suppress order!(bn)
 
-    @test_throws ErrorException("Invalid Query: queried nodes vector [:H] contains Symbols [:H] that are not associated to any node of the network") EnhancedBayesianNetworks.verify_query([:H], bn, Evidence(:G=>:Wet))
-    @test_throws ErrorException("Invalid Query: queried nodes vector [:G] contains Symbols [:G] that are already part of the evidence [:G => :Wet]") EnhancedBayesianNetworks.verify_query([:G], bn, Evidence(:G=>:Wet))
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:H] contains Symbols [:H] that are not associated to any node of the network") EnhancedBayesianNetworks._verify_query([:H], bn, Evidence(:G=>:Wet))
+    @test_throws ErrorException("Invalid Query: queried nodes vector [:G] contains Symbols [:G] that are already part of the evidence [:G => :Wet]") EnhancedBayesianNetworks._verify_query([:G], bn, Evidence(:G=>:Wet))
 
-    @test_throws ErrorException("Invalid Evidence: evidence [:H => :Wet] contains Symbols [:H] that are not associated to any node of the network") EnhancedBayesianNetworks.verify_evidence(Evidence(:H=>:Wet), bn)
-    @test_throws ErrorException("Invalid Evidence: evidence [:G => :Dirty] defines state :Dirty for node :G that does not belong to its possible states [:Dry, :Wet]") EnhancedBayesianNetworks.verify_evidence(Evidence(:G=>:Dirty), bn)
+    @test_throws ErrorException("Invalid Evidence: evidence [:H => :Wet] contains Symbols [:H] that are not associated to any node of the network") EnhancedBayesianNetworks._verify_evidence(Evidence(:H=>:Wet), bn)
+    @test_throws ErrorException("Invalid Evidence: evidence [:G => :Dirty] defines state :Dirty for node :G that does not belong to its possible states [:Dry, :Wet]") EnhancedBayesianNetworks._verify_evidence(Evidence(:G=>:Dirty), bn)
 end
 
 @testitem "Inference - query & evidence to index" begin

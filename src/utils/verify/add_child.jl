@@ -1,5 +1,5 @@
 # verify that each child of a discrete node have the node name in its CPT
-function verify_discrete(node::DiscreteNode, ch::AbstractVector{<:AbstractNode})
+function _verify_discrete(node::DiscreteNode, ch::AbstractVector{<:AbstractNode})
     not_functional_children = filter(x -> !isa(x, FunctionalNode), ch)
     for child in not_functional_children
         cols = Symbol.(Set(names(child.cpt.data)))
@@ -10,7 +10,7 @@ function verify_discrete(node::DiscreteNode, ch::AbstractVector{<:AbstractNode})
 end
 
 # verify that all the children of a continuous or functional nodes are only functional nodes
-function verify_continuous_and_functional(node::Union{ContinuousNode,FunctionalNode}, ch::AbstractVector{<:AbstractNode})
+function _verify_continuous_and_functional(node::Union{ContinuousNode,FunctionalNode}, ch::AbstractVector{<:AbstractNode})
     not_functional_children = filter(x -> !isa(x, FunctionalNode), ch)
     if !isempty(not_functional_children)
         error("Invalid Network: nodes $([i.name for i in not_functional_children]) are not functional nodes and cannot be children of the continuous/functional node $(repr(node.name))")

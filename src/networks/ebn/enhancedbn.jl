@@ -151,7 +151,7 @@ end
 # Verify a functional node's parents: every discrete parent must carry non-empty parameters (they feed
 # the models). Warns when there are no continuous parents (failure probabilities become Boolean) or no
 # discrete ancestors (the network is a plain reliability analysis).
-function verify_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode) ## Discrete Parents must have a non empty parameters attribute
+function _verify_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode) ## Discrete Parents must have a non empty parameters attribute
     par = filter(n -> n.name ∈ parents(net, node), net.nodes)
     discrete_par = filter(x -> isa(x, AbstractDiscreteNode), par)
     cont_par = filter(x -> isa(x, AbstractContinuousNode), par)
@@ -188,7 +188,7 @@ end
 
 # Verify that the ancestors in a functional node's simulation table match its discrete ancestors in the
 # eBN exactly — none defined only in the table, none missing from it.
-function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ## verify if all the ancestors in the ST have been added via add_child!
+function _verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ## verify if all the ancestors in the ST have been added via add_child!
     st_ancestors = Symbol.(names(node.simulation.data[:, Not(:sim)]))
     net_ancestors = discrete_ancestors(net, node)
     only_in_st = setdiff(st_ancestors, net_ancestors)
@@ -202,7 +202,7 @@ function verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) ##
 end
 
 # Every combination of the functional node's discrete-ancestor states must appear as a row in its simulation table.
-function verify_scenarios(net::EnhancedBayesianNetwork, node::FunctionalNode)
+function _verify_scenarios(net::EnhancedBayesianNetwork, node::FunctionalNode)
     anc = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
     cols = [i.name for i in anc]
     present = Set(Tuple(r[c] for c in cols) for r in eachrow(node.simulation.data))

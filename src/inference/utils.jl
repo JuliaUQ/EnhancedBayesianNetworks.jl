@@ -1,5 +1,5 @@
 # Validate a query: every queried name must be a node in the network, and none may already be fixed by the evidence.
-function verify_query(query::Union{Symbol,Vector{Symbol}}, net::Union{BayesianNetwork,CredalNetwork}, evidence::Evidence)
+function _verify_query(query::Union{Symbol,Vector{Symbol}}, net::Union{BayesianNetwork,CredalNetwork}, evidence::Evidence)
     query = _wrap(query)
     missing_names = setdiff(query, getproperty.(net.nodes, :name))
     if !isempty(missing_names)
@@ -13,7 +13,7 @@ function verify_query(query::Union{Symbol,Vector{Symbol}}, net::Union{BayesianNe
 end
 
 # Validate evidence: every evidence name must be a node, and each assigned state must be one of that node's states.
-function verify_evidence(evidence::Evidence, net::Union{BayesianNetwork,CredalNetwork})
+function _verify_evidence(evidence::Evidence, net::Union{BayesianNetwork,CredalNetwork})
     missing_names = setdiff(keys(evidence), getproperty.(net.nodes, :name))
     if !isempty(missing_names)
         evidence_str = "[" * join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ") * "]"

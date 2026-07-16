@@ -9,7 +9,7 @@
     valsR = trues(8)
     R = sparse(rowsR, colsR, valsR, 6, 6)
 
-    @test EnhancedBayesianNetworks.transitive_closure(A) == R
+    @test EnhancedBayesianNetworks._transitive_closure(A) == R
 
     rowsA = [1, 2, 3, 4, 5]
     colsA = [3, 4, 5, 5, 1]
@@ -21,7 +21,7 @@
     valsR = trues(16)
     R = sparse(rowsR, colsR, valsR, 5, 5)
 
-    @test EnhancedBayesianNetworks.transitive_closure(A) == R
+    @test EnhancedBayesianNetworks._transitive_closure(A) == R
 end
 
 @testitem "Iscyclic function" setup=[ExtraDeps] begin
@@ -29,13 +29,13 @@ end
     colsA = [3, 4, 5, 5, 1]
     valsA = trues(5)
     A = sparse(rowsA, colsA, valsA, 5, 5)
-    @test EnhancedBayesianNetworks.iscyclic(A)
+    @test EnhancedBayesianNetworks._iscyclic(A)
 
     rowsA = [1, 2, 3, 4]
     colsA = [3, 4, 5, 5]
     valsA = trues(4)
     A = sparse(rowsA, colsA, valsA, 5, 5)
-    @test !EnhancedBayesianNetworks.iscyclic(A)
+    @test !EnhancedBayesianNetworks._iscyclic(A)
 end
 
 @testitem "Isconnected function" setup=[ExtraDeps] begin
@@ -43,11 +43,11 @@ end
     colsA = [3, 4, 5, 5, 1]
     valsA = trues(5)
     A = sparse(rowsA, colsA, valsA, 5, 5)
-    @test EnhancedBayesianNetworks.isconnected(A)
+    @test EnhancedBayesianNetworks._isconnected(A)
 
     rowsA = [1, 2, 4]
     colsA = [3, 4, 5]
     valsA = trues(3)
     A = sparse(rowsA, colsA, valsA, 5, 5)
-    @test !EnhancedBayesianNetworks.isconnected(A)
+    @test !EnhancedBayesianNetworks._isconnected(A)
 end

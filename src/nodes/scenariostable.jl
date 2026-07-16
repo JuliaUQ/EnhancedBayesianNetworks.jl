@@ -28,7 +28,7 @@ end
 # A new row is pushed if the combination is absent, else the existing single matching row is updated.
 function Base.setindex!(st::ScenariosTable{T}, value::T, key::Pair{Symbol,Symbol}...) where {T<:Union{<:Probability,<:Simulation,Any}}
     if T == DiscreteProbability
-        verify_probability_value(value)
+        _verify_probability_value(value)
     end
     selector = map((p) -> p[1] => ByRow(x -> x == p[2]), collect(key))
     evidence_nodes = collect(map(p -> p[1], key))
@@ -65,13 +65,13 @@ function Base.filter(st::ScenariosTable, key::Pair{Symbol,Symbol}...)
 end
 
 # A probability entry must lie in [0, 1] — checked for both precise Reals and Interval bounds.
-function verify_probability_value(value::Real)
+function _verify_probability_value(value::Real)
     if !(0 <= value <= 1)
         throw(ArgumentError("Probability $value must be >= 0 and <= 1"))
     end
 end
 
-function verify_probability_value(value::Interval)
+function _verify_probability_value(value::Interval)
     if !all(0 .<= UncertaintyQuantification.bounds(value) .<= 1)
         throw(ArgumentError("Probability $value must be >= 0 and <= 1"))
     end

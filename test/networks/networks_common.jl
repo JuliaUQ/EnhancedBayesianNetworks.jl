@@ -81,15 +81,15 @@ end
     net = BayesianNetwork([A, B, weather])
     add_child!(net, A, B)
     add_child!(net, B, A)
-    @test EnhancedBayesianNetworks.iscyclic(net)
-    @test !EnhancedBayesianNetworks.isconnected(net)
+    @test EnhancedBayesianNetworks._iscyclic(net)
+    @test !EnhancedBayesianNetworks._isconnected(net)
 
     ## eBN
     net = EnhancedBayesianNetwork([A, B, weather])
     add_child!(net, A, B)
     add_child!(net, B, A)
-    @test EnhancedBayesianNetworks.iscyclic(net)
-    @test !EnhancedBayesianNetworks.isconnected(net)
+    @test EnhancedBayesianNetworks._iscyclic(net)
+    @test !EnhancedBayesianNetworks._isconnected(net)
 
     ## CN
     B = DiscreteNode(:B, [:A])
@@ -100,8 +100,8 @@ end
     net = CredalNetwork([A, B, weather])
     add_child!(net, A, B)
     add_child!(net, B, A)
-    @test EnhancedBayesianNetworks.iscyclic(net)
-    @test !EnhancedBayesianNetworks.isconnected(net)
+    @test EnhancedBayesianNetworks._iscyclic(net)
+    @test !EnhancedBayesianNetworks._isconnected(net)
 end
 
 @testitem "Networks Common - parents, children and ancestors" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
@@ -110,8 +110,8 @@ end
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [rain, sprinkler])
     add_child!(net, [rain, sprinkler], grass)
-    @test !EnhancedBayesianNetworks.iscyclic(net)
-    @test EnhancedBayesianNetworks.isconnected(net)
+    @test !EnhancedBayesianNetworks._iscyclic(net)
+    @test EnhancedBayesianNetworks._isconnected(net)
     @test isempty(parents(net, :W))
     @test issetequal(parents(net, :G), [:R, :S])
     @test issetequal(parents(net, grass), [:R, :S])
@@ -128,8 +128,8 @@ end
     net = CredalNetwork(nodes)
     add_child!(net, weather, [rain, sprinkler])
     add_child!(net, [rain, sprinkler], grass)
-    @test !EnhancedBayesianNetworks.iscyclic(net)
-    @test EnhancedBayesianNetworks.isconnected(net)
+    @test !EnhancedBayesianNetworks._iscyclic(net)
+    @test EnhancedBayesianNetworks._isconnected(net)
     @test isempty(parents(net, :W))
     @test issetequal(parents(net, :G), [:R, :S])
     @test issetequal(parents(net, grass), [:R, :S])
@@ -143,8 +143,8 @@ end
     add_child!(net, weather, [rain, sprinkler])
     add_child!(net, [rain, sprinkler], grass)
     add_child!(net, [rain2, sprinkler], grass2)
-    @test !EnhancedBayesianNetworks.iscyclic(net)
-    @test EnhancedBayesianNetworks.isconnected(net)
+    @test !EnhancedBayesianNetworks._iscyclic(net)
+    @test EnhancedBayesianNetworks._isconnected(net)
     @test isempty(parents(net, :W))
     @test issetequal(parents(net, :G), [:R, :S])
     @test issetequal(parents(net, grass), [:R, :S])
@@ -171,32 +171,32 @@ end
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, sprinkler, grass)
-    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks.verify_parents(net, grass)
+    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks._verify_parents(net, grass)
     add_child!(net, rain, grass)
-    @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass))
+    @test isnothing(EnhancedBayesianNetworks._verify_parents(net, grass))
 
     nodes = [weather, grass_incomplete, rain, sprinkler]
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_incomplete)
-    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks.verify_scenarios(net, grass_incomplete)
+    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks._verify_scenarios(net, grass_incomplete)
     nodes = [weather, grass, rain, sprinkler]
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass)
-    @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass))
+    @test isnothing(EnhancedBayesianNetworks._verify_scenarios(net, grass))
 
     nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_not_mutually_exclusive)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_mutually_exclusive)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_not_mutually_exclusive)
 
     bad_root = DiscreteNode(:W)
     bad_root[:W=>:sunny] = 0.5
     bad_root[:W=>:cloudy] = 0.6
     net = BayesianNetwork([bad_root])
-    @test_throws ErrorException("Invalid CPT: node :W has CPT values [0.5, 0.6] not exhaustive and mutually exclusive for the scenario Any[]") EnhancedBayesianNetworks.verify_exhaustiveness(net, bad_root)
+    @test_throws ErrorException("Invalid CPT: node :W has CPT values [0.5, 0.6] not exhaustive and mutually exclusive for the scenario Any[]") EnhancedBayesianNetworks._verify_exhaustiveness(net, bad_root)
 end
 
 @testitem "Networks Common - verify CN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
@@ -207,50 +207,50 @@ end
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, sprinkler, grass)
-    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks.verify_parents(net, grass)
+    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks._verify_parents(net, grass)
     add_child!(net, rain, grass)
-    @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass))
+    @test isnothing(EnhancedBayesianNetworks._verify_parents(net, grass))
 
     nodes = [weather, grass_incomplete, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_incomplete)
-    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks.verify_scenarios(net, grass_incomplete)
+    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks._verify_scenarios(net, grass_incomplete)
     nodes = [weather, grass, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass)
-    @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass))
+    @test isnothing(EnhancedBayesianNetworks._verify_scenarios(net, grass))
 
     nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_not_mutually_exclusive)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_mutually_exclusive)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_not_mutually_exclusive)
 
     nodes = [weather, grass_ub, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_ub)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.2, 0.3]] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_ub)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.2, 0.3]] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_ub)
 
     nodes = [weather, grass_ub2, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_ub2)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.2] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_ub2)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.2] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_ub2)
 
     nodes = [weather, grass_lb, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_lb)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.8, 0.9]] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_lb)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.8, 0.9]] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb)
 
     nodes = [weather, grass_lb2, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_lb2)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_lb2)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb2)
 end
 
 @testitem "Networks Common - verify eBN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
@@ -259,52 +259,52 @@ end
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [sprinkler, rain2], grass2)
     add_child!(net, sprinkler, grass)
-    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks.verify_parents(net, grass)
+    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks._verify_parents(net, grass)
     add_child!(net, rain, grass)
-    @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass))
-    @test isnothing(EnhancedBayesianNetworks.verify_parents(net, grass2))
+    @test isnothing(EnhancedBayesianNetworks._verify_parents(net, grass))
+    @test isnothing(EnhancedBayesianNetworks._verify_parents(net, grass2))
 
     nodes = [weather, grass_incomplete, rain, sprinkler]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_incomplete)
-    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks.verify_scenarios(net, grass_incomplete)
+    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks._verify_scenarios(net, grass_incomplete)
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [sprinkler, rain2], grass2)
     add_child!(net, [rain, sprinkler], grass)
-    @test isnothing(EnhancedBayesianNetworks.verify_scenarios(net, grass))
+    @test isnothing(EnhancedBayesianNetworks._verify_scenarios(net, grass))
 
     nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_not_mutually_exclusive)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_not_mutually_exclusive)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_not_mutually_exclusive)
 
     nodes = [weather, grass_ub, rain, sprinkler]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_ub)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.2, 0.3]] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_ub)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.2, 0.3]] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_ub)
 
     nodes = [weather, grass_ub2, rain, sprinkler]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_ub2)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.2] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_ub2)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.2] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_ub2)
 
     nodes = [weather, grass_lb, rain, sprinkler]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_lb)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.8, 0.9]] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_lb)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.8, 0.9]] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb)
 
     nodes = [weather, grass_lb2, rain, sprinkler]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass_lb2)
-    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks.verify_exhaustiveness(net, grass_lb2)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb2)
 end
 
 

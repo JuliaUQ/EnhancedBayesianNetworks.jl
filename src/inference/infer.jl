@@ -83,8 +83,8 @@ function infer(
     scorefun=fill_factor_score
 )
     query = _wrap(query)
-    verify_query(query, bn, evidence)
-    verify_evidence(evidence, bn)
+    _verify_query(query, bn, evidence)
+    _verify_evidence(evidence, bn)
 
     ns = NetworkSchema(bn)
     ig = InteractionGraph(bn)
@@ -103,8 +103,8 @@ function infer(
     scorefun=fill_factor_score
 )
     query = _wrap(query)
-    verify_query(query, cn, evidence)
-    verify_evidence(evidence, cn)
+    _verify_query(query, cn, evidence)
+    _verify_evidence(evidence, cn)
 
     posteriors = Posterior[]
     bns = extreme_bayesian_networks(cn)
