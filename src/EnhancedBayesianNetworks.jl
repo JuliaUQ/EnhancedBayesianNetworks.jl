@@ -43,6 +43,8 @@ export infer
 export isprecise
 export isroot
 export joint_probability
+export learn
+export learn_parameters_em
 export learn_parameters_mle
 export markov_blanket
 export markov_envelope
@@ -57,7 +59,7 @@ export states
 include("nodes/nodes.jl")
 include("networks/networks.jl")
 include("inference/inference.jl")
-include("learning/learning.jl")
+include("learning/learning_parameters.jl")
 include("utils/base_show.jl")
 include("utils/gplot.jl")
 end
