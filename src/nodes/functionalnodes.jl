@@ -45,7 +45,7 @@ mutable struct ContinuousFunctionalNode <: AbstractContinuousNode
         if name == :sim
             error(":sim is not allowed as node name")
         end
-        new(name, wrap(models), simulation, discretization, nbins)
+        new(name, _wrap(models), simulation, discretization, nbins)
     end
 end
 
@@ -127,7 +127,7 @@ mutable struct DiscreteFunctionalNode <: AbstractDiscreteNode
         if name == :sim
             error(":sim is not allowed as node name")
         end
-        new(name, wrap(models), performance, simulation, parameters)
+        new(name, _wrap(models), performance, simulation, parameters)
     end
 end
 

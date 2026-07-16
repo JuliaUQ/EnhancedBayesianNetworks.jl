@@ -1,6 +1,6 @@
 @testitem "Wrap functions" begin
     x = :a
-    @test EnhancedBayesianNetworks.wrap(x) == [x]
+    @test EnhancedBayesianNetworks._wrap(x) == [x]
     x = [:a]
-    @test EnhancedBayesianNetworks.wrap(x) == x
+    @test EnhancedBayesianNetworks._wrap(x) == x
 end

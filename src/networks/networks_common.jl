@@ -57,8 +57,8 @@ function add_child!(
     par::Union{<:AbstractNode,Vector{<:AbstractNode}},
     ch::Union{<:AbstractNode,Vector{<:AbstractNode}}
 )
-    parents = wrap(par)
-    children = wrap(ch)
+    parents = _wrap(par)
+    children = _wrap(ch)
     assert_nodes_defined(net, [i.name for i in vcat(parents, children)])
     loop = intersect(parents, children)
     isempty(loop) || error("Invalid Network: nodes $(getproperty.(loop, :name)) have a loop")
@@ -73,8 +73,8 @@ function add_child!(
     par::Union{Symbol,Vector{Symbol}},
     ch::Union{Symbol,Vector{Symbol}}
 )
-    parents = wrap(par)
-    children = wrap(ch)
+    parents = _wrap(par)
+    children = _wrap(ch)
     assert_nodes_defined(net, vcat(parents, children))
     par_nodes = filter(x -> x.name ∈ parents, net.nodes)
     ch_nodes = filter(x -> x.name ∈ children, net.nodes)

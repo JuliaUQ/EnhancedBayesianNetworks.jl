@@ -16,7 +16,7 @@ struct ScenariosTable{T<:Union{<:Probability,<:Simulation,Any}}
     n::Symbol
     # Build an empty table: Symbol columns for each parent, plus an empty T-typed value column `n`.
     function ScenariosTable{T}(columns::Union{Symbol,Vector{Symbol}}, n::Symbol) where {T<:Union{<:Probability,<:Simulation,Any}}
-        columns = wrap(columns)
+        columns = _wrap(columns)
         data = DataFrame([col => Symbol[] for col in columns])
         data[:, n] = T[]
         new{T}(data, n)

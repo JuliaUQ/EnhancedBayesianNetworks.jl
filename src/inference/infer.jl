@@ -82,7 +82,7 @@ function infer(
     evidence::Evidence,
     scorefun=fill_factor_score
 )
-    query = wrap(query)
+    query = _wrap(query)
     verify_query(query, bn, evidence)
     verify_evidence(evidence, bn)
 
@@ -102,7 +102,7 @@ function infer(
     evidence::Evidence,
     scorefun=fill_factor_score
 )
-    query = wrap(query)
+    query = _wrap(query)
     verify_query(query, cn, evidence)
     verify_evidence(evidence, cn)
 
