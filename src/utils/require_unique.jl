@@ -1,5 +1,5 @@
 # Return all elements that appear more than once in a vector (each duplicate listed once).
-function not_unique_elements(v::AbstractVector)
+function _not_unique_elements(v::AbstractVector)
     seen = Set{eltype(v)}()
     dups = Set{eltype(v)}()
 

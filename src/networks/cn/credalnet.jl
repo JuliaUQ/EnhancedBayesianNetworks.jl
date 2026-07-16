@@ -28,13 +28,13 @@ mutable struct CredalNetwork <: AbstractNetwork
     function CredalNetwork(nodes::AbstractVector{DiscreteNode}, topology::Dict, A::SparseMatrixCSC)
         # node names must be unique
         node_names = map(i -> i.name, nodes)
-        dups = not_unique_elements(node_names)
+        dups = _not_unique_elements(node_names)
         if !isempty(dups)
             error("Invalid CN: duplicate node names $dups")
         end
         # states must be globally unique across nodes (init=Symbol[] handles the empty-network case)
         states_list = reduce(vcat, states.(nodes); init=Symbol[])
-        dups = not_unique_elements(states_list)
+        dups = _not_unique_elements(states_list)
         if !isempty(dups)
             error("Invalid CN: duplicate node states $dups")
         end

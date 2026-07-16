@@ -36,14 +36,14 @@ mutable struct EnhancedBayesianNetwork <: AbstractNetwork
     )
         # node names must be unique
         node_names = map(i -> i.name, nodes)
-        dups = not_unique_elements(node_names)
+        dups = _not_unique_elements(node_names)
         if !isempty(dups)
             error("Invalid eBN: duplicate node names $dups")
         end
         discrete_nodes = filter(x -> isa(x, DiscreteNode), nodes)
         # states must be globally unique across nodes (init=Symbol[] handles the empty-network case)
         states_list = reduce(vcat, states.(discrete_nodes); init=Symbol[])
-        dups = not_unique_elements(states_list)
+        dups = _not_unique_elements(states_list)
         if !isempty(discrete_nodes)
             if !isempty(dups)
                 error("Invalid eBN: duplicate node states $dups")
