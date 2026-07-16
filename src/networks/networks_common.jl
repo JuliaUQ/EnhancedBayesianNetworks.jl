@@ -253,7 +253,7 @@ function verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
                 error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr not exhaustive and mutually exclusive for the scenario $scenario")
             end
         else
-            lb_sum, ub_sum = EnhancedBayesianNetworks.sum_intervals_and_float(sub.Π...)
+            lb_sum, ub_sum = EnhancedBayesianNetworks._sum_interval_and_floats(sub.Π...)
             if lb_sum > 1
                 valstr = "[" * join(string.(sub.Π), ", ") * "]"
                 error("Invalid CPT: node $(repr(node.name)) has CPT values $valstr for the scenario $scenario, the sum of lower bound values must be less than 1")

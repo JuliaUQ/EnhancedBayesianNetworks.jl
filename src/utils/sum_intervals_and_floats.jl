@@ -1,5 +1,5 @@
 # given multiple intervals this function return the sum of the lower and upper bounds
-function sum_intervals_and_float(args...)
+function _sum_interval_and_floats(args...)
     lb_sum = 0
     ub_sum = 0
 
