@@ -12,7 +12,7 @@ Factor(vars::Vector{Int}, x::Number) = Factor(vars, fill(x))
 # Turn a network (or a single node) into the Factors consumed by variable elimination: each node's CPT
 # becomes one factor over the node and its parents, with names mapped to integer ids through the
 # NetworkSchema. The BayesianNetwork method returns one factor per node.
-function factorize(node::DiscreteNode, ns::NetworkSchema)
+function _factorize(node::DiscreteNode, ns::NetworkSchema)
     var_names = Symbol.(names(node.cpt.data))[1:(end-1)]
     var_idxs = map(vn -> ns.node_to_idx[vn], var_names)
     dims = map(v_id -> length(ns.idx_to_state[v_id]), var_idxs)
@@ -26,9 +26,9 @@ function factorize(node::DiscreteNode, ns::NetworkSchema)
     return Factor(var_idxs, table)
 end
 
-function factorize(bn::BayesianNetwork)
+function _factorize(bn::BayesianNetwork)
     ns = NetworkSchema(bn)
-    map(n -> factorize(n, ns), bn.nodes)
+    map(n -> _factorize(n, ns), bn.nodes)
 end
 
 # Position (dimension index) of variable var in factor f, or nothing if f doesn't range over it.

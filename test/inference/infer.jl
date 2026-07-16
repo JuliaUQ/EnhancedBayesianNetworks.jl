@@ -137,7 +137,7 @@ end
 @testitem "Inference - extreme bns" setup=[SetupFireProtectionCN] begin
     nodes = [T, F, A, S, L, R]
     cn = CredalNetwork(nodes)
-    bns = EnhancedBayesianNetworks.extreme_bayesian_networks(cn)
+    bns = EnhancedBayesianNetworks._extreme_bayesian_networks(cn)
     @test length(bns) == 2048
     for bn in bns
         @test length(bn.nodes) == length(cn.nodes)

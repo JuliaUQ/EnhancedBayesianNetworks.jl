@@ -1,6 +1,6 @@
 # Variable elimination: restrict evidence, then eliminate every non-query, non-evidence variable in the
-# given order, multiply what remains, reorder to the query, and normalise into a posterior.
-function ve(
+# given order, _multiply what remains, reorder to the query, and normalise into a posterior.
+function _ve(
     factors::Vector{<:Factor},
     order::Vector{Int},
     query_vars::Vector{Int},
@@ -18,7 +18,7 @@ function ve(
         factors = eliminate_var(factors, var)
     end
     result_query_vars = setdiff(query_vars, first.(evidence_idx))
-    result = multiply(factors)
+    result = _multiply(factors)
     result = reorder(result, result_query_vars)
     return normalize(result)
 end
@@ -30,7 +30,7 @@ function apply_evidence!(factors::Vector{<:Factor}, evidence_idx::Vector{Tuple{I
             if !containsvar(factors[i], node)
                 continue
             end
-            factors[i] = restrict(factors[i], node, state)
+            factors[i] = _restrict(factors[i], node, state)
         end
     end
 end
@@ -50,6 +50,6 @@ function eliminate_var(factors::Vector{<:Factor}, var::Int)
     if isempty(involved)
         return factors
     end
-    push!(remaining, sumout(multiply(involved), var))
+    push!(remaining, _sumout(_multiply(involved), var))
     return remaining
 end

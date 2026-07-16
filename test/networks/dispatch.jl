@@ -38,21 +38,21 @@
 
     nodes = [r, v, s, t, g, h]
     ebn = EnhancedBayesianNetwork(nodes)
-    @test isa(EnhancedBayesianNetworks.dispatch(ebn), EnhancedBayesianNetwork)
+    @test isa(EnhancedBayesianNetworks._dispatch(ebn), EnhancedBayesianNetwork)
 
     nodes = [v, s, t, g, h]
     ebn = EnhancedBayesianNetwork(nodes)
-    @test isa(EnhancedBayesianNetworks.dispatch(ebn), CredalNetwork)
+    @test isa(EnhancedBayesianNetworks._dispatch(ebn), CredalNetwork)
 
     nodes = [v, s, t]
     ebn = EnhancedBayesianNetwork(nodes)
-    @test isa(EnhancedBayesianNetworks.dispatch(ebn), BayesianNetwork)
+    @test isa(EnhancedBayesianNetworks._dispatch(ebn), BayesianNetwork)
 
     nodes = [v, s, t, g]
     cn = CredalNetwork(nodes)
-    @test isa(EnhancedBayesianNetworks.dispatch(cn), CredalNetwork)
+    @test isa(EnhancedBayesianNetworks._dispatch(cn), CredalNetwork)
 
     nodes = [v, s, t]
     cn = @suppress CredalNetwork(nodes)
-    @test isa(EnhancedBayesianNetworks.dispatch(cn), BayesianNetwork)
+    @test isa(EnhancedBayesianNetworks._dispatch(cn), BayesianNetwork)
 end

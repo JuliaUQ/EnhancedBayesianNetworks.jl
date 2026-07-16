@@ -364,10 +364,10 @@ end
     add_child!(ebn, [D, E], F)
     order!(ebn)
 
-    @test EnhancedBayesianNetworks.has_functional_parents(ebn, F)
-    @test !EnhancedBayesianNetworks.has_functional_parents(ebn, D)
+    @test EnhancedBayesianNetworks._has_functional_parents(ebn, F)
+    @test !EnhancedBayesianNetworks._has_functional_parents(ebn, D)
 
     ebn1 = deepcopy(ebn)
-    EnhancedBayesianNetworks.eliminate_node!(ebn1, C)
+    EnhancedBayesianNetworks._eliminate_node!(ebn1, C)
     @test C.name ∉ getproperty.(ebn1.nodes, :name)
 end

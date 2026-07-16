@@ -460,14 +460,14 @@ end
     add_child!(net, :S, :G)
     add_child!(net, :R, :G)
 
-    @test_throws ErrorException("Invalid Network: node :W is already present in the network") EnhancedBayesianNetworks.push_node!(net, DiscreteNode(:W))
+    @test_throws ErrorException("Invalid Network: node :W is already present in the network") EnhancedBayesianNetworks._push_node!(net, DiscreteNode(:W))
 
     net1 = deepcopy(net)
     net2 = deepcopy(net)
     net3 = deepcopy(net)
 
-    EnhancedBayesianNetworks.remove_node!(net1, grass)
-    EnhancedBayesianNetworks.remove_node!(net2, :G)
+    EnhancedBayesianNetworks._remove_node!(net1, grass)
+    EnhancedBayesianNetworks._remove_node!(net2, :G)
 
     @test issetequal(getproperty.(net1.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
     adj = sparse([1, 1], [2, 3], [true, true], 3, 3)
@@ -476,12 +476,12 @@ end
     @test net2.A == net1.A
     @test issetequal(getproperty.(net2.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
     @test net2.topology == net1.topology
-    @test isnothing(EnhancedBayesianNetworks.remove_node!(net3, :G))
+    @test isnothing(EnhancedBayesianNetworks._remove_node!(net3, :G))
 
     net4 = deepcopy(net1)
     net5 = deepcopy(net1)
 
-    EnhancedBayesianNetworks.push_node!(net4, grass)
+    EnhancedBayesianNetworks._push_node!(net4, grass)
     @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
     adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
     @test net4.A == adj
@@ -501,8 +501,8 @@ end
     net2 = deepcopy(net)
     net3 = deepcopy(net)
 
-    EnhancedBayesianNetworks.remove_node!(net1, grass)
-    EnhancedBayesianNetworks.remove_node!(net2, :G)
+    EnhancedBayesianNetworks._remove_node!(net1, grass)
+    EnhancedBayesianNetworks._remove_node!(net2, :G)
 
     @test issetequal(getproperty.(net1.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
     adj = sparse([1, 1], [2, 3], [true, true], 3, 3)
@@ -511,12 +511,12 @@ end
     @test net2.A == net1.A
     @test issetequal(getproperty.(net2.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
     @test net2.topology == net1.topology
-    @test isnothing(EnhancedBayesianNetworks.remove_node!(net3, :G))
+    @test isnothing(EnhancedBayesianNetworks._remove_node!(net3, :G))
 
     net4 = deepcopy(net1)
     net5 = deepcopy(net1)
 
-    EnhancedBayesianNetworks.push_node!(net4, grass)
+    EnhancedBayesianNetworks._push_node!(net4, grass)
     @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
     adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
     @test net4.A == adj
@@ -533,8 +533,8 @@ end
     net2 = deepcopy(net)
     net3 = deepcopy(net)
 
-    EnhancedBayesianNetworks.remove_node!(net1, grass)
-    EnhancedBayesianNetworks.remove_node!(net2, :G)
+    EnhancedBayesianNetworks._remove_node!(net1, grass)
+    EnhancedBayesianNetworks._remove_node!(net2, :G)
 
     @test issetequal(getproperty.(net1.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
     adj = sparse([1, 1], [2, 3], [true, true], 3, 3)
@@ -543,12 +543,12 @@ end
     @test net2.A == net1.A
     @test issetequal(getproperty.(net2.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
     @test net2.topology == net1.topology
-    @test isnothing(EnhancedBayesianNetworks.remove_node!(net3, :G))
+    @test isnothing(EnhancedBayesianNetworks._remove_node!(net3, :G))
 
     net4 = deepcopy(net1)
     net5 = deepcopy(net1)
 
-    EnhancedBayesianNetworks.push_node!(net4, grass)
+    EnhancedBayesianNetworks._push_node!(net4, grass)
     @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
     adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
     @test net4.A == adj
@@ -705,7 +705,7 @@ end
     c[:C=>:c2] = 0.5
     nodes = [a, b, c]
 
-    topology, A = EnhancedBayesianNetworks.topology_and_adjacency(nodes)
+    topology, A = EnhancedBayesianNetworks._topology_and_adjacency(nodes)
     # names map to their 1-based position, aligned with the empty adjacency matrix
     @test topology == Dict(:A => 1, :B => 2, :C => 3)
     @test all(topology[n.name] == i for (i, n) in enumerate(nodes))
@@ -714,7 +714,7 @@ end
     @test eltype(A) == Bool
 
     # empty node vector -> empty topology and 0×0 matrix
-    topology, A = EnhancedBayesianNetworks.topology_and_adjacency(EnhancedBayesianNetworks.AbstractNode[])
+    topology, A = EnhancedBayesianNetworks._topology_and_adjacency(EnhancedBayesianNetworks.AbstractNode[])
     @test isempty(topology)
     @test size(A) == (0, 0)
 end

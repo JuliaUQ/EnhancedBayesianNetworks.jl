@@ -7,7 +7,7 @@ continuous, and functional nodes. Same layout as [`BayesianNetwork`](@ref)
 
 Validates that node names are unique and that states across discrete nodes are
 globally unique. It is progressively transformed — via `discretize!`,
-`transfer_continuous_functional_node!`, and [`reduce`](@ref) — into a
+`_transfer_continuous_functional_node!`, and [`reduce`](@ref) — into a
 [`BayesianNetwork`](@ref) or [`CredalNetwork`](@ref) for inference.
 
 # Examples
@@ -53,7 +53,7 @@ mutable struct EnhancedBayesianNetwork <: AbstractNetwork
     end
 end
 
-EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = EnhancedBayesianNetwork(nodes, topology_and_adjacency(nodes)...)
+EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = EnhancedBayesianNetwork(nodes, _topology_and_adjacency(nodes)...)
 
 
 """
@@ -61,7 +61,7 @@ EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = EnhancedBayesia
 
 Return the Markov envelopes of `net` as a vector of node-name vectors. Continuous nodes
 linked through their Markov blankets are first collected into groups
-([`markov_continuous_group`](@ref)); each group's envelope is the union of its members'
+([`_markov_continuous_group`](@ref)); each group's envelope is the union of its members'
 Markov blankets together with the members themselves. Envelopes that are a subset of
 another envelope are discarded, so only the maximal (non-redundant) envelopes remain.
 
@@ -78,7 +78,7 @@ markov_envelope(ebn)                        # [[:F, :W, :X]]  (continuous X, its
 ```
 """
 function markov_envelope(net::EnhancedBayesianNetwork)
-    Xm_groups = map(n -> markov_continuous_group(net, n), filter(x -> isa(x, AbstractContinuousNode), net.nodes))
+    Xm_groups = map(n -> _markov_continuous_group(net, n), filter(x -> isa(x, AbstractContinuousNode), net.nodes))
     envelopes = Vector{Vector{Symbol}}()
     for Xm_group in Xm_groups
         envelope = unique!(vcat(map(n -> vcat(markov_blanket(net, n), n.name), Xm_group)...))
@@ -106,9 +106,9 @@ function discretize!(net::EnhancedBayesianNetwork)
     evidence_nodes = filter(n -> !isempty(n.discretization), continuous_nodes)
     discretization_tuples = map(n -> (n, parents(net, n), children(net, n), _discretize(n)), evidence_nodes)
     for (node, pars, chs, (discretized_node, new_continuous)) in discretization_tuples
-        remove_node!(net, node)
-        push_node!(net, discretized_node)
-        push_node!(net, new_continuous)
+        _remove_node!(net, node)
+        _push_node!(net, discretized_node)
+        _push_node!(net, new_continuous)
         add_child!(net, discretized_node, new_continuous)
         map(p -> add_child!(net, p, discretized_node.name), pars)
         map(c -> add_child!(net, new_continuous.name, c), chs)
@@ -117,12 +117,12 @@ end
 
 # A continuous functional node with no discretization but with children is not evaluated on its own:
 # prepend its models to each child's models and splice it out, linking its parents straight to its children.
-function transfer_continuous_functional_node!(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode)
+function _transfer_continuous_functional_node!(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode)
     node_children = filter(n -> n.name ∈ children(net, node), net.nodes)
     if isempty(node.discretization) && !isempty(node_children)
         node_parents = filter(n -> n.name ∈ parents(net, node), net.nodes)
         map(ch -> prepend!(ch.models, node.models), node_children)
-        remove_node!(net, node)
+        _remove_node!(net, node)
         add_child!(net, node_parents, node_children)
         return order!(net)
     end
@@ -130,7 +130,7 @@ end
 
 # Grow the set of continuous nodes linked through shared Markov blankets: keep adding continuous nodes
 # found in the current group's blankets until it stabilises. Used to build Markov envelopes.
-function markov_continuous_group(net::EnhancedBayesianNetwork, node::Union{ContinuousNode,ContinuousFunctionalNode})
+function _markov_continuous_group(net::EnhancedBayesianNetwork, node::Union{ContinuousNode,ContinuousFunctionalNode})
     Xm_group = [node]
     blanket = filter(n -> n.name ∈ markov_blanket(net, node), net.nodes)
     continuous_node_in_blanket = filter(x -> isa(x, AbstractContinuousNode), blanket)
@@ -171,7 +171,7 @@ end
 
 # Materialise a functional node's per-scenario simulation table: for every combination of its discrete
 # ancestors' states, store the node's simulation strategy. No-op if the table already exists.
-function build_simulations!(net::EnhancedBayesianNetwork, node::FunctionalNode)
+function _build_simulations!(net::EnhancedBayesianNetwork, node::FunctionalNode)
     if !isa(node.simulation, ScenariosTable)
         anc_nodes = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
         anc = Symbol[i.name for i in anc_nodes]

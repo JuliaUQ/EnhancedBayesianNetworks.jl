@@ -74,7 +74,7 @@ add_child!(net, V, frame)
 add_child!(net, H, frame)
 order!(net)
 
-dispatch!(net)
+_dispatch!(net)
 # reduce!(net)
 
 

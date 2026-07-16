@@ -88,11 +88,11 @@ function infer(
 
     ns = NetworkSchema(bn)
     ig = InteractionGraph(bn)
-    factors = factorize(bn)
+    factors = _factorize(bn)
     query_vars = query_to_idx(query, ns)
     evidence_idx = evidence_to_idx(evidence, ns)
     order = sort_nodes(ig, ns, scorefun)
-    result = ve(factors, order, query_vars, evidence_idx)
+    result = _ve(factors, order, query_vars, evidence_idx)
     return Posterior(result, ns, query, evidence)
 end
 
@@ -107,7 +107,7 @@ function infer(
     _verify_evidence(evidence, cn)
 
     posteriors = Posterior[]
-    bns = extreme_bayesian_networks(cn)
+    bns = _extreme_bayesian_networks(cn)
     @info("Performing inference over $(length(bns)) BNs")
     for bn in bns
         push!(posteriors, infer(bn, query, evidence, scorefun))
@@ -128,7 +128,7 @@ function infer(
     )
 end
 
-function extreme_bayesian_networks(cn::CredalNetwork)
+function _extreme_bayesian_networks(cn::CredalNetwork)
     node_extremes = map(EnhancedBayesianNetworks._extreme_nodes, cn.nodes)
     combinations = Iterators.product(node_extremes...)
     bns = BayesianNetwork[]

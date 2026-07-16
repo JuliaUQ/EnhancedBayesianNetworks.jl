@@ -1,5 +1,5 @@
 # Fix `node` to `state`: slice that dimension out of the table and drop the variable from the factor.
-function restrict(f::Factor, node::Int, state::Int)
+function _restrict(f::Factor, node::Int, state::Int)
     pos = varpos(f, node)
     if isnothing(pos)
         return f
@@ -10,7 +10,7 @@ function restrict(f::Factor, node::Int, state::Int)
 end
 
 # Marginalise `node` out: sum the table over its dimension and drop the variable from the factor.
-function sumout(f::Factor, node::Int)
+function _sumout(f::Factor, node::Int)
     pos = varpos(f, node)
     if isnothing(pos)
         return f
@@ -23,7 +23,7 @@ end
 
 # Factor product: broadcast-multiply two factors over the union of their variables (each expanded to the
 # shared variable layout), yielding a factor over all of them.
-function multiply(f1::Factor, f2::Factor)
+function _multiply(f1::Factor, f2::Factor)
     # Compute all variables
     allvars = union(f1.vars, f2.vars)
     # Determine variable positon in a Dict to avoid multupli lookups
@@ -36,11 +36,11 @@ function multiply(f1::Factor, f2::Factor)
 end
 
 # Product of many factors, left to right; errors on an empty set (no identity factor is assumed).
-function multiply(factors::Vector{<:Factor})
+function _multiply(factors::Vector{<:Factor})
     if isempty(factors)
         error("Cannot multiply an empty factor set")
     end
-    return reduce(multiply, factors)
+    return reduce(_multiply, factors)
 end
 
 # Rescale a factor so its entries sum to 1 (turns an unnormalised marginal into a distribution).

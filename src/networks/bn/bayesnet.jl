@@ -51,7 +51,7 @@ mutable struct BayesianNetwork <: AbstractNetwork
     end
 end
 
-BayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = BayesianNetwork(nodes, topology_and_adjacency(nodes)...)
+BayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = BayesianNetwork(nodes, _topology_and_adjacency(nodes)...)
 
 """
     joint_probability(bn::BayesianNetwork, scenario::Evidence)

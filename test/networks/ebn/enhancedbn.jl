@@ -109,7 +109,7 @@ end
 
     new_discrete_functional = DiscreteFunctionalNode(:fd, [model1, model2], performance, MonteCarlo(300))
 
-    EnhancedBayesianNetworks.transfer_continuous_functional_node!(net, cont_functional)
+    EnhancedBayesianNetworks._transfer_continuous_functional_node!(net, cont_functional)
     adj = sparse([1, 2], [3, 3], [true, true], 3, 3)
     @test net.A == adj
     @test issetequal([i.name for i in net.nodes], [:x, :y, :fd])
@@ -127,7 +127,7 @@ end
     add_child!(net, cont_functional, discrete_functional)
     @suppress order!(net)
     net1 = deepcopy(net)
-    EnhancedBayesianNetworks.transfer_continuous_functional_node!(net, cont_functional)
+    EnhancedBayesianNetworks._transfer_continuous_functional_node!(net, cont_functional)
     @test :fc ∈ [i.name for i in net.nodes]
     @test length(discrete_functional.models) == 1
     check_index_coherence(net)
@@ -236,10 +236,10 @@ end
     add_child!(ebn, :y5, :x4)
     add_child!(ebn, :x4, :y6)
 
-    @test issetequal(EnhancedBayesianNetworks.markov_continuous_group(ebn, X1), [X1, X2, X3])
-    @test issetequal(EnhancedBayesianNetworks.markov_continuous_group(ebn, X2), [X1, X2, X3])
-    @test issetequal(EnhancedBayesianNetworks.markov_continuous_group(ebn, X3), [X1, X2, X3])
-    @test issetequal(EnhancedBayesianNetworks.markov_continuous_group(ebn, X4), [X4])
+    @test issetequal(EnhancedBayesianNetworks._markov_continuous_group(ebn, X1), [X1, X2, X3])
+    @test issetequal(EnhancedBayesianNetworks._markov_continuous_group(ebn, X2), [X1, X2, X3])
+    @test issetequal(EnhancedBayesianNetworks._markov_continuous_group(ebn, X3), [X1, X2, X3])
+    @test issetequal(EnhancedBayesianNetworks._markov_continuous_group(ebn, X4), [X4])
 
     envelopes = markov_envelope(ebn)
     @test issetequal(envelopes[1], [:y3, :y1, :x2, :x3, :y4, :y5, :y2, :x1])
@@ -394,7 +394,7 @@ end
     add_child!(net, [rain, sprinkler], grass)
     add_child!(net, [rain2, sprinkler], grass2)
 
-    EnhancedBayesianNetworks.build_simulations!(net, grass2)
+    EnhancedBayesianNetworks._build_simulations!(net, grass2)
     node = first(filter(n -> n.name == :G2, net.nodes))
     @test isa(node.simulation, EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteSimulation})
     @test issetequal(Symbol.(names(node.simulation.data)), [:S, :sim])
@@ -402,6 +402,6 @@ end
     @test issetequal(node.simulation.data.sim, [MonteCarlo(100), MonteCarlo(100)])
 
     st1 = node.simulation
-    EnhancedBayesianNetworks.build_simulations!(net, node)   # 2nd call must be a no-op
+    EnhancedBayesianNetworks._build_simulations!(net, node)   # 2nd call must be a no-op
     @test node.simulation === st1
 end

@@ -25,16 +25,16 @@ function reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
     order!(net)
     discretize!(net)
     continuous_functional_node = filter(x -> isa(x, ContinuousFunctionalNode), net.nodes)
-    map(n -> transfer_continuous_functional_node!(net, n), filter(x -> isempty(x.discretization), continuous_functional_node))
+    map(n -> _transfer_continuous_functional_node!(net, n), filter(x -> isempty(x.discretization), continuous_functional_node))
     map(n -> _verify_functional_parents(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
-    map(n -> build_simulations!(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
+    map(n -> _build_simulations!(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
     map(n -> _verify_ancestors(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
     map(n -> _verify_scenarios(net, n), filter(x -> isa(x, FunctionalNode), net.nodes))
 
     functional_nodes = filter(n -> isa(n, FunctionalNode), net.nodes)
     while !isempty(functional_nodes)
         # evaluate a functional node whose parents are all non-functional (its inputs are ready)
-        mapping = map(n -> has_functional_parents(net, n), functional_nodes)
+        mapping = map(n -> _has_functional_parents(net, n), functional_nodes)
         node2eval = first(functional_nodes[.!mapping])
         evaluated = evaluate(net, node2eval, collect)
         par = parents(net, node2eval)
@@ -42,7 +42,7 @@ function reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
             n_children_functional = filter(n -> isa(n, FunctionalNode), filter(x -> x.name ∈ setdiff(children(net, n), [node2eval.name]), net.nodes))
             if isempty(n_children_functional)
                 # a continuous parent feeding only this node is no longer needed → drop it
-                eliminate_node!(net, n)
+                _eliminate_node!(net, n)
             else
                 # a continuous parent still feeds other functional nodes → cut only this edge
                 net.A[net.topology[n.name], net.topology[node2eval.name]] = false
@@ -52,8 +52,8 @@ function reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
         # swap the functional node for its evaluated (discrete/continuous) result, keeping its wiring
         par = parents(net, node2eval)
         chs = children(net, node2eval)
-        remove_node!(net, node2eval)
-        push_node!(net, evaluated)
+        _remove_node!(net, node2eval)
+        _push_node!(net, evaluated)
         add_child!(net, par, evaluated.name)
         add_child!(net, evaluated.name, chs)
         functional_nodes = filter(n -> isa(n, FunctionalNode), net.nodes)
@@ -61,19 +61,19 @@ function reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
     if size(net.A) != (1, 1)
         order!(net)
     end
-    return dispatch(net)
+    return _dispatch(net)
 end
 
 # True if any parent of this functional node is itself a functional node (so it can't be evaluated yet).
-function has_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode)
+function _has_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode)
     any(isa.(filter(n -> n.name ∈ parents(net, node), net.nodes), FunctionalNode))
 end
 
 # Remove a continuous node and reconnect its parents directly to its children; errors if that creates a cycle.
-function eliminate_node!(net::EnhancedBayesianNetwork, node::ContinuousNode)
+function _eliminate_node!(net::EnhancedBayesianNetwork, node::ContinuousNode)
     par = parents(net, node)
     chs = children(net, node)
-    remove_node!(net, node)
+    _remove_node!(net, node)
     add_child!(net, par, chs)
     if _iscyclic(net)
         error("Error during node elimination: elimination of node $(repr(node.name)) leads to a cyclic network")

@@ -2,8 +2,8 @@
 # sample the parents' inputs through the models and refit the output as an EmpiricalDistribution
 # (or lower/upper EmpiricalDistributions when the inputs are imprecise). `collect` keeps the raw samples.
 function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, collect::Bool=true)
-    scs = simulation_scenarios(node)
-    inputs_vector = map(sc -> (sc, simulation_inputs(net, node, sc)), scs)
+    scs = _simulation_scenarios(node)
+    inputs_vector = map(sc -> (sc, _simulation_inputs(net, node, sc)), scs)
     if collect
         rt = ScenariosTable{Any}(discrete_ancestors(net, node), :res)
     else
@@ -40,8 +40,8 @@ end
 # probability from the models + performance function, storing it on the _failed state and its complement
 # on _safe. `collect` keeps the raw samples on `results`.
 function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, collect::Bool=true)
-    scs = simulation_scenarios(node)
-    inputs_vector = map(sc -> (sc, EnhancedBayesianNetworks.simulation_inputs(net, node, sc)), scs)
+    scs = _simulation_scenarios(node)
+    inputs_vector = map(sc -> (sc, EnhancedBayesianNetworks._simulation_inputs(net, node, sc)), scs)
     if collect
         rt = ScenariosTable{Any}(discrete_ancestors(net, node), :res)
     else
@@ -67,7 +67,7 @@ end
 
 # The discrete-ancestor state combinations (scenarios) the node is evaluated over, read from its
 # simulation table; a single empty scenario when it has no discrete ancestors.
-function simulation_scenarios(node::FunctionalNode)
+function _simulation_scenarios(node::FunctionalNode)
     df = node.simulation.data[:, Not("sim")]
     cols = Symbol.(names(df))
     scs = map(row -> Dict(col => row[col] for col in cols), eachrow(df))
@@ -79,7 +79,7 @@ end
 
 # Assemble the UQ inputs for one scenario: the random variables / parameters contributed by the node's
 # direct parents (uncertainty comes from parents only; the discrete ancestors just form the scenario grid).
-function simulation_inputs(net::EnhancedBayesianNetwork, node::FunctionalNode, sc::Evidence)
+function _simulation_inputs(net::EnhancedBayesianNetwork, node::FunctionalNode, sc::Evidence)
     par_names = parents(net, node)
     par_nodes = filter(n -> n.name ∈ par_names, net.nodes)
     return mapreduce(p -> _inputs(p, Dict(sc)), vcat, par_nodes)

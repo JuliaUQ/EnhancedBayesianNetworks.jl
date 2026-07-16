@@ -1,4 +1,4 @@
-@testitem "Inference - Factor & factorize" setup=[ExtraDeps] begin
+@testitem "Inference - Factor & _factorize" setup=[ExtraDeps] begin
     f = EnhancedBayesianNetworks.Factor(
         [1],
         [0.5, 0.5]
@@ -52,15 +52,15 @@
     @suppress order!(bn)
     ns = EnhancedBayesianNetworks.NetworkSchema(bn)
 
-    f1 = EnhancedBayesianNetworks.factorize(weather, ns)
+    f1 = EnhancedBayesianNetworks._factorize(weather, ns)
     @test f1.vars == [1]
     @test f1.table == [0.5, 0.5]
 
-    f2 = EnhancedBayesianNetworks.factorize(rain, ns)
+    f2 = EnhancedBayesianNetworks._factorize(rain, ns)
     @test f2.vars == [1, 2]
     @test f2.table == [0.8 0.2; 0.1 0.9]
 
-    factors = EnhancedBayesianNetworks.factorize(bn)
+    factors = EnhancedBayesianNetworks._factorize(bn)
     @test factors[1].vars == [1]
     @test factors[1].table == [0.5, 0.5]
     @test factors[2].vars == [1, 2]

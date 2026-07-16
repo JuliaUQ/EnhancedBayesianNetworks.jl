@@ -59,12 +59,12 @@ function add_child!(
 )
     parents = _wrap(par)
     children = _wrap(ch)
-    assert_nodes_defined(net, [i.name for i in vcat(parents, children)])
+    _assert_nodes_defined(net, [i.name for i in vcat(parents, children)])
     loop = intersect(parents, children)
     isempty(loop) || error("Invalid Network: nodes $(getproperty.(loop, :name)) have a loop")
     map(dp -> _verify_discrete(dp, children), filter(x -> isa(x, DiscreteNode), parents))
     map(cfp -> _verify_continuous_and_functional(cfp, children), filter(x -> isa(x, Union{ContinuousNode,FunctionalNode}), parents))
-    set_edges!(net, parents, children)
+    _set_edges!(net, parents, children)
 end
 
 # add edges by node name
@@ -75,7 +75,7 @@ function add_child!(
 )
     parents = _wrap(par)
     children = _wrap(ch)
-    assert_nodes_defined(net, vcat(parents, children))
+    _assert_nodes_defined(net, vcat(parents, children))
     par_nodes = filter(x -> x.name ∈ parents, net.nodes)
     ch_nodes = filter(x -> x.name ∈ children, net.nodes)
     add_child!(net, par_nodes, ch_nodes)
@@ -266,7 +266,7 @@ function _verify_exhaustiveness(net::AbstractNetwork, node::DiscreteNode)
 end
 
 # Drop a node and all its edges, then shift every higher index down by one so topology stays contiguous.
-function remove_node!(net::AbstractNetwork, node::AbstractNode)
+function _remove_node!(net::AbstractNetwork, node::AbstractNode)
     filter!(n -> n.name != node.name, net.nodes)
     idx = net.topology[node.name]
     keep = setdiff(1:size(net.A, 1), idx)
@@ -280,10 +280,10 @@ function remove_node!(net::AbstractNetwork, node::AbstractNode)
     end
 end
 
-remove_node!(net::AbstractNetwork, name::Symbol) = remove_node!(net, first(filter(n -> n.name == name, net.nodes)))
+_remove_node!(net::AbstractNetwork, name::Symbol) = _remove_node!(net, first(filter(n -> n.name == name, net.nodes)))
 
 # Append a disconnected node (errors on a duplicate name) and grow the adjacency matrix by one row/column.
-function push_node!(net::AbstractNetwork, node::AbstractNode)
+function _push_node!(net::AbstractNetwork, node::AbstractNode)
     if haskey(net.topology, node.name)
         error("Invalid Network: node $(repr(node.name)) is already present in the network")
     end
@@ -297,20 +297,20 @@ end
 
 # Build the (topology, adjacency) pair shared by all three network constructors:
 # topology maps each node name to its 1-based position; A is the empty n×n edge matrix.
-function topology_and_adjacency(nodes::AbstractVector{<:AbstractNode})
+function _topology_and_adjacency(nodes::AbstractVector{<:AbstractNode})
     topology = Dict{Symbol,Int}(node.name => i for (i, node) in enumerate(nodes))
     A = spzeros(Bool, length(nodes), length(nodes))
     return topology, A
 end
 
 # every referenced parent/child name must already be a node in the network
-function assert_nodes_defined(net::AbstractNetwork, names::AbstractVector{Symbol})
+function _assert_nodes_defined(net::AbstractNetwork, names::AbstractVector{Symbol})
     missing_nodes = setdiff(names, [i.name for i in net.nodes])
     isempty(missing_nodes) || error("Invalid Network: nodes $missing_nodes are not defined in the network")
 end
 
 # flip on the parent→child edges in the adjacency matrix
-function set_edges!(net::AbstractNetwork, parents, children)
+function _set_edges!(net::AbstractNetwork, parents, children)
     pidx = getindex.(Ref(net.topology), getfield.(parents, :name))
     cidx = getindex.(Ref(net.topology), getfield.(children, :name))
     net.A[pidx, cidx] .= true

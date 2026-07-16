@@ -47,4 +47,4 @@ mutable struct CredalNetwork <: AbstractNetwork
     end
 end
 
-CredalNetwork(nodes::AbstractVector{<:AbstractNode}) = CredalNetwork(nodes, topology_and_adjacency(nodes)...)
+CredalNetwork(nodes::AbstractVector{<:AbstractNode}) = CredalNetwork(nodes, _topology_and_adjacency(nodes)...)

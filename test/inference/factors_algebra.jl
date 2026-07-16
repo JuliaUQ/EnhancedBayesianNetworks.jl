@@ -1,26 +1,26 @@
-@testitem "Factors Algebra - restrict" begin
+@testitem "Factors Algebra - _restrict" begin
     # test restrict - scalar
     f = EnhancedBayesianNetworks.Factor([1], [0.5, 0.5])
-    r = EnhancedBayesianNetworks.restrict(f, 1, 1)
+    r = EnhancedBayesianNetworks._restrict(f, 1, 1)
     @test r.vars == Int[]
     @test r.table[] == 0.5
     # test restrict - not scalar
     f = EnhancedBayesianNetworks.Factor([1, 2], [0.8 0.2; 0.1 0.9])
-    r = EnhancedBayesianNetworks.restrict(f, 2, 1)
+    r = EnhancedBayesianNetworks._restrict(f, 2, 1)
     @test r.vars == [1]
     @test size(r.table) == (2,)
     @test r.table[1] == 0.8
     @test r.table[2] == 0.1
 end
 
-@testitem "Factors Algebra - sumout" begin
+@testitem "Factors Algebra - _sumout" begin
     f = EnhancedBayesianNetworks.Factor([1], [0.5, 0.5])
-    s = EnhancedBayesianNetworks.sumout(f, 1)
+    s = EnhancedBayesianNetworks._sumout(f, 1)
     @test s.vars == Int[]
     @test s.table[] == 1.0
 
     f = EnhancedBayesianNetworks.Factor([1, 2], [0.8 0.2; 0.1 0.9])
-    s = EnhancedBayesianNetworks.sumout(f, 2)
+    s = EnhancedBayesianNetworks._sumout(f, 2)
     @test s.vars == [1]
     @test s.table[1] == 1.0
     @test s.table[2] == 1.0
@@ -106,10 +106,10 @@ end
     end
 end
 
-@testitem "Factors Algebra - multiply" begin
+@testitem "Factors Algebra - _multiply" begin
     fW = EnhancedBayesianNetworks.Factor([1], [0.5, 0.5])
     fR = EnhancedBayesianNetworks.Factor([1, 2], [0.8 0.2; 0.1 0.9])
-    fWR = EnhancedBayesianNetworks.multiply(fW, fR)
+    fWR = EnhancedBayesianNetworks._multiply(fW, fR)
     @test fWR.vars == [1, 2]
     @test size(fWR.table) == (2, 2)
     @test fWR.table[1, 1] == 0.4
@@ -118,24 +118,24 @@ end
     @test fWR.table[2, 2] == 0.45
 
     fS = EnhancedBayesianNetworks.Factor([1, 3], [0.4 0.4 0.2; 0.6000000000000001 0.30000000000000004 0.10000000000000002])
-    f = EnhancedBayesianNetworks.multiply(fS, fR)
+    f = EnhancedBayesianNetworks._multiply(fS, fR)
     @test f.vars == [1, 3, 2]
     @test size(f.table) == (2, 3, 2)
 
     # commutativity
-    A = EnhancedBayesianNetworks.multiply(fW, fR)
-    B = EnhancedBayesianNetworks.multiply(fR, fW)
+    A = EnhancedBayesianNetworks._multiply(fW, fR)
+    B = EnhancedBayesianNetworks._multiply(fR, fW)
     @test sort(A.vars) == sort(B.vars)
 
     # constant factor
     c = EnhancedBayesianNetworks.Factor(Int[], fill(0.5))
     f = EnhancedBayesianNetworks.Factor([1], [0.5, 0.5])
-    m = EnhancedBayesianNetworks.multiply(c, f)
+    m = EnhancedBayesianNetworks._multiply(c, f)
     @test m.vars == [1]
     @test m.table == [0.25, 0.25]
 
     # multiply all - 2 factors
-    fWR = EnhancedBayesianNetworks.multiply([fW, fR])
+    fWR = EnhancedBayesianNetworks._multiply([fW, fR])
     @test fWR.vars == [1, 2]
     @test size(fWR.table) == (2, 2)
     @test fWR.table[1, 1] == 0.4
@@ -143,25 +143,25 @@ end
     @test fWR.table[2, 1] == 0.05
     @test fWR.table[2, 2] == 0.45
 
-    a = EnhancedBayesianNetworks.multiply([fW, fR])
-    b = EnhancedBayesianNetworks.multiply(fW, fR)
+    a = EnhancedBayesianNetworks._multiply([fW, fR])
+    b = EnhancedBayesianNetworks._multiply(fW, fR)
     @test a.table == b.table
     @test a.vars == b.vars
 
     # multiply all - 3 factors
-    f = EnhancedBayesianNetworks.multiply([fW, fR, fS])
+    f = EnhancedBayesianNetworks._multiply([fW, fR, fS])
     f.vars == [1, 2, 3]
     @test size(f.table) == (2, 2, 3)
     @test f.table[1, 1, 1] ≈ 0.16
     @test f.table[2, 2, 3] ≈ 0.045
 
     # multiply all - 1 factor
-    m = EnhancedBayesianNetworks.multiply([fW])
+    m = EnhancedBayesianNetworks._multiply([fW])
     @test m.vars == fW.vars
     @test m.table == fW.table
 
     # error message
-    @test_throws ErrorException("Cannot multiply an empty factor set") EnhancedBayesianNetworks.multiply(EnhancedBayesianNetworks.Factor[])
+    @test_throws ErrorException("Cannot multiply an empty factor set") EnhancedBayesianNetworks._multiply(EnhancedBayesianNetworks.Factor[])
 end
 
 @testitem "Factors Algebra - normalize" begin

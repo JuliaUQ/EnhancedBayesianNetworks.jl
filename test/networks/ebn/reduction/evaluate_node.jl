@@ -42,21 +42,21 @@
 end
 
 @testitem "Simulation Inputs" setup=[SetupEvaluateeBN] begin
-    uqi = EnhancedBayesianNetworks.simulation_inputs(net, E, Dict(:A => :a1, :C => :c1))
+    uqi = EnhancedBayesianNetworks._simulation_inputs(net, E, Dict(:A => :a1, :C => :c1))
     @test isa(uqi, Vector{UQInput})
     @test issetequal(uqi, [Parameter(1, :A), Parameter(1, :C), RandomVariable(Normal(), :D)])
 
 end
 
 @testitem "Simulation Scenarios" setup=[SetupEvaluateeBN] begin
-    EnhancedBayesianNetworks.build_simulations!(net, E)
-    scs = EnhancedBayesianNetworks.simulation_scenarios(E)
+    EnhancedBayesianNetworks._build_simulations!(net, E)
+    scs = EnhancedBayesianNetworks._simulation_scenarios(E)
     @test isa(scs, Vector{Evidence})
     @test issetequal(scs, [Evidence(:A => :a1, :C => :c1), Evidence(:A => :a2, :C => :c1), Evidence(:A => :a1, :C => :c2), Evidence(:A => :a2, :C => :c2)])
 end
 
 @testitem "Evaluate Node - continuous precise" setup=[SetupEvaluateeBN] begin
-    EnhancedBayesianNetworks.build_simulations!(net, E)
+    EnhancedBayesianNetworks._build_simulations!(net, E)
     evaluated_E = EnhancedBayesianNetworks.evaluate(net, E)
     @test evaluated_E.name == E.name
     @test all(isa.(evaluated_E.cpt.data.Π, EmpiricalDistribution))
@@ -70,7 +70,7 @@ end
 end
 
 @testitem "Evaluate Node - continuous imprecise" setup=[SetupEvaluateeBN] begin
-    EnhancedBayesianNetworks.build_simulations!(net, F)
+    EnhancedBayesianNetworks._build_simulations!(net, F)
     evaluated_F = EnhancedBayesianNetworks.evaluate(net, F)
     @test evaluated_F.name == F.name
     @test all(isa.(evaluated_F.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
@@ -84,7 +84,7 @@ end
 end
 
 @testitem "Evaluate Node - discrete precise" setup=[SetupEvaluateeBN] begin
-    EnhancedBayesianNetworks.build_simulations!(net, G)
+    EnhancedBayesianNetworks._build_simulations!(net, G)
     evaluated_G = EnhancedBayesianNetworks.evaluate(net, G)
     @test evaluated_G.name == G.name
     @test all(isa.(evaluated_G.cpt.data.Π, Real))
@@ -98,7 +98,7 @@ end
 end
 
 @testitem "Evaluate Node - discrete imprecise" setup=[SetupEvaluateeBN] begin
-    EnhancedBayesianNetworks.build_simulations!(net, H)
+    EnhancedBayesianNetworks._build_simulations!(net, H)
     evaluated_H = EnhancedBayesianNetworks.evaluate(net, H)
     @test evaluated_H.name == H.name
     @test all(isa.(evaluated_H.cpt.data.Π, Interval))

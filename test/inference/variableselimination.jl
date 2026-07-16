@@ -38,7 +38,7 @@
     add_child!(bn, :S, :G)
     @suppress order!(bn)
 
-    factors = EnhancedBayesianNetworks.factorize(bn)
+    factors = EnhancedBayesianNetworks._factorize(bn)
     evidence_idx = [(4, 2)]
     EnhancedBayesianNetworks.apply_evidence!(factors, evidence_idx)
     @test factors[1].vars == [1]
@@ -90,7 +90,7 @@ end
     add_child!(bn, :S, :G)
     @suppress order!(bn)
 
-    factors = EnhancedBayesianNetworks.factorize(bn)
+    factors = EnhancedBayesianNetworks._factorize(bn)
     newfactors = EnhancedBayesianNetworks.eliminate_var(factors, 10)
     @test newfactors === factors
 
@@ -159,14 +159,14 @@ end
     add_child!(bn, :S, :G)
     @suppress order!(bn)
 
-    factors = EnhancedBayesianNetworks.factorize(bn)
+    factors = EnhancedBayesianNetworks._factorize(bn)
     node_order = EnhancedBayesianNetworks.sort_nodes(
         EnhancedBayesianNetworks.InteractionGraph(bn),
         EnhancedBayesianNetworks.NetworkSchema(bn),
         EnhancedBayesianNetworks.fill_score
     )
     # No evidence
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [1],
@@ -177,7 +177,7 @@ end
     @test result.table[2] ≈ 0.5
     @test sum(result.table) ≈ 1.0
 
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [2],
@@ -188,7 +188,7 @@ end
     @test result.table[2] ≈ 0.55
     @test sum(result.table) ≈ 1.0
 
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [3],
@@ -201,7 +201,7 @@ end
     @test result.table[3] ≈ 0.15
     @test sum(result.table) ≈ 1.0
 
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [4],
@@ -213,7 +213,7 @@ end
     @test sum(result.table) ≈ 1.0
 
     # With evidence
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [1],
@@ -224,7 +224,7 @@ end
     @test result.table[2] ≈ 1/9
     @test sum(result.table) ≈ 1.0
 
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [1],
@@ -235,7 +235,7 @@ end
     @test sum(result.table) ≈ 1.0
 
     # Multiple query
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [1, 2],
@@ -248,7 +248,7 @@ end
     @test result.table[2, 2] ≈ 0.45
     @test sum(result.table) ≈ 1.0
 
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [2, 1],
@@ -261,7 +261,7 @@ end
     @test result.table[2, 2] ≈ 0.45
     @test sum(result.table) ≈ 1.0
 
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [1, 3],
@@ -276,7 +276,7 @@ end
     @test result.table[2, 3] ≈ 0.05
     @test sum(result.table) ≈ 1.0
 
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [1, 2],
@@ -289,7 +289,7 @@ end
     @test result.table[2, 2] ≈ 0.45077 atol=1e-4
     @test sum(result.table) ≈ 1.0
 
-    result = EnhancedBayesianNetworks.ve(
+    result = EnhancedBayesianNetworks._ve(
         factors,
         node_order,
         [1, 2, 3],
