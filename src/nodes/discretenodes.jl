@@ -277,7 +277,7 @@ function _extreme_probabilities(intervals::Vararg{Union{Real,Interval}})
     A = vcat(A, [-ones(n)'; ones(n)'])
 
     # Right-hand side: [lbᵢ, ubᵢ] per entry (a point [x, x] for a precise Real); negate the lb rows to match the -I rows, then append the sum bounds.
-    b = mapreduce(x -> flat(x), vcat, intervals)
+    b = mapreduce(x -> _flat(x), vcat, intervals)
     b[collect(1:2:(2*n))] = -b[collect(1:2:(2*n))]
     b = vcat(b, [-1 1]')
 
