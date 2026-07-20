@@ -1,82 +1,119 @@
-@auto_hash_equals mutable struct BayesianNetwork <: AbstractNetwork
-    nodes::AbstractVector{<:AbstractNode}
-    topology_dict::Dict
-    adj_matrix::SparseMatrixCSC
 
-    function BayesianNetwork(nodes::AbstractVector{<:AbstractNode}, topology_dict::Dict, adj_matrix::SparseMatrixCSC)
-        nodes_names = map(i -> i.name, nodes)
-        if !allunique(nodes_names)
-            error("network nodes names must be unique")
+"""
+    BayesianNetwork(nodes::AbstractVector{DiscreteNode})
+
+A Bayesian network: a DAG of discrete, **precise** nodes.
+
+- `nodes`: the `DiscreteNode`s, positionally aligned with `topology`/`A`.
+- `topology`: maps each node name to its index (row/column in `A`).
+- `A`: sparse boolean adjacency matrix; `A[i, j] == true` iff `i → j`.
+
+Validates that node names and states are globally unique and that every node is
+precise — any imprecise node requires a [`CredalNetwork`](@ref). Edges are added
+afterwards with [`add_child!`](@ref).
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+
+bn = BayesianNetwork([W, S])
+add_child!(bn, :W, :S)                      # wire parents to children
+order!(bn)                                  # sort and validate
+```
+"""
+mutable struct BayesianNetwork <: AbstractNetwork
+    nodes::AbstractVector{DiscreteNode}
+    topology::Dict
+    A::SparseMatrixCSC
+
+    function BayesianNetwork(nodes::AbstractVector{DiscreteNode}, topology::Dict, A::SparseMatrixCSC)
+        # node names must be unique
+        node_names = map(i -> i.name, nodes)
+        dups = _not_unique_elements(node_names)
+        if !isempty(dups)
+            error("Invalid BN: duplicate node names $dups")
         end
-        discrete_nodes = filter(x -> isa(x, DiscreteNode), nodes)
-        if !isempty(discrete_nodes)
-            states_list = mapreduce(i -> states(i), vcat, discrete_nodes)
-            if !allunique(states_list)
-                error("network nodes states must be unique")
-            end
+        # states must be globally unique across nodes (init=Symbol[] handles the empty-network case)
+        states_list = reduce(vcat, states.(nodes); init=Symbol[])
+        dups = _not_unique_elements(states_list)
+        if !isempty(dups)
+            error("Invalid BN: duplicate node states $dups")
         end
-        functional_nodes = nodes[isa.(nodes, FunctionalNode)]
-        functional_nodes_names = [i.name for i in functional_nodes]
-        if !isempty(functional_nodes)
-            error("node/s $functional_nodes_names are functional nodes. evaluate the related EnhancedBayesianNetwork structure before!")
-        end
-        continuous_nodes = nodes[isa.(nodes, ContinuousNode)]
-        continuous_nodes_names = [i.name for i in continuous_nodes]
-        if !isempty(continuous_nodes)
-            error("node/s $continuous_nodes_names are continuous. Use EnhancedBayesianNetwork structure!")
-        end
-        imprecise_nodes = nodes[map(!, isprecise.(nodes))]
-        imprecise_nodes_names = [i.name for i in imprecise_nodes]
+        # a BayesianNetwork admits only precise nodes
+        imprecise_nodes = nodes[.!isprecise.(nodes)]
         if !isempty(imprecise_nodes)
-            error("node/s $imprecise_nodes_names are imprecise. Use CrealNetwork structure!")
+            error("Invalid BN: node/s $(getproperty.(imprecise_nodes, :name)) are imprecise; CredalNetwork structure is required")
         end
-        new(nodes, topology_dict, adj_matrix)
+        new(nodes, topology, A)
     end
 end
 
-function BayesianNetwork(nodes::AbstractVector{<:AbstractNode})
-    n = length(nodes)
-    topology_dict = Dict()
-    for (i, n) in enumerate(nodes)
-        topology_dict[n.name] = i
-    end
-    adj_matrix = sparse(zeros(n, n))
-    return BayesianNetwork(nodes, topology_dict, adj_matrix)
-end
+BayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = BayesianNetwork(nodes, _topology_and_adjacency(nodes)...)
 
-function BayesianNetwork(net::EnhancedBayesianNetwork)
-    order!(net)
-    nodes = net.nodes
-    topology_dict = net.topology_dict
-    adj_matrix = net.adj_matrix
-    return BayesianNetwork(nodes, topology_dict, adj_matrix)
-end
+"""
+    joint_probability(bn::BayesianNetwork, scenario::Evidence)
 
+Return the joint probability of a **complete** `scenario` (one state per node) as the product of each
+node's CPT entry given its parents. Errors if any node is missing from the scenario (use [`infer`](@ref)
+for marginals or partial evidence) or if a state is invalid; nodes not in the network are dropped with
+a warning.
+
+# Examples
+```julia
+W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
+
+joint_probability(bn, Evidence(:W => :sunny, :S => :on))    # 0.5 * 0.9 = 0.45
+```
+"""
 function joint_probability(bn::BayesianNetwork, scenario::Evidence)
-    th_keys = [i.name for i in bn.nodes]
-    pr_keys = keys(scenario) |> collect
-    if !issubset(th_keys, pr_keys)
-        error("Not all the BN's nodes $([i.name for i in bn.nodes]) have a specidied states in $scenario. Use Inference!")
+    scenario = deepcopy(scenario)
+    missing_names = setdiff(getproperty.(bn.nodes, :name), keys(scenario))
+    if !isempty(missing_names)
+        error("Invalid Scenario: nodes $missing_names are not defined in the scenario; joint_probability requires a complete scenario, use infer instead")
     end
-    for k in setdiff(pr_keys, th_keys)
-        @warn("nodes $k is not part of the BN, therefore is useless for the scenario probability evaluation")
-        delete!(scenario, k)
+    extra_names = setdiff(keys(scenario), getproperty.(bn.nodes, :name))
+    if !isempty(extra_names)
+        @warn("Scenario contains nodes $(collect(extra_names)) that are not defined in the network; they are ignored in the joint probability evaluation")
+        for k in extra_names
+            delete!(scenario, k)
+        end
     end
-    th_states = Dict(map(n -> (n.name, states(n)), bn.nodes))
-    for (node, th_state) in th_states
-        if scenario[node] ∉ th_state
-            error("node $node has a defined scenario state $(scenario[node]) that is not among its possible states $th_state")
+
+    for (n, s) in scenario
+        sts = states(first(filter(x -> x.name == n, bn.nodes)))
+        if s ∉ sts
+            error("Invalid Scenario: scenario defines state $(repr(s)) for node $(repr(n)) that does not belong to its possible states $(repr(sts))")
         end
     end
 
     prob = 1.0
-    cpts_dict = Dict(map(n -> (n.name, n.cpt.data), bn.nodes))
-    parents_dict = Dict(map(n -> (n.name, parents(bn, n)[2]), bn.nodes))
-    for (node, cpt) in cpts_dict
-        parent_keys = get(parents_dict, node, [])
-        all_keys = vcat(parent_keys, node)
-        row = filter(r -> all(k -> r[k] == scenario[k], all_keys), eachrow(cpt))
-        prob *= row.Π[1]
+    for node in bn.nodes
+        query = vcat(node.name, parents(node))
+        filtered = filter(p -> first(p) in query, scenario)
+        prob_n = node.cpt[filtered...]
+        prob *= prob_n
     end
     return prob
+end
+
+function sample(bn::BayesianNetwork, n::Int=1)
+    order!(bn)
+    evidences = [Evidence() for _ in 1:n]
+    samples = DataFrame()
+    for node in bn.nodes
+        results = map(e -> sample(node, e), evidences)
+        samples[!, node.name] = results
+        # Update Evidence
+        for (e, r) in zip(evidences, results)
+            e[node.name] = r
+        end
+    end
+    return samples
 end

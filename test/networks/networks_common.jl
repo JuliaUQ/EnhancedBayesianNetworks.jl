@@ -1,298 +1,720 @@
-@testset "Common Networks Operations" begin
+@testsnippet SetupCommonNetTest begin
 
-    weather_cpt = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(:w)
-    weather_cpt[:w=>:sunny] = 0.5
-    weather_cpt[:w=>:cloudy] = 0.5
-    weather = DiscreteNode(:w, weather_cpt)
+    model = Model(df -> df.Rc .+ df.S, :G2)
+    performance = df -> df.G2
+    simulation = DoubleLoop(MonteCarlo(100))
+    grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
 
-    sprinkler_cpt = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:w, :s])
-    sprinkler_cpt[:w=>:sunny, :s=>:on] = 0.9
-    sprinkler_cpt[:w=>:sunny, :s=>:off] = 0.1
-    sprinkler_cpt[:w=>:cloudy, :s=>:on] = 0.2
-    sprinkler_cpt[:w=>:cloudy, :s=>:off] = 0.8
-    sprinkler = DiscreteNode(:s, sprinkler_cpt)
+    grass_incomplete = DiscreteNode(:G, [:S, :R])
+    grass_incomplete[:R=>:yes, :S=>:on, :G=>:dry] = 0
+    grass_incomplete[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
+    grass_incomplete[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
+    grass_incomplete[:R=>:no, :S=>:on, :G=>:dry] = 0.05
+    grass_incomplete[:R=>:no, :S=>:on, :G=>:wet] = 0.95
+    grass_incomplete[:R=>:no, :S=>:off, :G=>:dry] = 1
+    grass_incomplete[:R=>:no, :S=>:off, :G=>:wet] = 0
 
-    rain_cpt = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:w, :r])
-    rain_cpt[:w=>:sunny, :r=>:no_rain] = 0.9
-    rain_cpt[:w=>:sunny, :r=>:rain] = 0.1
-    rain_cpt[:w=>:cloudy, :r=>:no_rain] = 0.8
-    rain_cpt[:w=>:cloudy, :r=>:rain] = 0.2
-    rain = DiscreteNode(:r, rain_cpt)
+    grass_not_mutually_exclusive = DiscreteNode(:G, [:S, :R])
+    grass_not_mutually_exclusive[:R=>:yes, :S=>:on, :G=>:dry] = 0.3
+    grass_not_mutually_exclusive[:R=>:yes, :S=>:on, :G=>:wet] = 0.999
+    grass_not_mutually_exclusive[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
+    grass_not_mutually_exclusive[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
+    grass_not_mutually_exclusive[:R=>:no, :S=>:on, :G=>:dry] = 0.05
+    grass_not_mutually_exclusive[:R=>:no, :S=>:on, :G=>:wet] = 0.95
+    grass_not_mutually_exclusive[:R=>:no, :S=>:off, :G=>:dry] = 1
+    grass_not_mutually_exclusive[:R=>:no, :S=>:off, :G=>:wet] = 0
 
-    grass_cpt = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:s, :r, :g])
-    grass_cpt[:s=>:on, :r=>:no_rain, :g=>:dry] = 0.9
-    grass_cpt[:s=>:on, :r=>:no_rain, :g=>:wet] = 0.1
-    grass_cpt[:s=>:on, :r=>:rain, :g=>:dry] = 0.9
-    grass_cpt[:s=>:on, :r=>:rain, :g=>:wet] = 0.1
-    grass_cpt[:s=>:off, :r=>:no_rain, :g=>:dry] = 0.9
-    grass_cpt[:s=>:off, :r=>:no_rain, :g=>:wet] = 0.1
-    grass_cpt[:s=>:off, :r=>:rain, :g=>:dry] = 0.9
-    grass_cpt[:s=>:off, :r=>:rain, :g=>:wet] = 0.1
-    grass = DiscreteNode(:g, grass_cpt)
+    grass_ub = DiscreteNode(:G, [:S, :R])
+    grass_ub[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
+    grass_ub[:R=>:yes, :S=>:on, :G=>:wet] = Interval(0.2, 0.3)
+    grass_ub[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
+    grass_ub[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
+    grass_ub[:R=>:no, :S=>:on, :G=>:dry] = 0.05
+    grass_ub[:R=>:no, :S=>:on, :G=>:wet] = 0.95
+    grass_ub[:R=>:no, :S=>:off, :G=>:dry] = 1
+    grass_ub[:R=>:no, :S=>:off, :G=>:wet] = 0
 
-    @testset "add_child!" begin
+    grass_ub2 = DiscreteNode(:G, [:S, :R])
+    grass_ub2[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
+    grass_ub2[:R=>:yes, :S=>:on, :G=>:wet] = 0.2
+    grass_ub2[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
+    grass_ub2[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
+    grass_ub2[:R=>:no, :S=>:on, :G=>:dry] = 0.05
+    grass_ub2[:R=>:no, :S=>:on, :G=>:wet] = 0.95
+    grass_ub2[:R=>:no, :S=>:off, :G=>:dry] = 1
+    grass_ub2[:R=>:no, :S=>:off, :G=>:wet] = 0
 
-        nodes = [weather, grass, rain, sprinkler]
-        net = EnhancedBayesianNetwork(nodes)
-        topology_dict = Dict(:w => 1, :s => 4, :g => 2, :r => 3)
-        adj_matrix = spzeros(4, 4)
-        @test net.topology_dict == topology_dict
-        @test issetequal(net.nodes, nodes)
-        @test net.adj_matrix == adj_matrix
+    grass_lb = DiscreteNode(:G, [:S, :R])
+    grass_lb[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
+    grass_lb[:R=>:yes, :S=>:on, :G=>:wet] = Interval(0.8, 0.9)
+    grass_lb[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
+    grass_lb[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
+    grass_lb[:R=>:no, :S=>:on, :G=>:dry] = 0.05
+    grass_lb[:R=>:no, :S=>:on, :G=>:wet] = 0.95
+    grass_lb[:R=>:no, :S=>:off, :G=>:dry] = 1
+    grass_lb[:R=>:no, :S=>:off, :G=>:wet] = 0
 
-        @test_throws ErrorException("Recursion on the same node 'w' is not allowed in EnhancedBayesianNetworks") add_child!(net, :w, :w)
-        @test_throws ErrorException("node 'w' is a root node and cannot have parents") add_child!(net, :s, :w)
-        rain_state1 = DataFrame(:a => [:sunny, :sunny, :cloudy, :cloudy], :r => [:no_rain, :rain, :no_rain, :rain], :Π => [0.9, 0.1, 0.2, 0.8])
-        rain1 = DiscreteNode(:r, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(rain_state1))
-        nodes1 = [weather, grass, rain1, sprinkler]
-        net1 = EnhancedBayesianNetwork(nodes1)
-        @test_throws ErrorException("trying to set node 'r' as child of node 'w', but 'r' has a cpt that does not contains 'w' in the scenarios: $(rain1.cpt)") @suppress add_child!(net1, weather, rain1)
-        rain_state2 = DataFrame(:w => [:sunny, :sunny, :cloudies, :cloudies], :r => [:no_rain, :rain, :no_rain, :rain], :Π => [0.9, 0.1, 0.2, 0.8])
-        rain2 = DiscreteNode(:r, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(rain_state2))
-        nodes2 = [weather, grass, rain2, sprinkler]
-        net2 = EnhancedBayesianNetwork(nodes2)
-        @test_throws ErrorException("child node 'r' has scenarios [:cloudies, :sunny], that is not coherent with its parent node 'w' with states [:cloudy, :sunny]") add_child!(net2, weather, rain2)
+    grass_lb2 = DiscreteNode(:G, [:S, :R])
+    grass_lb2[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
+    grass_lb2[:R=>:yes, :S=>:on, :G=>:wet] = 0.8
+    grass_lb2[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
+    grass_lb2[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
+    grass_lb2[:R=>:no, :S=>:on, :G=>:dry] = 0.05
+    grass_lb2[:R=>:no, :S=>:on, :G=>:wet] = 0.95
+    grass_lb2[:R=>:no, :S=>:off, :G=>:dry] = 1
+    grass_lb2[:R=>:no, :S=>:off, :G=>:wet] = 0
 
-        grass_model = Model(df -> df.r .+ df.s, :g)
-        grass_simulation = MonteCarlo(200)
-        grass_performance = df -> df.g
-        grass1 = DiscreteFunctionalNode(:g, [grass_model], grass_performance, grass_simulation)
-        nodes4 = [weather, rain, sprinkler, grass1]
-        net4 = EnhancedBayesianNetwork(nodes4)
-        @test_throws ErrorException("functional node 'g' can have only functional children. 'r' is not a functional node") add_child!(net4, :g, :r)
-        net_new1 = deepcopy(net)
-        net_new2 = deepcopy(net)
-        add_child!(net, weather, rain)
-        adj_matrix_net = sparse([
-            0.0 0.0 1.0 0.0;
-            0.0 0.0 0.0 0.0;
-            0.0 0.0 0.0 0.0;
-            0.0 0.0 0.0 0.0
-        ])
-        @test net.topology_dict == topology_dict
-        @test net.nodes == nodes
-        @test net.adj_matrix == adj_matrix_net
-        add_child!(net_new1, :w, :r)
-        @test net_new1 == net
-        add_child!(net_new2, 1, 3)
-        add_child!(net_new2, :w, :r)
-        @test net_new2 == net
-    end
+end
 
-    @testset "parents & children" begin
+@testitem "Networks Common - cyclicality & connection" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+    ## BN
+    A = DiscreteNode(:A, [:B])
+    A[:B=>:b1, :A=>:a1] = 0.05
+    A[:B=>:b1, :A=>:a2] = 0.95
+    A[:B=>:b2, :A=>:a1] = 0.7
+    A[:B=>:b2, :A=>:a2] = 0.3
+    B = DiscreteNode(:B, [:A])
+    B[:B=>:b1, :A=>:a1] = 0.05
+    B[:B=>:b1, :A=>:a2] = 0.95
+    B[:B=>:b2, :A=>:a1] = 0.7
+    B[:B=>:b2, :A=>:a2] = 0.3
+    net = BayesianNetwork([A, B, weather])
+    add_child!(net, A, B)
+    add_child!(net, B, A)
+    @test EnhancedBayesianNetworks._iscyclic(net)
+    @test !EnhancedBayesianNetworks._isconnected(net)
 
-        grass_model = Model(df -> df.r .+ df.s, :g)
-        grass_simulation = MonteCarlo(200)
-        grass_performance = df -> df.g
-        grass = DiscreteFunctionalNode(:g, [grass_model], grass_performance, grass_simulation)
-        nodes = [weather, rain, sprinkler, grass]
-        net = EnhancedBayesianNetwork(nodes)
-        add_child!(net, :w, :r)
-        add_child!(net, :w, :s)
-        add_child!(net, :s, :g)
-        add_child!(net, :r, :g)
+    ## eBN
+    net = EnhancedBayesianNetwork([A, B, weather])
+    add_child!(net, A, B)
+    add_child!(net, B, A)
+    @test EnhancedBayesianNetworks._iscyclic(net)
+    @test !EnhancedBayesianNetworks._isconnected(net)
 
-        @test parents(net, :w) == (Int64[], Symbol[], AbstractNode[])
-        @test parents(net, 1) == (Int64[], Symbol[], AbstractNode[])
-        @test parents(net, weather) == (Int64[], Symbol[], AbstractNode[])
-        @test parents(net, :g) == ([2, 3], [:r, :s], [rain, sprinkler])
-        @test parents(net, 4) == ([2, 3], [:r, :s], [rain, sprinkler])
-        @test parents(net, grass) == ([2, 3], [:r, :s], [rain, sprinkler])
+    ## CN
+    B = DiscreteNode(:B, [:A])
+    B[:B=>:b1, :A=>:a1] = Interval(0.05, 0.1)
+    B[:B=>:b1, :A=>:a2] = Interval(0.6, 0.95)
+    B[:B=>:b2, :A=>:a1] = 0.7
+    B[:B=>:b2, :A=>:a2] = 0.3
+    net = CredalNetwork([A, B, weather])
+    add_child!(net, A, B)
+    add_child!(net, B, A)
+    @test EnhancedBayesianNetworks._iscyclic(net)
+    @test !EnhancedBayesianNetworks._isconnected(net)
+end
 
-        @test children(net, :w) == ([2, 3], [:r, :s], [rain, sprinkler])
-        @test children(net, 1) == ([2, 3], [:r, :s], [rain, sprinkler])
-        @test children(net, weather) == ([2, 3], [:r, :s], [rain, sprinkler])
-        @test children(net, :g) == (Int64[], Symbol[], AbstractNode[])
-        @test children(net, 4) == (Int64[], Symbol[], AbstractNode[])
-        @test children(net, grass) == (Int64[], Symbol[], AbstractNode[])
-    end
+@testitem "Networks Common - parents, children and ancestors" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+    ## BN
+    nodes = [weather, grass, rain, sprinkler]
+    net = BayesianNetwork(nodes)
+    add_child!(net, weather, [rain, sprinkler])
+    add_child!(net, [rain, sprinkler], grass)
+    @test !EnhancedBayesianNetworks._iscyclic(net)
+    @test EnhancedBayesianNetworks._isconnected(net)
+    @test isempty(parents(net, :W))
+    @test issetequal(parents(net, :G), [:R, :S])
+    @test issetequal(parents(net, grass), [:R, :S])
+    @test isempty(children(net, :G))
+    @test issetequal(children(net, :W), [:R, :S])
+    @test issetequal(children(net, weather), [:R, :S])
 
-    @testset "discrete_ancestors" begin
-        cpt_root1 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(:X1)
-        cpt_root1[:X1=>:y] = 0.2
-        cpt_root1[:X1=>:n] = 0.8
-        root1 = DiscreteNode(:X1, cpt_root1)
+    ## CN
+    weather = DiscreteNode(:W)
+    weather[:W=>:sunny] = Interval(0.4, 0.6)
+    weather[:W=>:cloudy] = Interval(0.4, 0.6)
 
-        cpt_root2 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(:X2)
-        cpt_root2[:X2=>:yes] = 0.4
-        cpt_root2[:X2=>:no] = 0.6
-        root2 = DiscreteNode(:X2, cpt_root2, Dict(:yes => [Parameter(2.2, :X2)], :no => [Parameter(5.5, :X2)]))
+    nodes = [weather, grass, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [rain, sprinkler])
+    add_child!(net, [rain, sprinkler], grass)
+    @test !EnhancedBayesianNetworks._iscyclic(net)
+    @test EnhancedBayesianNetworks._isconnected(net)
+    @test isempty(parents(net, :W))
+    @test issetequal(parents(net, :G), [:R, :S])
+    @test issetequal(parents(net, grass), [:R, :S])
+    @test isempty(children(net, :G))
+    @test issetequal(children(net, :W), [:R, :S])
+    @test issetequal(children(net, weather), [:R, :S])
 
-        cpt_root3 = ContinuousConditionalProbabilityTable{PreciseContinuousInput}()
-        cpt_root3[] = Normal()
-        root3 = ContinuousNode(:Y1, cpt_root3, ExactDiscretization([0, 0.2, 1]))
+    ## eBN
+    nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [rain, sprinkler])
+    add_child!(net, [rain, sprinkler], grass)
+    add_child!(net, [rain2, sprinkler], grass2)
+    @test !EnhancedBayesianNetworks._iscyclic(net)
+    @test EnhancedBayesianNetworks._isconnected(net)
+    @test isempty(parents(net, :W))
+    @test issetequal(parents(net, :G), [:R, :S])
+    @test issetequal(parents(net, grass), [:R, :S])
+    @test isempty(children(net, :G))
+    @test issetequal(children(net, :W), [:R, :S])
+    @test issetequal(children(net, weather), [:R, :S])
+    @test issetequal(discrete_ancestors(net, grass), [:R, :S])
+    @test issetequal(discrete_ancestors(net, :G), [:R, :S])
 
-        child1_states = DataFrame(:X1 => [:y, :y, :n, :n], :C1 => [:c1y, :c1n, :c1y, :c1n], :Π => [0.3, 0.7, 0.4, 0.6])
-        child1 = DiscreteNode(:C1, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(child1_states), Dict(:c1y => [Parameter(1, :X1)], :c1n => [Parameter(0, :X1)]))
+    rain2 = ContinuousNode(:Rc, [:W])
+    rain2[:W=>:sunny] = Normal()
+    rain2[:W=>:cloudy] = Normal()
+    nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain, rain2])
+    add_child!(net, [rain, sprinkler], grass)
+    add_child!(net, [rain2, sprinkler], grass2)
+    @test issetequal(discrete_ancestors(net, grass2), [:W, :S])
+    @test issetequal(discrete_ancestors(net, :G2), [:W, :S])
+end
 
-        child2 = ContinuousNode(:C2, ContinuousConditionalProbabilityTable{PreciseContinuousInput}(DataFrame(:X2 => [:yes, :no], :Π => [Normal(), Normal(1, 1)])))
+@testitem "Networks Common - verify BN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+    nodes = [weather, grass, rain, sprinkler]
+    net = BayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, sprinkler, grass)
+    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks._verify_parents(net, grass)
+    add_child!(net, rain, grass)
+    @test isnothing(EnhancedBayesianNetworks._verify_parents(net, grass))
 
-        disc_D = ApproximatedDiscretization([-1.1, 0, 0.11], 2)
-        model1 = [Model(df -> (df.X1 .^ 2) ./ 2 .- df.C2, :fun1)]
-        simulation1 = MonteCarlo(300)
-        functional1_node = ContinuousFunctionalNode(:F1, model1, simulation1, disc_D)
+    nodes = [weather, grass_incomplete, rain, sprinkler]
+    net = BayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_incomplete)
+    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks._verify_scenarios(net, grass_incomplete)
+    nodes = [weather, grass, rain, sprinkler]
+    net = BayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass)
+    @test isnothing(EnhancedBayesianNetworks._verify_scenarios(net, grass))
 
-        net = EnhancedBayesianNetwork([root1, root2, root3, child1, child2, functional1_node])
-        add_child!(net, root1, child1)
-        add_child!(net, root2, child2)
-        add_child!(net, child1, functional1_node)
-        add_child!(net, child2, functional1_node)
+    nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
+    net = BayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_not_mutually_exclusive)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_not_mutually_exclusive)
 
-        @test issetequal(discrete_ancestors(net, functional1_node), [root2, child1])
-        @test isempty(discrete_ancestors(net, root1))
-        th_scenarios = [
-            Dict(:C1 => :c1n, :X2 => :no)
-            Dict(:C1 => :c1y, :X2 => :no)
-            Dict(:C1 => :c1n, :X2 => :yes)
-            Dict(:C1 => :c1y, :X2 => :yes)]
-        @test EnhancedBayesianNetworks._theoretical_scenarios(net, functional1_node) == th_scenarios
-        @test EnhancedBayesianNetworks._theoretical_scenarios(net, root1) == [Dict()]
-    end
+    bad_root = DiscreteNode(:W)
+    bad_root[:W=>:sunny] = 0.5
+    bad_root[:W=>:cloudy] = 0.6
+    net = BayesianNetwork([bad_root])
+    @test_throws ErrorException("Invalid CPT: node :W has CPT values [0.5, 0.6] not exhaustive and mutually exclusive for the scenario Any[]") EnhancedBayesianNetworks._verify_exhaustiveness(net, bad_root)
+end
 
-    @testset "verify net" begin
+@testitem "Networks Common - verify CN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+    weather = DiscreteNode(:W)
+    weather[:W=>:sunny] = Interval(0.4, 0.6)
+    weather[:W=>:cloudy] = Interval(0.4, 0.6)
+    nodes = [weather, grass, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, sprinkler, grass)
+    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks._verify_parents(net, grass)
+    add_child!(net, rain, grass)
+    @test isnothing(EnhancedBayesianNetworks._verify_parents(net, grass))
 
-        grass_model = Model(df -> df.r .+ df.s, :g)
-        grass_simulation = MonteCarlo(200)
-        grass_performance = df -> df.g
-        grass = DiscreteFunctionalNode(:g, [grass_model], grass_performance, grass_simulation)
-        nodes = [weather, rain, sprinkler, grass]
-        net = EnhancedBayesianNetwork(nodes)
-        @test isnothing(EnhancedBayesianNetworks._verify_child_node(net, weather))
-        @test_throws ErrorException("node 'r''s cpt requires exctly the nodes '[:w]' to be its parents, but provided parents are 'Symbol[]'") EnhancedBayesianNetworks._verify_child_node(net, rain)
-        @test_throws ErrorException("node 'r''s cpt requires exctly the nodes '[:w]' to be its parents, but provided parents are 'Symbol[]'") EnhancedBayesianNetworks._verify_net(net)
+    nodes = [weather, grass_incomplete, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_incomplete)
+    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks._verify_scenarios(net, grass_incomplete)
+    nodes = [weather, grass, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass)
+    @test isnothing(EnhancedBayesianNetworks._verify_scenarios(net, grass))
 
-        add_child!(net, :w, :r)
-        add_child!(net, :w, :s)
+    nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_not_mutually_exclusive)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_not_mutually_exclusive)
 
-        @test_throws ErrorException("functional node 'g' must have at least one parent") EnhancedBayesianNetworks._verify_functional_node(net, grass)
-        @test_throws ErrorException("functional node 'g' must have at least one parent") EnhancedBayesianNetworks._verify_net(net)
+    nodes = [weather, grass_ub, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_ub)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.2, 0.3]] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_ub)
 
-        add_child!(net, :s, :g)
-        add_child!(net, :r, :g)
+    nodes = [weather, grass_ub2, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_ub2)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.2] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_ub2)
 
-        @test_throws ErrorException("node 's' is a discrete parent of a functional node and cannot have an empty parameters vector") EnhancedBayesianNetworks._non_empty_parameters_vector(net, sprinkler)
-        @test_throws ErrorException("node 'r' is a discrete parent of a functional node and cannot have an empty parameters vector") EnhancedBayesianNetworks._non_empty_parameters_vector(net, rain)
-        @suppress @test_throws ErrorException("node 'r' is a discrete parent of a functional node and cannot have an empty parameters vector") EnhancedBayesianNetworks._verify_net(net)
+    nodes = [weather, grass_lb, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_lb)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.8, 0.9]] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb)
 
-        sprinkler_states = DataFrame(
-            :w => [:sunny, :sunny, :cloudy, :cloudy], :s => [:on, :off, :on, :off], :Π => [0.9, 0.1, 0.2, 0.8]
-        )
-        sprinkler2 = DiscreteNode(:s, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(sprinkler_states), Dict(:on => [Parameter(1, :S)], :off => [Parameter(2, :S)]))
-        nodes2 = [weather, rain, sprinkler2, grass]
-        net2 = EnhancedBayesianNetwork(nodes2)
-        add_child!(net2, weather, sprinkler2)
-        add_child!(net2, weather, rain)
-        add_child!(net2, sprinkler2, grass)
-        @test isnothing(EnhancedBayesianNetworks._non_empty_parameters_vector(net, sprinkler2))
-        @test_logs (:warn, "functional node 'g' have no continuous parents. All the simulations will return the same output") EnhancedBayesianNetworks._verify_functional_node(net2, grass)
-        @test_logs (:warn, "functional node 'g' have no continuous parents. All the simulations will return the same output") EnhancedBayesianNetworks._verify_net(net2)
-        @suppress isnothing(EnhancedBayesianNetworks._verify_functional_node(net2, grass))
-        @suppress isnothing(EnhancedBayesianNetworks._verify_net(net2))
+    nodes = [weather, grass_lb2, rain, sprinkler]
+    net = CredalNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_lb2)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb2)
+end
 
-        nodes3 = [weather, rain, sprinkler, grass]
-        net3 = EnhancedBayesianNetwork(nodes3)
-        @test_throws ErrorException("functional node 'g' must have at least one parent") EnhancedBayesianNetworks._verify_functional_node(net3, grass)
-        add_child!(net2, sprinkler2, grass)
-        @test_logs (:warn, "functional node 'g' have no continuous parents. All the simulations will return the same output") EnhancedBayesianNetworks._verify_functional_node(net2, grass)
-        @suppress isnothing(EnhancedBayesianNetworks._verify_functional_node(net2, grass)
-        )
+@testitem "Networks Common - verify eBN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+    nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [sprinkler, rain2], grass2)
+    add_child!(net, sprinkler, grass)
+    @test_throws ErrorException("Invalid CPT: node :G has nodes [:R] defined in the CPT only, but they have not been added via add_child!") EnhancedBayesianNetworks._verify_parents(net, grass)
+    add_child!(net, rain, grass)
+    @test isnothing(EnhancedBayesianNetworks._verify_parents(net, grass))
+    @test isnothing(EnhancedBayesianNetworks._verify_parents(net, grass2))
 
-        sprinkler_states3 = DataFrame(
-            :w => [:sunny, :sunny, :cloudy, :cloudy, :t, :t, :not_t, :not_t], :s => [:on, :off, :on, :off, :on, :off, :on, :off], :Π => [0.9, 0.1, 0.2, 0.8, 0.1, 0.9, 0.4, 0.6]
-        )
-        sprinkler3 = DiscreteNode(:s, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(sprinkler_states3))
-        net3 = EnhancedBayesianNetwork([weather, rain, sprinkler3, grass])
-        add_child!(net3, :w, :r)
-        add_child!(net3, :w, :s)
-        add_child!(net3, :s, :g)
-        add_child!(net3, :r, :g)
-        @test_throws ErrorException("node 's' has defined cpt scenarios $(sprinkler3.cpt) not coherent with the theoretical one [Dict(:w => :cloudy), Dict(:w => :sunny)]") EnhancedBayesianNetworks._verify_child_node(net3, sprinkler3)
-        @test_throws ErrorException("node 's' has defined cpt scenarios $(sprinkler3.cpt) not coherent with the theoretical one [Dict(:w => :cloudy), Dict(:w => :sunny)]") EnhancedBayesianNetworks._verify_net(net3)
-    end
+    nodes = [weather, grass_incomplete, rain, sprinkler]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_incomplete)
+    @test_throws ErrorException("Invalid CPT: node :G is missing the following scenario [:R => :yes, :S => :on, :G => :wet]") EnhancedBayesianNetworks._verify_scenarios(net, grass_incomplete)
+    nodes = [weather, grass, rain, sprinkler, rain2, grass2]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [sprinkler, rain2], grass2)
+    add_child!(net, [rain, sprinkler], grass)
+    @test isnothing(EnhancedBayesianNetworks._verify_scenarios(net, grass))
 
-    @testset "order network" begin
-        cpt_root = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(:A)
-        cpt_root[:A=>:a1] = 0.5
-        cpt_root[:A=>:a2] = 0.5
-        root = DiscreteNode(:A, cpt_root)
+    nodes = [weather, grass_not_mutually_exclusive, rain, sprinkler]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_not_mutually_exclusive)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_not_mutually_exclusive)
 
-        child1 = DiscreteNode(:B, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(DataFrame(:D => [:d1, :d2, :d1, :d2, :d1, :d2, :d1, :d2], :A => [:a1, :a1, :a2, :a2, :a1, :a1, :a2, :a2], :B => [:b1, :b2, :b1, :b2, :b1, :b2, :b1, :b2], :Π => [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])))
+    nodes = [weather, grass_ub, rain, sprinkler]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_ub)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.2, 0.3]] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_ub)
 
-        child2 = DiscreteNode(:C, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(DataFrame(:B => [:b1, :b1, :b2, :b2], :C => [:c1, :c2, :c1, :c2], :Π => [0.5, 0.5, 0.5, 0.5])))
+    nodes = [weather, grass_ub2, rain, sprinkler]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_ub2)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.2] for the scenario [:R => :yes, :S => :on], the sum of upper bound values must be greater than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_ub2)
 
-        child3 = DiscreteNode(:D, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(DataFrame(:C => [:c1, :c1, :c2, :c2], :D => [:d1, :d2, :d1, :d2], :Π => [0.5, 0.5, 0.5, 0.5])))
+    nodes = [weather, grass_lb, rain, sprinkler]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_lb)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], [0.8, 0.9]] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb)
 
-        grass_states = DataFrame(:s => [:on, :on, :on, :on, :off, :off, :off, :off], :r => [:no_rain, :no_rain, :rain, :rain, :no_rain, :no_rain, :rain, :rain], :g => [:dry, :wet, :dry, :wet, :dry, :wet, :dry, :wet], :Π => [0.9, 0.1, 0.9, 0.1, 0.9, 0.1, 0.9, 0.1])
-        grass = DiscreteNode(:g, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(grass_states))
+    nodes = [weather, grass_lb2, rain, sprinkler]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, weather, [sprinkler, rain])
+    add_child!(net, [rain, sprinkler], grass_lb2)
+    @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb2)
+end
 
-        nodes = [weather, sprinkler, rain, grass]
-        net = EnhancedBayesianNetwork(nodes)
-        add_child!(net, :w, :s)
-        add_child!(net, :w, :r)
-        add_child!(net, :s, :g)
-        add_child!(net, :r, :g)
 
-        order!(net)
-        @test net.adj_matrix == sparse(Matrix([0 1.0 1.0 0; 0 0 0 1.0; 0 0 0 1.0; 0 0 0 0]))
-        @test net.topology_dict == Dict(:w => 1, :s => 2, :g => 4, :r => 3)
-        @test net.nodes == [weather, sprinkler, rain, grass]
-        @test isnothing(EnhancedBayesianNetworks._verify_net(net))
-    end
+@testitem "Networks Common - Markov Blanket" begin
+    x1 = DiscreteNode(:x1)
+    x1[:x1=>:x1y] = 0.5
+    x1[:x1=>:x1n] = 0.5
 
-    @testset "add & remove nodes" begin
-        sprinkler_states = DataFrame(:w => [:sunny, :sunny, :cloudy, :cloudy], :s => [:on, :off, :on, :off], :Π => [0.9, 0.1, 0.2, 0.8])
-        sprinkler = DiscreteNode(:s, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(sprinkler_states))
-        rain_state = DataFrame(:w => [:sunny, :sunny, :cloudy, :cloudy], :r => [:no_rain, :rain, :no_rain, :rain], :Π => [0.9, 0.1, 0.2, 0.8])
-        rain = DiscreteNode(:r, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(rain_state))
-        grass_states = DataFrame(:s => [:on, :on, :on, :on, :off, :off, :off, :off], :r => [:no_rain, :no_rain, :rain, :rain, :no_rain, :no_rain, :rain, :rain], :g => [:dry, :wet, :dry, :wet, :dry, :wet, :dry, :wet], :Π => [0.9, 0.1, 0.9, 0.1, 0.9, 0.1, 0.9, 0.1])
-        grass = DiscreteNode(:g, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(grass_states))
+    x2 = DiscreteNode(:x2)
+    x2[:x2=>:x2y] = 0.5
+    x2[:x2=>:x2n] = 0.5
 
-        nodes = [weather, sprinkler, rain, grass]
-        net = EnhancedBayesianNetwork(nodes)
-        add_child!(net, :w, :s)
-        add_child!(net, :w, :r)
-        add_child!(net, :s, :g)
-        add_child!(net, :r, :g)
-        order!(net)
-        net1 = deepcopy(net)
-        net2 = deepcopy(net)
-        net3 = deepcopy(net)
+    x4 = DiscreteNode(:x4)
+    x4[:x4=>:x4y] = 0.5
+    x4[:x4=>:x4n] = 0.5
 
-        EnhancedBayesianNetworks._remove_node!(net1, grass)
-        EnhancedBayesianNetworks._remove_node!(net2, :g)
-        EnhancedBayesianNetworks._remove_node!(net3, 4)
+    x8 = DiscreteNode(:x8)
+    x8[:x8=>:x8y] = 0.5
+    x8[:x8=>:x8n] = 0.5
 
-        @test issetequal(net1.nodes, [weather, sprinkler, rain])
-        adj = [
-            0.0 1.0 1.0;
-            0.0 0.0 0.0;
-            0.0 0.0 0.0
-        ]
-        @test net1.adj_matrix == adj
-        @test net1.topology_dict == Dict(:w => 1, :r => 3, :s => 2)
-        @test net2 == net1
-        @test net3 == net1
+    x3 = DiscreteNode(:x3, [:x1])
+    x3[:x1=>:x1y, :x3=>:x3y] = 0.5
+    x3[:x1=>:x1y, :x3=>:x3n] = 0.5
+    x3[:x1=>:x1n, :x3=>:x3y] = 0.5
+    x3[:x1=>:x1n, :x3=>:x3n] = 0.5
 
-        net4 = deepcopy(net1)
-        net5 = deepcopy(net1)
-        net6 = deepcopy(net1)
+    x5 = DiscreteNode(:x5, [:x2])
+    x5[:x2=>:x2y, :x5=>:x5y] = 0.5
+    x5[:x2=>:x2y, :x5=>:x5n] = 0.5
+    x5[:x2=>:x2n, :x5=>:x5y] = 0.5
+    x5[:x2=>:x2n, :x5=>:x5n] = 0.5
 
-        EnhancedBayesianNetworks._add_node!(net4, grass)
-        EnhancedBayesianNetworks._add_node!(net5, grass)
-        EnhancedBayesianNetworks._add_node!(net6, grass)
+    x7 = DiscreteNode(:x7, [:x4])
+    x7[:x4=>:x4y, :x7=>:x7y] = 0.5
+    x7[:x4=>:x4y, :x7=>:x7n] = 0.5
+    x7[:x4=>:x4n, :x7=>:x7y] = 0.5
+    x7[:x4=>:x4n, :x7=>:x7n] = 0.5
 
-        add_child!(net4, :s, :g)
-        add_child!(net4, :r, :g)
-        order!(net4)
-        add_child!(net5, :s, :g)
-        add_child!(net5, :r, :g)
-        order!(net5)
-        add_child!(net6, :s, :g)
-        add_child!(net6, :r, :g)
-        order!(net6)
+    x11 = DiscreteNode(:x11, [:x8])
+    x11[:x8=>:x8y, :x11=>:x11y] = 0.5
+    x11[:x8=>:x8y, :x11=>:x11n] = 0.5
+    x11[:x8=>:x8n, :x11=>:x11y] = 0.5
+    x11[:x8=>:x8n, :x11=>:x11n] = 0.5
 
-        @test net4 == net
-        @test net5 == net
-        @test net6 == net
-    end
+    x6 = DiscreteNode(:x6, [:x3, :x4])
+    x6[:x3=>:x3y, :x4=>:x4y, :x6=>:x6y] = 0.5
+    x6[:x3=>:x3y, :x4=>:x4y, :x6=>:x6n] = 0.5
+    x6[:x3=>:x3y, :x4=>:x4n, :x6=>:x6y] = 0.5
+    x6[:x3=>:x3y, :x4=>:x4n, :x6=>:x6n] = 0.5
+    x6[:x3=>:x3n, :x4=>:x4y, :x6=>:x6y] = 0.5
+    x6[:x3=>:x3n, :x4=>:x4y, :x6=>:x6n] = 0.5
+    x6[:x3=>:x3n, :x4=>:x4n, :x6=>:x6y] = 0.5
+    x6[:x3=>:x3n, :x4=>:x4n, :x6=>:x6n] = 0.5
+
+    x9 = DiscreteNode(:x9, [:x5, :x6])
+    x9[:x5=>:x5y, :x6=>:x6y, :x9=>:x9y] = 0.5
+    x9[:x5=>:x5y, :x6=>:x6y, :x9=>:x9n] = 0.5
+    x9[:x5=>:x5y, :x6=>:x6n, :x9=>:x9y] = 0.5
+    x9[:x5=>:x5y, :x6=>:x6n, :x9=>:x9n] = 0.5
+    x9[:x5=>:x5n, :x6=>:x6y, :x9=>:x9y] = 0.5
+    x9[:x5=>:x5n, :x6=>:x6y, :x9=>:x9n] = 0.5
+    x9[:x5=>:x5n, :x6=>:x6n, :x9=>:x9y] = 0.5
+    x9[:x5=>:x5n, :x6=>:x6n, :x9=>:x9n] = 0.5
+
+    x10 = DiscreteNode(:x10, [:x8, :x6])
+    x10[:x8=>:x8y, :x6=>:x6y, :x10=>:x10y] = 0.5
+    x10[:x8=>:x8y, :x6=>:x6y, :x10=>:x10n] = 0.5
+    x10[:x8=>:x8y, :x6=>:x6n, :x10=>:x10y] = 0.5
+    x10[:x8=>:x8y, :x6=>:x6n, :x10=>:x10n] = 0.5
+    x10[:x8=>:x8n, :x6=>:x6y, :x10=>:x10y] = 0.5
+    x10[:x8=>:x8n, :x6=>:x6y, :x10=>:x10n] = 0.5
+    x10[:x8=>:x8n, :x6=>:x6n, :x10=>:x10y] = 0.5
+    x10[:x8=>:x8n, :x6=>:x6n, :x10=>:x10n] = 0.5
+
+    x12 = DiscreteNode(:x12, [:x9])
+    x12[:x9=>:x9y, :x12=>:x12y] = 0.5
+    x12[:x9=>:x9y, :x12=>:x12n] = 0.5
+    x12[:x9=>:x9n, :x12=>:x12y] = 0.5
+    x12[:x9=>:x9n, :x12=>:x12n] = 0.5
+
+    x13 = DiscreteNode(:x13, [:x10])
+    x13[:x10=>:x10y, :x13=>:x13y] = 0.5
+    x13[:x10=>:x10y, :x13=>:x13n] = 0.5
+    x13[:x10=>:x10n, :x13=>:x13y] = 0.5
+    x13[:x10=>:x10n, :x13=>:x13n] = 0.5
+
+    ## BN
+    nodes = [x1, x2, x4, x8, x5, x7, x11, x3, x6, x9, x10, x12, x13]
+    net = BayesianNetwork(nodes)
+    add_child!(net, :x1, :x3)
+    add_child!(net, :x2, :x5)
+    add_child!(net, :x4, :x7)
+    add_child!(net, :x8, :x11)
+    add_child!(net, :x3, :x6)
+    add_child!(net, :x4, :x6)
+    add_child!(net, :x5, :x9)
+    add_child!(net, :x6, :x9)
+    add_child!(net, :x6, :x10)
+    add_child!(net, :x8, :x10)
+    add_child!(net, :x9, :x12)
+    add_child!(net, :x10, :x13)
+
+    @test issetequal(markov_blanket(net, :x6), [:x3, :x4, :x5, :x8, :x9, :x10])
+    @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
+
+    ## CN
+    x1 = DiscreteNode(:x1)
+    x1[:x1=>:x1y] = Interval(0.4, 0.6)
+    x1[:x1=>:x1n] = Interval(0.4, 0.6)
+    nodes = [x1, x2, x4, x8, x5, x7, x11, x3, x6, x9, x10, x12, x13]
+    net = CredalNetwork(nodes)
+    add_child!(net, :x1, :x3)
+    add_child!(net, :x2, :x5)
+    add_child!(net, :x4, :x7)
+    add_child!(net, :x8, :x11)
+    add_child!(net, :x3, :x6)
+    add_child!(net, :x4, :x6)
+    add_child!(net, :x5, :x9)
+    add_child!(net, :x6, :x9)
+    add_child!(net, :x6, :x10)
+    add_child!(net, :x8, :x10)
+    add_child!(net, :x9, :x12)
+    add_child!(net, :x10, :x13)
+
+    @test issetequal(markov_blanket(net, :x6), [:x3, :x4, :x5, :x8, :x9, :x10])
+    @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
+
+    ## eBN
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, :x1, :x3)
+    add_child!(net, :x2, :x5)
+    add_child!(net, :x4, :x7)
+    add_child!(net, :x8, :x11)
+    add_child!(net, :x3, :x6)
+    add_child!(net, :x4, :x6)
+    add_child!(net, :x5, :x9)
+    add_child!(net, :x6, :x9)
+    add_child!(net, :x6, :x10)
+    add_child!(net, :x8, :x10)
+    add_child!(net, :x9, :x12)
+    add_child!(net, :x10, :x13)
+
+    @test issetequal(markov_blanket(net, :x6), [:x3, :x4, :x5, :x8, :x9, :x10])
+    @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
+end
+
+@testitem "Networks Common - add/remove node" setup=[ExtraDeps, SetupSprinklereBN, SetupCommonNetTest] begin
+    ## BN
+    nodes = [weather, sprinkler, rain, grass]
+    net = BayesianNetwork(nodes)
+    add_child!(net, :W, :S)
+    add_child!(net, :W, :R)
+    add_child!(net, :S, :G)
+    add_child!(net, :R, :G)
+
+    @test_throws ErrorException("Invalid Network: node :W is already present in the network") EnhancedBayesianNetworks._push_node!(net, DiscreteNode(:W))
+
+    net1 = deepcopy(net)
+    net2 = deepcopy(net)
+    net3 = deepcopy(net)
+
+    EnhancedBayesianNetworks._remove_node!(net1, grass)
+    EnhancedBayesianNetworks._remove_node!(net2, :G)
+
+    @test issetequal(getproperty.(net1.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
+    adj = sparse([1, 1], [2, 3], [true, true], 3, 3)
+    @test net1.A == adj
+    @test net1.topology == Dict(:W => 1, :R => 3, :S => 2)
+    @test net2.A == net1.A
+    @test issetequal(getproperty.(net2.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
+    @test net2.topology == net1.topology
+    @test isnothing(EnhancedBayesianNetworks._remove_node!(net3, :G))
+
+    net4 = deepcopy(net1)
+    net5 = deepcopy(net1)
+
+    EnhancedBayesianNetworks._push_node!(net4, grass)
+    @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
+    adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
+    @test net4.A == adj
+    @test net4.topology == Dict(:W => 1, :R => 3, :S => 2, :G => 4)
+
+    ## CN
+    weather = DiscreteNode(:W)
+    weather[:W=>:sunny] = Interval(0.4, 0.6)
+    weather[:W=>:cloudy] = Interval(0.4, 0.6)
+    nodes = [weather, sprinkler, rain, grass]
+    net = CredalNetwork(nodes)
+    add_child!(net, :W, :S)
+    add_child!(net, :W, :R)
+    add_child!(net, :S, :G)
+    add_child!(net, :R, :G)
+    net1 = deepcopy(net)
+    net2 = deepcopy(net)
+    net3 = deepcopy(net)
+
+    EnhancedBayesianNetworks._remove_node!(net1, grass)
+    EnhancedBayesianNetworks._remove_node!(net2, :G)
+
+    @test issetequal(getproperty.(net1.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
+    adj = sparse([1, 1], [2, 3], [true, true], 3, 3)
+    @test net1.A == adj
+    @test net1.topology == Dict(:W => 1, :R => 3, :S => 2)
+    @test net2.A == net1.A
+    @test issetequal(getproperty.(net2.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
+    @test net2.topology == net1.topology
+    @test isnothing(EnhancedBayesianNetworks._remove_node!(net3, :G))
+
+    net4 = deepcopy(net1)
+    net5 = deepcopy(net1)
+
+    EnhancedBayesianNetworks._push_node!(net4, grass)
+    @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
+    adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
+    @test net4.A == adj
+    @test net4.topology == Dict(:W => 1, :R => 3, :S => 2, :G => 4)
+
+    ## eBN
+    nodes = [weather, sprinkler, rain, grass]
+    net = EnhancedBayesianNetwork(nodes)
+    add_child!(net, :W, :S)
+    add_child!(net, :W, :R)
+    add_child!(net, :S, :G)
+    add_child!(net, :R, :G)
+    net1 = deepcopy(net)
+    net2 = deepcopy(net)
+    net3 = deepcopy(net)
+
+    EnhancedBayesianNetworks._remove_node!(net1, grass)
+    EnhancedBayesianNetworks._remove_node!(net2, :G)
+
+    @test issetequal(getproperty.(net1.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
+    adj = sparse([1, 1], [2, 3], [true, true], 3, 3)
+    @test net1.A == adj
+    @test net1.topology == Dict(:W => 1, :R => 3, :S => 2)
+    @test net2.A == net1.A
+    @test issetequal(getproperty.(net2.nodes, :name), getproperty.([weather, sprinkler, rain], :name))
+    @test net2.topology == net1.topology
+    @test isnothing(EnhancedBayesianNetworks._remove_node!(net3, :G))
+
+    net4 = deepcopy(net1)
+    net5 = deepcopy(net1)
+
+    EnhancedBayesianNetworks._push_node!(net4, grass)
+    @test issetequal(getproperty.(net4.nodes, :name), [:W, :R, :S, :G])
+    adj = sparse([1, 1], [2, 3], [true, true], 4, 4)
+    @test net4.A == adj
+    @test net4.topology == Dict(:W => 1, :R => 3, :S => 2, :G => 4)
+end
+
+@testitem "Networks Common - sorting functions" setup=[ExtraDeps] begin
+    A = DiscreteNode(:A, [:B])
+    A[:B=>:b1, :A=>:a1] = 0.05
+    A[:B=>:b1, :A=>:a2] = 0.95
+    A[:B=>:b2, :A=>:a1] = 0.7
+    A[:B=>:b2, :A=>:a2] = 0.3
+    B = DiscreteNode(:B, [:A])
+    B[:B=>:b1, :A=>:a1] = 0.05
+    B[:B=>:b1, :A=>:a2] = 0.95
+    B[:B=>:b2, :A=>:a1] = 0.7
+    B[:B=>:b2, :A=>:a2] = 0.3
+
+    C = DiscreteNode(:C)
+    C[:C=>:C1] = 0.1
+    C[:C=>:C2] = 0.9
+    D = DiscreteNode(:D)
+    D[:D=>:D1] = 0.1
+    D[:D=>:D2] = 0.9
+    E = DiscreteNode(:E, [:D])
+    E[:E=>:E1, :D=>:D1] = 0.05
+    E[:E=>:E1, :D=>:D2] = 0.95
+    E[:E=>:E2, :D=>:D1] = 0.7
+    E[:E=>:E2, :D=>:D2] = 0.3
+
+    net = BayesianNetwork([A, B])
+    add_child!(net, A, B)
+    add_child!(net, B, A)
+    @test_throws ErrorException("Invalid Network: network is cyclic!") order!(net)
+    net = BayesianNetwork([C, D, E])
+    add_child!(net, D, E)
+    @test_throws ErrorException("Invalid Network: network is not connected") order!(net)
+
+    ## CN
+    A = DiscreteNode(:A, [:B])
+    A[:B=>:b1, :A=>:a1] = Interval(0.05, 0.1)
+    A[:B=>:b1, :A=>:a2] = Interval(0.6, 0.95)
+    A[:B=>:b2, :A=>:a1] = 0.7
+    A[:B=>:b2, :A=>:a2] = 0.3
+
+    C = DiscreteNode(:C)
+    C[:C=>:C1] = Interval(0.4, 0.6)
+    C[:C=>:C2] = Interval(0.4, 0.6)
+
+    net = CredalNetwork([A, B])
+    add_child!(net, A, B)
+    add_child!(net, B, A)
+    @test_throws ErrorException("Invalid Network: network is cyclic!") order!(net)
+    net = CredalNetwork([C, D, E])
+    add_child!(net, D, E)
+    @test_throws ErrorException("Invalid Network: network is not connected") order!(net)
+
+    ## eBN
+    net = EnhancedBayesianNetwork([A, B])
+    add_child!(net, A, B)
+    add_child!(net, B, A)
+    @test_throws ErrorException("Invalid Network: network is cyclic!") order!(net)
+    net = EnhancedBayesianNetwork([C, D, E])
+    add_child!(net, D, E)
+    @test_throws ErrorException("Invalid Network: network is not connected") order!(net)
+
+    A = DiscreteNode(:A)
+    A[:A=>:a1] = 0.3
+    A[:A=>:a2] = 0.7
+    B = DiscreteNode(:B)
+    B[:B=>:b1] = 0.3
+    B[:B=>:b2] = 0.7
+    C = ContinuousNode(:C)
+    C[] = Normal()
+    D = DiscreteNode(:D, [:A, :B])
+    D[:A=>:a1, :B=>:b1, :D=>:d1] = 0.2
+    D[:A=>:a1, :B=>:b1, :D=>:d2] = 0.8
+    D[:A=>:a1, :B=>:b2, :D=>:d1] = 0.2
+    D[:A=>:a1, :B=>:b2, :D=>:d2] = 0.8
+    D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.2
+    D[:A=>:a2, :B=>:b1, :D=>:d2] = 0.8
+    D[:A=>:a2, :B=>:b2, :D=>:d1] = 0.2
+    D[:A=>:a2, :B=>:b2, :D=>:d2] = 0.8
+    model = Model(df -> df.C .+ df.D, :E)
+    performance = df -> df.E
+    sim = MonteCarlo(100)
+    E = DiscreteFunctionalNode(:E, model, performance, sim)
+    net = EnhancedBayesianNetwork([E, A, C, D, B])
+    add_child!(net, [A, B], D)
+    add_child!(net, [D, C], E)
+
+    EnhancedBayesianNetworks._topologically_sort!(net)
+    @test getproperty.(net.nodes, :name) == [:A, :C, :B, :D, :E]
+    @test net.topology == Dict(:A => 1, :B => 3, :C => 2, :D => 4, :E => 5)
+    adj = spzeros(Bool, 5, 5)
+    adj[1, 4] = true
+    adj[2, 5] = true
+    adj[3, 4] = true
+    adj[4, 5] = true
+    @test net.A == adj
+
+    net = EnhancedBayesianNetwork([E, A, C, D, B])
+    add_child!(net, [A, B], D)
+    add_child!(net, [D, C], E)
+    order!(net)
+    @test getproperty.(net.nodes, :name) == [:A, :C, :B, :D, :E]
+    @test net.topology == Dict(:A => 1, :B => 3, :C => 2, :D => 4, :E => 5)
+    adj = spzeros(Bool, 5, 5)
+    adj[1, 4] = true
+    adj[2, 5] = true
+    adj[3, 4] = true
+    adj[4, 5] = true
+    @test net.A == adj
+
+    net = EnhancedBayesianNetwork([C, D, B, A])
+    add_child!(net, [A, B], D)
+    @test_throws ErrorException("Invalid Network: network is not connected") order!(net)
+
+    net = EnhancedBayesianNetwork([E, A, C, D, B])
+    add_child!(net, B, D)
+    add_child!(net, [A, D, C], E)
+    @test_throws ErrorException("Invalid CPT: node :D has nodes [:A] defined in the CPT only, but they have not been added via add_child!") order!(net)
+
+    D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.1
+    net = EnhancedBayesianNetwork([E, A, C, D, B])
+    add_child!(net, [A, B], D)
+    add_child!(net, [D, C], E)
+    @test_throws ErrorException("Invalid CPT: node :D has CPT values [0.1, 0.8] not exhaustive and mutually exclusive for the scenario [:A => :a2, :B => :b1]") order!(net)
+
+    D = DiscreteNode(:D, [:A, :B])
+    D[:A=>:a1, :B=>:b1, :D=>:d1] = 0.2
+    D[:A=>:a1, :B=>:b1, :D=>:d2] = 0.8
+    D[:A=>:a1, :B=>:b2, :D=>:d1] = 0.2
+    D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.2
+    D[:A=>:a2, :B=>:b1, :D=>:d2] = 0.8
+    D[:A=>:a2, :B=>:b2, :D=>:d1] = 0.2
+    D[:A=>:a2, :B=>:b2, :D=>:d2] = 0.8
+    net = EnhancedBayesianNetwork([E, A, C, D, B])
+    add_child!(net, [A, B], D)
+    add_child!(net, [D, C], E)
+    @test_throws ErrorException("Invalid CPT: node :D is missing the following scenario [:A => :a1, :B => :b2, :D => :d2]") order!(net)
+end
+
+
+@testitem "Networks Common - topology and adjacency" setup=[ExtraDeps] begin
+    a = DiscreteNode(:A);
+    a[:A=>:a1] = 0.5;
+    a[:A=>:a2] = 0.5
+    b = DiscreteNode(:B);
+    b[:B=>:b1] = 0.5;
+    b[:B=>:b2] = 0.5
+    c = DiscreteNode(:C);
+    c[:C=>:c1] = 0.5;
+    c[:C=>:c2] = 0.5
+    nodes = [a, b, c]
+
+    topology, A = EnhancedBayesianNetworks._topology_and_adjacency(nodes)
+    # names map to their 1-based position, aligned with the empty adjacency matrix
+    @test topology == Dict(:A => 1, :B => 2, :C => 3)
+    @test all(topology[n.name] == i for (i, n) in enumerate(nodes))
+    @test size(A) == (3, 3)
+    @test nnz(A) == 0
+    @test eltype(A) == Bool
+
+    # empty node vector -> empty topology and 0×0 matrix
+    topology, A = EnhancedBayesianNetworks._topology_and_adjacency(EnhancedBayesianNetworks.AbstractNode[])
+    @test isempty(topology)
+    @test size(A) == (0, 0)
 end

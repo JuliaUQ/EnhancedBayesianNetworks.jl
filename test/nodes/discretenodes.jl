@@ -1,302 +1,219 @@
-@testset "Discrete Nodes" begin
-
-    @testset "Root Nodes" begin
-        name = :a
-        cpt0 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(name)
-        cpt0[:a=>:yes] = -0.5
-        cpt0[:a=>:no] = 0.5
-        @test_throws ErrorException("probabilities must be non-negative: -0.5") DiscreteNode(name, cpt0)
-
-        cpt1 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(name)
-        cpt1[:a=>:yes] = 1.5
-        cpt1[:a=>:no] = 0.5
-        @test_throws ErrorException("probabilities must be lower or equal than 1: 1.5") DiscreteNode(name, cpt1)
-
-        cpt2 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}(name)
-        cpt2[:a=>:yes] = (-0.5, 0.1)
-        cpt2[:a=>:no] = (0.5, 0.9)
-        @test_throws ErrorException("probabilities must be non-negative: -0.5") DiscreteNode(name, cpt2)
-
-        cpt3 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}(name)
-        cpt3[:a=>:yes] = (0.6, 1.5)
-        cpt3[:a=>:no] = (0.4, 0.5)
-        @test_throws ErrorException("probabilities must be lower or equal than 1: 1.5") DiscreteNode(name, cpt3)
-
-        cpt4 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}(name)
-        cpt4[:a=>:yes] = (0.6, 0.8)
-        cpt4[:a=>:no] = (0.1, 0.15)
-        @test_throws ErrorException("sum of intervals upper bounds is smaller than 1: $(cpt4.data)") DiscreteNode(name, cpt4)
-
-        cpt5 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}(name)
-        cpt5[:a=>:yes] = (0.6, 0.8)
-        cpt5[:a=>:no] = (0.5, 0.6)
-        @test_throws ErrorException("sum of intervals lower bounds is bigger than 1: $(cpt5.data)") DiscreteNode(name, cpt5)
-
-        cpt6 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}(name)
-        cpt6[:a=>:yes] = (0.3, 0.5)
-        cpt6[:a=>:no] = (0.5, 0.7)
-        parameters = Dict(:y => [Parameter(1, :a)], :no => [Parameter(2, :a)])
-        @test_throws ErrorException("parameters keys [:y, :no] must be coherent with states [:yes, :no]") DiscreteNode(name, cpt6, parameters)
-
-        parameters = Dict(:yes => [Parameter(1, :a)], :no => [Parameter(2, :a)])
-        node = DiscreteNode(name, cpt6, parameters)
-        @test node.name == name
-        @test node.cpt == cpt6
-        @test node.parameters == parameters
-        @test node.additional_info == Dict{AbstractVector{Symbol},Dict}()
-
-        @suppress @test_throws ErrorException("defined cpt does not contain a column refered to node name x: $cpt6") DiscreteNode(:x, cpt6)
-
-        node = DiscreteNode(name, cpt6)
-        @test node.name == name
-        @test node.cpt == cpt6
-        @test node.parameters == Dict{Symbol,Vector{Parameter}}()
-        @test node.additional_info == Dict{AbstractVector{Symbol},Dict}()
-
-        cpt7 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(name)
-        cpt7[:a=>:yes] = 0.4999
-        cpt7[:a=>:no] = 0.5
-        @suppress node = DiscreteNode(name, cpt7)
-        @test all(isapprox.(node.cpt.data[:, :Π], [0.50005, 0.49995]))
-
-        @testset "nodes functions" begin
-            node = DiscreteNode(name, cpt6, parameters)
-
-            @test states(node) == [:no, :yes]
-            @test scenarios(node) == Any[]
-            @test isroot(node)
-            @test EnhancedBayesianNetworks._scenarios_cpt(node) == [cpt6.data]
-        end
-    end
-
-    @testset "Child Nodes" begin
-        cpt0 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:x, :y])
-        cpt0[:x=>:yesx, :y=>:yesy] = -0.5
-        cpt0[:x=>:yesx, :y=>:noy] = 0.5
-        cpt0[:x=>:nox, :y=>:yesy] = 0.5
-        cpt0[:x=>:nox, :y=>:noy] = 0.5
-
-        @test_throws ErrorException("probabilities must be non-negative: -0.5") DiscreteNode(:y, cpt0)
-
-        cpt1 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:x, :y])
-        cpt1[:x=>:yesx, :y=>:yesy] = 1.5
-        cpt1[:x=>:yesx, :y=>:noy] = 0.5
-        cpt1[:x=>:nox, :y=>:yesy] = 0.5
-        cpt1[:x=>:nox, :y=>:noy] = 0.5
-
-        @test_throws ErrorException("probabilities must be lower or equal than 1: 1.5") DiscreteNode(:y, cpt1)
-
-        cpt2 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}([:x, :y])
-        cpt2[:x=>:yesx, :y=>:yesy] = (-0.5, 0.5)
-        cpt2[:x=>:yesx, :y=>:noy] = (0.3, 0.7)
-        cpt2[:x=>:nox, :y=>:yesy] = (0.5, 0.8)
-        cpt2[:x=>:nox, :y=>:noy] = (0.2, 0.5)
-
-        @test_throws ErrorException("probabilities must be non-negative: -0.5") DiscreteNode(:y, cpt2)
-
-        cpt3 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}([:x, :y])
-        cpt3[:x=>:yesx, :y=>:yesy] = (0.5, 1.5)
-        cpt3[:x=>:yesx, :y=>:noy] = (0.3, 0.7)
-        cpt3[:x=>:nox, :y=>:yesy] = (0.5, 0.8)
-        cpt3[:x=>:nox, :y=>:noy] = (0.2, 0.5)
-
-        @test_throws ErrorException("probabilities must be lower or equal than 1: 1.5") DiscreteNode(:y, cpt3)
-
-        cpt4 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}([:x, :y])
-        cpt4[:x=>:yesx, :y=>:yesy] = (0.5, 0.3)
-        cpt4[:x=>:yesx, :y=>:noy] = (0.3, 0.7)
-        cpt4[:x=>:nox, :y=>:yesy] = (0.5, 0.8)
-        cpt4[:x=>:nox, :y=>:noy] = (0.2, 0.5)
-
-        @test_throws ErrorException("interval probabilities must have a lower bound smaller than upper bound. $(cpt4.data)") DiscreteNode(:y, cpt4)
-
-        cpt5 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}([:x, :y])
-        cpt5[:x=>:yesx, :y=>:yesy] = (0.2, 0.3)
-        cpt5[:x=>:yesx, :y=>:noy] = (0.3, 0.4)
-        cpt5[:x=>:nox, :y=>:yesy] = (0.5, 0.8)
-        cpt5[:x=>:nox, :y=>:noy] = (0.2, 0.5)
-
-        res = EnhancedBayesianNetworks._scenarios_cpt(cpt5, :y)[1]
-        @test_throws ErrorException("sum of intervals upper bounds is smaller than 1: $res") DiscreteNode(:y, cpt5)
-
-        cpt6 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}([:x, :y])
-        cpt6[:x=>:yesx, :y=>:yesy] = (0.8, 0.9)
-        cpt6[:x=>:yesx, :y=>:noy] = (0.3, 0.4)
-        cpt6[:x=>:nox, :y=>:yesy] = (0.5, 0.8)
-        cpt6[:x=>:nox, :y=>:noy] = (0.2, 0.5)
-
-        res = EnhancedBayesianNetworks._scenarios_cpt(cpt6, :y)[1]
-        @test_throws ErrorException("sum of intervals lower bounds is bigger than 1: $res") DiscreteNode(:y, cpt6)
-
-        cpt7 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}([:x, :y])
-        cpt7[:x=>:yesx, :y=>:yesy] = (0.3, 0.5)
-        cpt7[:x=>:yesx, :y=>:noy] = (0.5, 0.7)
-        cpt7[:x=>:nox, :y=>:yesy] = (0.5, 0.8)
-        cpt7[:x=>:nox, :y=>:noy] = (0.2, 0.5)
-        parameters = Dict(:yes => [Parameter(1, :a)], :no => [Parameter(2, :a)])
-
-        @test_throws ErrorException("parameters keys [:yes, :no] must be coherent with states [:yesy, :noy]") DiscreteNode(:y, cpt7, parameters)
-
-        parameters = Dict(:yesy => [Parameter(1, :a)], :noy => [Parameter(2, :a)])
-        node = DiscreteNode(:y, cpt7, parameters)
-        @test node.name == :y
-        @test node.cpt == cpt7
-        @test node.parameters == parameters
-        @test node.additional_info == Dict{AbstractVector{Symbol},Dict}()
-
-        node = DiscreteNode(:y, cpt7)
-        @test node.name == :y
-        @test node.cpt == cpt7
-        @test node.parameters == Dict{Symbol,Vector{Parameter}}()
-        @test node.additional_info == Dict{AbstractVector{Symbol},Dict}()
-
-        cpt8 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:x, :y])
-        cpt8[:x=>:yesx, :y=>:yesy] = 0.49999
-        cpt8[:x=>:yesx, :y=>:noy] = 0.5
-        cpt8[:x=>:nox, :y=>:yesy] = 0.8
-        cpt8[:x=>:nox, :y=>:noy] = 0.2
-        @suppress node = DiscreteNode(:y, cpt8)
-        @test all(isapprox.(node.cpt.data[:, :Π], [0.2, 0.8, 0.500005, 0.499995]))
-
-        @testset "nodes functions" begin
-            node = DiscreteNode(:y, cpt7, parameters)
-
-            @test issetequal(states(node), [:noy, :yesy])
-            @test issetequal(scenarios(node), [Dict(:x => :yesx), Dict(:x => :nox)])
-            @test issetequal(EnhancedBayesianNetworks._scenarios_cpt(node), EnhancedBayesianNetworks._scenarios_cpt(cpt7, :y))
-
-            @test !isprecise(node)
-            @test !isroot(node)
-
-            node2 = DiscreteNode(:y, cpt8, parameters)
-            @test isprecise(node2)
-        end
-    end
-
-    @testset "Extreme Points Root" begin
-
-        cpt1 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(:x)
-        cpt1[:x=>:yesx] = 0.2
-        cpt1[:x=>:nox] = 0.8
-        node1 = DiscreteNode(:x, cpt1)
-
-        cpt2 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}(:x)
-        cpt2[:x=>:yesx] = (0.1, 0.2)
-        cpt2[:x=>:nox] = (0.8, 0.9)
-        node2 = DiscreteNode(:x, cpt2)
-
-        @test_throws ErrorException("Precise conditional probability table does not have extreme points: $(cpt1.data)") EnhancedBayesianNetworks._extreme_points_probabilities(cpt1.data)
-
-        extreme_point_probabilities = EnhancedBayesianNetworks._extreme_points_probabilities(cpt2.data)
-        @test all(isapprox.(extreme_point_probabilities[1], [0.8, 0.2], atol=0.001))
-        @test all(isapprox.(extreme_point_probabilities[2], [0.9, 0.1], atol=0.001))
-
-        extreme_point_dfs = EnhancedBayesianNetworks._extreme_points_dfs(cpt2.data)
-        @test isapprox(extreme_point_dfs[1][!, :Π][1], 0.8, atol=0.05)
-        @test isapprox(extreme_point_dfs[1][!, :Π][2], 0.2, atol=0.05)
-        @test isapprox(extreme_point_dfs[2][!, :Π][1], 0.9, atol=0.05)
-        @test isapprox(extreme_point_dfs[2][!, :Π][2], 0.1, atol=0.05)
-
-        node = DiscreteNode(:x, cpt2)
-        ext_nodes = EnhancedBayesianNetworks._extreme_points(node)
-
-        node1 = DiscreteNode(:x, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(extreme_point_dfs[1]))
-        node2 = DiscreteNode(:x, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(extreme_point_dfs[2]))
-        @test ext_nodes[1].name == node1.name
-        @test ext_nodes[1].cpt.data[!, :x] == node1.cpt.data[!, :x]
-        @test all(isapprox.(ext_nodes[1].cpt.data[!, :Π], node1.cpt.data[!, :Π]; atol=0.01))
-
-        @test ext_nodes[2].name == node2.name
-        @test ext_nodes[2].cpt.data[!, :x] == node2.cpt.data[!, :x]
-        @test all(isapprox.(ext_nodes[2].cpt.data[!, :Π], node2.cpt.data[!, :Π]; atol=0.01))
-    end
-
-    @testset "Extreme Points Child" begin
-
-        cpt1 = DataFrame(:a => [:a1, :a1, :a2, :a2], :x => [:no, :yes, :no, :yes], :Π => [0.8, 0.2, 0.8, 0.2])
-        cpt1 = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(cpt1)
-
-        cpt2 = DataFrame(:a => [:a1, :a1, :a2, :a2], :x => [:yes, :no, :yes, :no], :Π => [(0.2, 0.3), (0.7, 0.8), (0.4, 0.6), (0.4, 0.6)])
-        cpt2 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}(cpt2)
-
-        node = DiscreteNode(:x, cpt2)
-
-        sub_cpts = EnhancedBayesianNetworks._scenarios_cpt(node.cpt, node.name)
-        res = map(sc -> EnhancedBayesianNetworks._extreme_points_dfs(sc), sub_cpts)
-
-        @test isapprox(res[1][1][!, :Π][1], 0.7, atol=0.05)
-        @test isapprox(res[1][1][!, :Π][2], 0.3, atol=0.05)
-        @test isapprox(res[1][2][!, :Π][1], 0.8, atol=0.05)
-        @test isapprox(res[1][2][!, :Π][2], 0.2, atol=0.05)
-
-        @test isapprox(res[2][1][!, :Π][1], 0.4, atol=0.05)
-        @test isapprox(res[2][1][!, :Π][2], 0.6, atol=0.05)
-        @test isapprox(res[2][2][!, :Π][1], 0.6, atol=0.05)
-        @test isapprox(res[2][2][!, :Π][2], 0.4, atol=0.05)
-
-        extreme_point_dfs = EnhancedBayesianNetworks._extreme_points(node)
-        df1 = vcat(res[1][1], res[2][1])
-        df2 = vcat(res[1][1], res[2][2])
-        df3 = vcat(res[1][2], res[2][1])
-        df4 = vcat(res[1][2], res[2][2])
-        node1 = DiscreteNode(:x, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(df1))
-        node2 = DiscreteNode(:x, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(df2))
-        node3 = DiscreteNode(:x, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(df3))
-        node4 = DiscreteNode(:x, DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(df4))
-
-        @test issetequal(extreme_point_dfs, [node1, node2, node3, node4])
-
-        cpt3 = DataFrame(:b => [:b1, :b1, :b1, :b1, :b2, :b2, :b2, :b2], :a => [:a1, :a1, :a2, :a2, :a1, :a1, :a2, :a2], :x => [:yes, :no, :yes, :no, :yes, :no, :yes, :no], :Π => [(0.2, 0.3), (0.7, 0.8), (0.4, 0.6), (0.4, 0.6), (0.2, 0.3), (0.7, 0.8), (0.4, 0.6), (0.4, 0.6)])
-        cpt3 = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}(cpt3)
-        node = DiscreteNode(:x, cpt3)
-        sub_cpts = EnhancedBayesianNetworks._scenarios_cpt(node.cpt, node.name)
-        res = map(sc -> EnhancedBayesianNetworks._extreme_points_dfs(sc), sub_cpts)
-
-        @test isapprox(res[1][1][!, :Π][1], 0.7, atol=0.05)
-        @test isapprox(res[1][1][!, :Π][2], 0.3, atol=0.05)
-        @test isapprox(res[1][2][!, :Π][1], 0.8, atol=0.05)
-        @test isapprox(res[1][2][!, :Π][2], 0.2, atol=0.05)
-
-        @test isapprox(res[2][1][!, :Π][1], 0.4, atol=0.05)
-        @test isapprox(res[2][1][!, :Π][2], 0.6, atol=0.05)
-        @test isapprox(res[2][2][!, :Π][1], 0.6, atol=0.05)
-        @test isapprox(res[2][2][!, :Π][2], 0.4, atol=0.05)
-
-        @test isapprox(res[3][1][!, :Π][1], 0.7, atol=0.05)
-        @test isapprox(res[3][1][!, :Π][2], 0.3, atol=0.05)
-        @test isapprox(res[3][2][!, :Π][1], 0.8, atol=0.05)
-        @test isapprox(res[3][2][!, :Π][2], 0.2, atol=0.05)
-
-        @test isapprox(res[4][1][!, :Π][1], 0.4, atol=0.05)
-        @test isapprox(res[4][1][!, :Π][2], 0.6, atol=0.05)
-        @test isapprox(res[4][2][!, :Π][1], 0.6, atol=0.05)
-        @test isapprox(res[4][2][!, :Π][2], 0.4, atol=0.05)
-
-        extreme_point_dfs = EnhancedBayesianNetworks._extreme_points(node)
-        @test length(extreme_point_dfs) == 16
-    end
-
-    @testset "uq inputs" begin
-        root_cpt = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(:x)
-        root_cpt[:x=>:x1] = 0.2
-        root_cpt[:x=>:x2] = 0.8
-        parameters1 = Dict(:x1 => [Parameter(1, :x)], :x2 => [Parameter(2, :x)])
-        rootnode = DiscreteNode(:x, root_cpt, parameters1)
-
-        child_cpt = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:x, :y])
-        child_cpt[:x=>:x1, :y=>:y1] = 0.2
-        child_cpt[:x=>:x1, :y=>:y2] = 0.8
-        child_cpt[:x=>:x2, :y=>:y1] = 0.3
-        child_cpt[:x=>:x2, :y=>:y2] = 0.7
-        parameters2 = Dict(:y1 => [Parameter(1, :y)], :y2 => [Parameter(2, :y)])
-        childnode = DiscreteNode(:y, child_cpt, parameters2)
-
-        evidence1 = Evidence(:x => :x1, :y => :y1)
-        evidence2 = Evidence(:a => :a1)
-
-        @test EnhancedBayesianNetworks._uq_inputs(rootnode, evidence1) == [Parameter(1, :x)]
-        @test_throws ErrorException("evidence Dict(:a => :a1) does not contain the node x") EnhancedBayesianNetworks._uq_inputs(rootnode, evidence2)
-        @test EnhancedBayesianNetworks._uq_inputs(childnode, evidence1) == [Parameter(1, :y)]
-        @test_throws ErrorException("evidence Dict(:a => :a1) does not contain the node y") EnhancedBayesianNetworks._uq_inputs(childnode, evidence2)
-    end
+@testitem "DiscreteNode - struct set and get index" begin
+    node_a = DiscreteNode(:a)
+    @test isa(node_a, EnhancedBayesianNetworks.AbstractNode)
+    @test isa(node_a, EnhancedBayesianNetworks.AbstractDiscreteNode)
+    @test isa(node_a, DiscreteNode)
+    @test isa(node_a.cpt, EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability})
+    @test names(node_a.cpt.data) == ["a", "Π"]
+    @test isa(node_a.parameters, Vector{Pair{Symbol,Vector{Parameter}}})
+    @test isnothing(node_a.results)
+    node_c = DiscreteNode(:c, [:a])
+    @test isa(node_c, DiscreteNode)
+    @test isa(node_c.cpt, EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability})
+    @test names(node_c.cpt.data) == ["a", "c", "Π"]
+    @test isa(node_c.parameters, Vector{Pair{Symbol,Vector{Parameter}}})
+    @test isnothing(node_c.results)
+
+    node_a[:a=>:a1] = Interval(0.1, 0.3)
+    node_a[:a=>:a2] = Interval(0.6, 0.8)
+    node_a[:a=>:a3] = 0.2
+    @test node_a.cpt.data.a == [:a1, :a2, :a3]
+    @test node_a.cpt.data.Π[1] == Interval(0.1, 0.3)
+    @test node_a.cpt.data.Π[2] == Interval(0.6, 0.8)
+    @test node_a.cpt.data.Π[3] == 0.2
+    node_c[:a=>:a1, :c=>:c1] = 0.3
+    node_c[:a=>:a1, :c=>:c2] = 0.7
+    node_c[:a=>:a2, :c=>:c1] = Interval(0.3, 0.6)
+    node_c[:a=>:a2, :c=>:c2] = Interval(0.3, 0.6)
+    @test isa(node_c, EnhancedBayesianNetworks.AbstractNode)
+    @test isa(node_c, EnhancedBayesianNetworks.AbstractDiscreteNode)
+    @test isa(node_c, DiscreteNode)
+    @test node_c.cpt.data.a == [:a1, :a1, :a2, :a2]
+    @test node_c.cpt.data.c == [:c1, :c2, :c1, :c2]
+    @test node_c.cpt.data.Π[1] == 0.3
+    @test node_c.cpt.data.Π[2] == 0.7
+    @test node_c.cpt.data.Π[3] == Interval(0.3, 0.6)
+    @test node_c.cpt.data.Π[4] == Interval(0.3, 0.6)
+
+    ## tests for parameters    
+    parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)]]
+    node_a = DiscreteNode(:a, parameters)
+    node_a[:a=>:a1] = 0.2
+    @test node_a.cpt.data.a == [:a1]
+    @test node_a.cpt.data.Π == [0.2]
+    @test node_a.parameters == parameters
+    node_c = DiscreteNode(:c, [:a], parameters)
+    node_c[:a=>:a1, :c=>:c1] = 0.2
+    @test node_c.cpt.data.c == [:c1]
+    @test node_c.cpt.data.a == [:a1]
+    @test node_c.cpt.data.Π == [0.2]
+    @test node_c.parameters == parameters
+
+    ## tests for nodes with a pre-defined CPT
+    cpt_a = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}(:a, :Π)
+    cpt_a[:a=>:a1] = 0.2
+    cpt_a[:a=>:a2] = 0.8
+    parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)]]
+    node_a = DiscreteNode(cpt_a)
+    @test node_a.cpt == cpt_a
+    node_a = DiscreteNode(cpt_a, parameters)
+    @test node_a.cpt == cpt_a
+    @test node_a.parameters == parameters
+
+    cpt_c = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:a, :c], :Π)
+    cpt_c[:a=>:a1, :c=>:c1] = 0.2
+    cpt_c[:a=>:a1, :c=>:c2] = 0.8
+    parameters = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(0, :C)]]
+    node_c = DiscreteNode(cpt_c)
+    @test node_c.cpt == cpt_c
+    node_c = DiscreteNode(cpt_c, parameters)
+    @test node_c.cpt == cpt_c
+    @test node_c.parameters == parameters
+end
+
+@testitem "DiscreteNode - main functions" begin
+    @test_throws ErrorException(":Π is not allowed as node name") DiscreteNode(:Π)
+    node_a = DiscreteNode(:a)
+    node_a[:a=>:a1] = Interval(0.1, 0.3)
+    node_a[:a=>:a2] = Interval(0.6, 0.8)
+    node_a[:a=>:a3] = 0.2
+    node_c = DiscreteNode(:c, [:a])
+    node_c[:a=>:a1, :c=>:c1] = 0.3
+    node_c[:a=>:a1, :c=>:c2] = 0.7
+    node_c[:a=>:a2, :c=>:c1] = Interval(0.3, 0.6)
+    node_c[:a=>:a2, :c=>:c2] = Interval(0.3, 0.6)
+    node_b = DiscreteNode(:b, [:a])
+    node_b[:a=>:a1, :b=>:b1] = 0.3
+    node_b[:a=>:a1, :b=>:b2] = 0.7
+    node_b[:a=>:a2, :b=>:b1] = 0.6
+    node_b[:a=>:a2, :b=>:b2] = 0.4
+
+    @test issetequal(states(node_a), [:a1, :a2, :a3])
+    @test issetequal(states(node_c), [:c1, :c2])
+    sc_a = [[:a => :a1], [:a => :a2], [:a => :a3]]
+    sc_c = [[:a => :a1, :c => :c1], [:a => :a1, :c => :c2], [:a => :a2, :c => :c1], [:a => :a2, :c => :c2]]
+    @test scenarios(node_a) == sc_a
+    @test scenarios(node_c) == sc_c
+    @test isprecise(node_a) == false
+    @test isprecise(node_c) == false
+    @test isprecise(node_b)
+    @test isroot(node_a)
+    @test isroot(node_c) == false
+    @test isempty(parents(node_a))
+    @test issetequal(parents(node_c), [:a])
+
+    ## inputs function
+    parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)], :a3 => [Parameter(-1, :A)]]
+    node_a = DiscreteNode(:a, parameters)
+    node_a[:a=>:a1] = Interval(0.1, 0.3)
+    node_a[:a=>:a2] = Interval(0.6, 0.8)
+    node_a[:a=>:a3] = 0.2
+
+    node_b = DiscreteNode(:b)
+    node_b[:b=>:b1] = Interval(0.1, 0.3)
+    node_b[:b=>:b2] = Interval(0.6, 0.8)
+    node_b[:b=>:b3] = 0.2
+
+    evidence = Evidence(:b => :a1)
+    @test_throws ErrorException("Invalid Evidence: evidence [:b => :a1] does not contain the node :a") EnhancedBayesianNetworks._inputs(node_a, evidence)
+    evidence = Evidence(:a => :a4)
+    @test_throws ErrorException("Invalid Evidence: evidence [:a => :a4] contains a not existing state :a4 for node :a") EnhancedBayesianNetworks._inputs(node_a, evidence)
+    evidence = Evidence(:b => :b1)
+    @test_throws ErrorException("Invalid Node: node :b has an empty parameters dictionary") EnhancedBayesianNetworks._inputs(node_b, evidence)
+    evidence = Evidence(:a => :a1)
+    @test EnhancedBayesianNetworks._inputs(node_a, evidence) == [Parameter(1, :A)]
+    evidence = Evidence(:a => :a2, :b => :b1)
+    @test EnhancedBayesianNetworks._inputs(node_a, evidence) == [Parameter(0, :A)]
+end
+
+@testitem "DiscreteNode - Extreme Points" begin
+    node_a = DiscreteNode(:a, [:b, :c])
+    node_a[:b=>:b1, :c=>:c1, :a=>:a1] = Interval(0.1, 0.2)
+    node_a[:b=>:b1, :c=>:c1, :a=>:a2] = Interval(0.3, 0.7)
+    node_a[:b=>:b1, :c=>:c1, :a=>:a3] = Interval(0.4, 0.5)
+    node_a[:b=>:b1, :c=>:c2, :a=>:a1] = Interval(0.15, 0.45)
+    node_a[:b=>:b1, :c=>:c2, :a=>:a2] = Interval(0.05, 0.25)
+    node_a[:b=>:b1, :c=>:c2, :a=>:a3] = Interval(0.45, 0.55)
+    node_a[:b=>:b2, :c=>:c1, :a=>:a1] = Interval(0.01, 0.02)
+    node_a[:b=>:b2, :c=>:c1, :a=>:a2] = Interval(0.03, 0.07)
+    node_a[:b=>:b2, :c=>:c1, :a=>:a3] = Interval(0.93, 0.99)
+    node_a[:b=>:b2, :c=>:c2, :a=>:a1] = Interval(0.1112, 0.21123)
+    node_a[:b=>:b2, :c=>:c2, :a=>:a2] = Interval(0.31123, 0.71123)
+    node_a[:b=>:b2, :c=>:c2, :a=>:a3] = Interval(0.41123, 0.511223)
+
+    int1 = Interval(0.2, 0.5)
+    int2 = Interval(0.5, 0.6)
+    int3 = Interval(0.2, 0.4)
+    extreme_probs = EnhancedBayesianNetworks._extreme_probabilities(int1, int2, int3)
+    @test all(isapprox.(extreme_probs[1], [0.2, 0.6, 0.2]))
+    @test all(isapprox.(extreme_probs[2], [0.3, 0.5, 0.2]))
+    @test all(isapprox.(extreme_probs[3], [0.2, 0.5, 0.3]))
+
+    node_x = DiscreteNode(:a)
+    node_x[:a=>:a1] = Interval(0.4, 0.5)
+    node_x[:a=>:a2] = Interval(0.3, 0.4)
+    node_x[:a=>:a3] = Interval(0.1, 0.2)
+    nodes = EnhancedBayesianNetworks._extreme_nodes(node_x)
+    @test all([i.name == node_x.name for i in nodes])
+    @test all([i.parameters == node_x.parameters for i in nodes])
+    @test all([i.results == node_x.results for i in nodes])
+    @test nodes[1].cpt.data.Π == [0.4, 0.4, 0.2]
+    @test nodes[2].cpt.data.Π == [0.5, 0.3, 0.2]
+    @test nodes[3].cpt.data.Π == [0.5, 0.4, 0.1]
+
+    nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
+    @test length(nodes) == 400
+
+    node_a[:b=>:b1, :c=>:c1, :a=>:a2] = 0.5
+    nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
+    @test length(nodes) == 100
+
+    node_b = DiscreteNode(:b)
+    node_b[:b=>:b1] = 0.4
+    node_b[:b=>:b2] = 0.3
+    node_b[:b=>:b3] = 0.3
+    @test EnhancedBayesianNetworks._extreme_nodes(node_b) == [node_b]
+end
+
+@testitem "DiscreteNode - Sampling" begin
+    # --- root node, deterministic marginal ---
+    node_v = DiscreteNode(:v)
+    node_v[:v=>:yes] = 1.0
+    node_v[:v=>:no] = 0.0
+    @test all(sample(node_v, Evidence()) == :yes for _ in 1:100)
+    # clamping: node's own state in evidence is returned directly, bypassing the CPT
+    @test sample(node_v, Evidence(:v => :no)) == :no
+
+    # --- root node, random 50/50: result must be a valid state ---
+    node_r = DiscreteNode(:r)
+    node_r[:r=>:r1] = 0.5
+    node_r[:r=>:r2] = 0.5
+    @test all(sample(node_r, Evidence()) ∈ [:r1, :r2] for _ in 1:100)
+
+    # --- child node, deterministic conditional ---
+    node_c = DiscreteNode(:c, [:v])
+    node_c[:v=>:yes, :c=>:c1] = 1.0
+    node_c[:v=>:yes, :c=>:c2] = 0.0
+    node_c[:v=>:no, :c=>:c1] = 0.0
+    node_c[:v=>:no, :c=>:c2] = 1.0
+    @test sample(node_c, Evidence(:v => :yes)) == :c1
+    @test sample(node_c, Evidence(:v => :no)) == :c2
+
+    # non-parent entries in evidence are ignored
+    @test sample(node_c, Evidence(:v => :yes, :x => :whatever)) == :c1
+
+    # clamping wins over the conditional, even for a zero-probability state
+    @test sample(node_c, Evidence(:v => :yes, :c => :c2)) == :c2
+
+    # --- errors ---
+    # imprecise node cannot be sampled
+    node_i = DiscreteNode(:i)
+    node_i[:i=>:i1] = Interval(0.2, 0.4)
+    node_i[:i=>:i2] = Interval(0.6, 0.8)
+    @test_throws ErrorException("Sampling Error: cannot sample from imprecise node :i") sample(node_i, Evidence())
+    # ...but an imprecise node can still be clamped (clamp precedes the precision check)
+    @test sample(node_i, Evidence(:i => :i1)) == :i1
+
+    # invalid parent configuration → empty CPT block
+    @test_throws "is not a valid configuration of parents" sample(node_c, Evidence(:v => :maybe))
 end

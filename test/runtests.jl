@@ -1,32 +1,22 @@
 using Test
-
+using TestItems
+using TestItemRunner
 using EnhancedBayesianNetworks
-using Suppressor
-using CSV
 
-include("utils/wrap.jl")
-include("nodes/nodes.jl")
-include("nodes/cpts.jl")
-include("utils/verify_discrete.jl")
-include("nodes/discretenodes.jl")
-include("utils/verify_continuous.jl")
-include("nodes/continuousnode.jl")
-include("nodes/functionalnodes.jl")
-include("networks/networks_common.jl")
-include("networks/ebn/enhancedbn.jl")
-include("networks/ebn/transmission/transmission.jl")
-include("networks/ebn/discretization/discretize.jl")
-include("networks/ebn/evaluate/evaluate_node.jl")
-include("networks/ebn/evaluate/evaluate_net.jl")
-include("networks/ebn/reduction/reduction.jl")
-include("networks/bn/bayesnet.jl")
-include("networks/bn/bayesnet2be.jl")
-include("networks/cn/credalnet.jl")
-include("networks/dispatch.jl")
-include("utils/verify_evidence.jl")
-include("inference/inferencestate.jl")
-include("inference/factors.jl")
-include("inference/variableselimination.jl")
-include("learning/parameters_learning/mle.jl")
-include("learning/parameters_learning/em.jl")
+# Add dependencies only needed for testing
+@testsnippet ExtraDeps begin
+    using CSV
+    using DataFrames
+    using SparseArrays
+    using Suppressor
+end
 
+# Helper function to check that the indices of the nodes in the network are coherent with the topology and adjacency matrix
+@testsnippet CheckSetup begin
+    function check_index_coherence(net)
+        @test length(net.topology) == length(net.nodes) == size(net.A, 1)
+        @test all(net.topology[node.name] == i for (i, node) in enumerate(net.nodes))
+    end
+end
+
+@run_package_tests()

@@ -1,105 +1,80 @@
-@testset "Credal Networks" begin
+@testitem "Credal Network" setup=[ExtraDeps] begin
+    r = ContinuousNode(:R, Normal())
 
-    cpt_f = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(:F)
-    cpt_f[:F=>:Ft] = 0.5
-    cpt_f[:F=>:Ff] = 0.5
-    F = DiscreteNode(:F, cpt_f)
+    v = DiscreteNode(:V)
+    v[:V=>:yesV] = 0.01
+    v[:V=>:noV] = 0.99
 
-    cpt_b = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}(:B)
-    cpt_b[:B=>:Bt] = 0.5
-    cpt_b[:B=>:Bf] = 0.5
-    B = DiscreteNode(:B, cpt_b)
+    s = DiscreteNode(:S)
+    s[:S=>:yesS] = 0.5
+    s[:S=>:noS] = 0.5
 
-    cpt_l = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:F, :L])
-    cpt_l[:F=>:Ft, :L=>:Lt] = 0.3
-    cpt_l[:F=>:Ft, :L=>:Lf] = 0.4
-    cpt_l[:F=>:Ft, :L=>:L2] = 0.3
-    cpt_l[:F=>:Ff, :L=>:Lt] = 0.05
-    cpt_l[:F=>:Ff, :L=>:Lf] = 0.85
-    cpt_l[:F=>:Ff, :L=>:L2] = 0.1
-    L = DiscreteNode(:L, cpt_l)
+    t = DiscreteNode(:T, [:V])
+    t[:V=>:yesV, :T=>:yesT] = 0.05
+    t[:V=>:yesV, :T=>:noT] = 0.95
+    t[:V=>:noV, :T=>:yesT] = 0.01
+    t[:V=>:noV, :T=>:noT] = 0.99
 
-    cpt_d = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:F, :B, :D])
-    cpt_d[:F=>:Ft, :B=>:Bt, :D=>:Dt] = 0.8
-    cpt_d[:F=>:Ft, :B=>:Bt, :D=>:Df] = 0.2
-    cpt_d[:F=>:Ft, :B=>:Bf, :D=>:Dt] = 0.1
-    cpt_d[:F=>:Ft, :B=>:Bf, :D=>:Df] = 0.9
-    cpt_d[:F=>:Ff, :B=>:Bt, :D=>:Dt] = 0.1
-    cpt_d[:F=>:Ff, :B=>:Bt, :D=>:Df] = 0.9
-    cpt_d[:F=>:Ff, :B=>:Bf, :D=>:Dt] = 0.7
-    cpt_d[:F=>:Ff, :B=>:Bf, :D=>:Df] = 0.3
-    D = DiscreteNode(:D, cpt_d)
+    l = DiscreteNode(:L, [:S])
+    l[:S=>:yesS, :L=>:yesL] = 0.1
+    l[:S=>:yesS, :L=>:noL] = 0.9
+    l[:S=>:noS, :L=>:yesL] = 0.01
+    l[:S=>:noS, :L=>:noL] = 0.99
 
-    cpt_h = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:D, :B])
-    cpt_h[:D=>:Dt, :B=>:Ht] = 0.6
-    cpt_h[:D=>:Dt, :B=>:Hf] = 0.4
-    cpt_h[:D=>:Df, :B=>:Ht] = 0.3
-    cpt_h[:D=>:Df, :B=>:Hf] = 0.7
-    H = DiscreteNode(:B, cpt_h)
+    f1 = DiscreteFunctionalNode(
+        :F1, [Model(df -> df.v1 .+ df.R, :f1)], df -> 0.8 .- df.f1, MonteCarlo(200)
+    )
 
-    @test_throws ErrorException("network nodes names must be unique") CredalNetwork([F, B, L, D, H])
+    g = DiscreteNode(:G)
+    g[:G=>:g1] = Interval(0.1, 0.2)
+    g[:G=>:g2] = Interval(0.15, 0.25)
+    g[:G=>:g3] = 0.2
+    g[:G=>:g4] = Interval(0.3, 0.5)
 
+    h = DiscreteNode(:H)
+    h[:H=>:yesH] = 0.01
+    h[:H=>:noH] = 0.99
 
-    cpt_h = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:D, :H])
-    cpt_h[:D=>:Dt, :H=>:Bt] = 0.6
-    cpt_h[:D=>:Dt, :H=>:Bf] = 0.4
-    cpt_h[:D=>:Df, :H=>:Bt] = 0.3
-    cpt_h[:D=>:Df, :H=>:Bf] = 0.7
-    H = DiscreteNode(:H, cpt_h)
-    @test_throws ErrorException("network nodes states must be unique") CredalNetwork([F, B, L, D, H])
+    nodes = [r, v, s, t]
+    @test_throws MethodError CredalNetwork(nodes)
 
-    cpt_h = DiscreteConditionalProbabilityTable{PreciseDiscreteProbability}([:D, :H])
-    cpt_h[:D=>:Dt, :H=>:Ht] = 0.6
-    cpt_h[:D=>:Dt, :H=>:Hf] = 0.4
-    cpt_h[:D=>:Df, :H=>:Ht] = 0.3
-    cpt_h[:D=>:Df, :H=>:Hf] = 0.7
-    H = DiscreteNode(:H, cpt_h)
-    @test_throws ErrorException("all nodes are precise. Use BayesianNetwork structure!") CredalNetwork([F, B, L, D, H])
+    nodes = [f1, v, s, t]
+    @test_throws MethodError CredalNetwork(nodes)
 
+    nodes = [v, s, t, l]
+    @test_logs (:warn, "All the nodes are precise; BayesianNetwork structure should be used instead") CredalNetwork(nodes)
 
-    H = DiscreteNode(:H, cpt_h, Dict(:Ht => [Parameter(1, :H)], :Hf => [Parameter(0, :H)]))
+    nodes = [v, g, g]
+    @test_throws ErrorException("Invalid CN: duplicate node names [:G]") CredalNetwork(nodes)
 
-    cpt_i = ContinuousConditionalProbabilityTable{PreciseContinuousInput}()
-    cpt_i[] = Normal()
-    I = ContinuousNode(:I, cpt_i)
+    i = DiscreteNode(:I)
+    i[:I=>:g1] = Interval(0.2, 0.3)
+    i[:I=>:i2] = Interval(0.7, 0.8)
+    nodes = [v, g, i]
+    @test_throws ErrorException("Invalid CN: duplicate node states [:g1]") CredalNetwork(nodes)
 
-    @test_throws ErrorException("node/s [:I] are continuous. Use EnhancedBayesianNetwork structure!") CredalNetwork([F, B, L, D, H, I])
+    nodes = [v, s, t, l, g]
+    cn = CredalNetwork(nodes)
+    @test isa(cn, CredalNetwork)
+    @test isa(cn, EnhancedBayesianNetworks.AbstractNetwork)
+    @test issetequal(cn.nodes, nodes)
+    @test cn.topology == Dict(:V => 1, :S => 2, :T => 3, :L => 4, :G => 5)
+    @test cn.A == spzeros(Bool, 5, 5)
 
+    @test_throws ErrorException("Invalid Network: nodes [:V] have a loop") add_child!(cn, v, v)
 
-    cpt_h = DiscreteConditionalProbabilityTable{ImpreciseDiscreteProbability}([:D, :H])
-    cpt_h[:D=>:Dt, :H=>:Ht] = (0.6, 0.8)
-    cpt_h[:D=>:Dt, :H=>:Hf] = (0.2, 0.4)
-    cpt_h[:D=>:Df, :H=>:Ht] = (0.2, 0.3)
-    cpt_h[:D=>:Df, :H=>:Hf] = (0.7, 0.8)
-    H = DiscreteNode(:H, cpt_h)
+    @test_throws ErrorException("Invalid Network: node :T does not have the node :S in its CPT") add_child!(cn, s, t)
 
-    cn = CredalNetwork([F, B, L, D, H])
+    @test_throws ErrorException("Invalid Network: nodes [:H] are not defined in the network") add_child!(cn, v, h)
 
-    @test cn.adj_matrix == sparse(zeros(5, 5))
-    @test cn.topology_dict == Dict(:F => 1, :H => 5, :D => 4, :B => 2, :L => 3)
-    @test issetequal(cn.nodes, [F, B, L, D, H])
+    @test_throws ErrorException("Invalid Network: nodes [:H] are not defined in the network") add_child!(cn, :V, :H)
 
-    add_child!(cn, F, L)
-    add_child!(cn, F, D)
-    add_child!(cn, B, D)
-    add_child!(cn, D, H)
-    order!(cn)
+    add_child!(cn, v, t)
+    @test cn.A == sparse([1], [3], [true], 5, 5)
+    add_child!(cn, :S, :L)
+    @test cn.A == sparse([1, 2], [3, 4], [true, true], 5, 5)
 
-    @test cn.adj_matrix == sparse([
-        0.0 0.0 1.0 1.0 0.0;
-        0.0 0.0 0.0 1.0 0.0;
-        0.0 0.0 0.0 0.0 0.0;
-        0.0 0.0 0.0 0.0 1.0;
-        0.0 0.0 0.0 0.0 0.0])
-    @test cn.topology_dict == Dict(:F => 1, :H => 5, :D => 4, :B => 2, :L => 3)
-    @test issetequal(cn.nodes, [F, B, L, D, H])
-
-    ebn = EnhancedBayesianNetwork([F, B, L, D, H])
-    add_child!(ebn, F, L)
-    add_child!(ebn, F, D)
-    add_child!(ebn, B, D)
-    add_child!(ebn, D, H)
-    order!(ebn)
-
-    @test cn == CredalNetwork(ebn)
+    cn = @test_logs (:warn, "All the nodes are precise; BayesianNetwork structure should be used instead") CredalNetwork(DiscreteNode[])
+    @test isempty(cn.nodes)
+    @test size(cn.A) == (0, 0)
 end

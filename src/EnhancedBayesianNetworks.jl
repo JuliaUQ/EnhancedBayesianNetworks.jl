@@ -1,92 +1,65 @@
 module EnhancedBayesianNetworks
 
-using AutoHashEquals
 using DataFrames
-using Distributed
 using Distributions
 using LinearAlgebra
-using NetworkLayout
+using Polyhedra: HalfSpace, doubledescription
 using Reexport
 using SparseArrays
-using UncertaintyQuantification: sample, Interval
-using Polyhedra: HalfSpace, doubledescription
+using Compose
 
-# @reexport using Graphs
 @reexport using UncertaintyQuantification
-@reexport using DataFrames
-@reexport using SparseArrays
-@reexport using Compose
 
 import Base: *, sum, reduce
 
 # Types
-export AbstractContinuousInput
-export AbstractContinuousNode
-export AbstractDiscreteNode
-export AbstractDiscretization
-export AbstractInferenceState
-export AbstractNetwork
-export AbstractNode
 export ApproximatedDiscretization
 export BayesianNetwork
-export BayesianNetwork2be
 export ContinuousFunctionalNode
-export ContinuousInput
 export ContinuousNode
-export ContinuousConditionalProbabilityTable
 export CredalNetwork
-export DiscreteConditionalProbabilityTable
+export CredalPosterior
+export DirectAcyclicGraph
 export DiscreteFunctionalNode
 export DiscreteNode
-export DiscreteProbability
 export ExactDiscretization
 export EnhancedBayesianNetwork
 export Evidence
-export Factor
-export FunctionalNode
-export ImpreciseInferenceState
-export ImpreciseContinuousInput
-export ImpreciseDiscreteProbability
-export PreciseContinuousInput
-export PreciseDiscreteProbability
-export PreciseInferenceState
-export UnamedProbabilityBox
-# export Factor
+export Posterior
 
-## Constants
+# Constants
 const Evidence = Dict{Symbol,Symbol}
 
-## Functions
+# Functions
 export add_child!
+export add_node!
 export children
 export discrete_ancestors
-export dispatch
-export distributions
-export evaluate!
-export evaluate_with_envelopes
-export factorize
+export factor_score
+export fill_factor_score
+export fill_score
 export gplot
 export infer
 export isprecise
 export isroot
 export joint_probability
-export learn_parameters_EM
-export learn_parameters_MLE
+export learn
+export learn_parameters_em
+export learn_parameters_mle
 export markov_blanket
 export markov_envelope
 export order!
 export parents
-export reduce!
+export reduce
+export sample
 export saveplot
 export scenarios
 export states
 
-include("util/wrap.jl")
 include("nodes/nodes.jl")
 include("networks/networks.jl")
 include("inference/inference.jl")
-include("learning/learning.jl")
-
-include("util/base_show.jl")
-include("util/plots.jl")
+include("learning/learning_parameters.jl")
+include("utils/base_show.jl")
+include("utils/gplot.jl")
 end
