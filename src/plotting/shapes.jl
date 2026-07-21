@@ -176,7 +176,7 @@ function _build_node_contexts(locs_x, locs_y, node_list, hw, hh)
                 _node_form(node, locs_x[i], locs_y[i], hw, hh),
                 fill(_node_color(node)),
                 Compose.stroke("black"),
-                linewidth(_node_stroskewidth(node))
+                linewidth(_node_strokewidth(node))
             )
         )
     end
