@@ -40,11 +40,17 @@ function _rounded_polygon(verts, r::Float64, arcpoints::Int=8)
         ux, uy = px - cx, py - cy
         vx, vy = nx - cx, ny - cy
         lu, lv = hypot(ux, uy), hypot(vx, vy)
-        (lu < 1e-12 || lv < 1e-12) && (push!(pts, (cx, cy)); continue)
+        if lu < 1e-12 || lv < 1e-12                         # degenerate edge: keep the corner
+            push!(pts, (cx, cy))
+            continue
+        end
         ux, uy = ux / lu, uy / lu
         vx, vy = vx / lv, vy / lv
         α = acos(clamp(ux * vx + uy * vy, -1.0, 1.0)) / 2   # half the corner angle
-        (α < 1e-6 || α > π / 2 - 1e-6) && (push!(pts, (cx, cy)); continue)
+        if α < 1e-6 || α > π / 2 - 1e-6                     # straight or folded: keep the corner
+            push!(pts, (cx, cy))
+            continue
+        end
         d = min(r / tan(α), lu / 2, lv / 2)                 # never eat more than half an edge
         rr = d * tan(α)                                     # radius actually achievable
         t1 = (cx + d * ux, cy + d * uy)                     # tangency points
@@ -56,8 +62,12 @@ function _rounded_polygon(verts, r::Float64, arcpoints::Int=8)
         a1 = atan(t1[2] - oy, t1[1] - ox)
         a2 = atan(t2[2] - oy, t2[1] - ox)
         Δ = a2 - a1
-        Δ > π && (Δ -= 2π)                                  # sweep the short way
-        Δ < -π && (Δ += 2π)
+        if Δ > π                                            # sweep the short way
+            Δ -= 2π
+        end
+        if Δ < -π
+            Δ += 2π
+        end
         for m in 0:arcpoints
             a = a1 + Δ * m / arcpoints
             push!(pts, (ox + rr * cos(a), oy + rr * sin(a)))
@@ -92,12 +102,18 @@ function _polygon_border(cx, cy, θ, verts)
         (bx, by) = verts[mod1(k + 1, n)]
         ex, ey = bx - ax, by - ay
         den = dx * ey - dy * ex
-        abs(den) < 1e-12 && continue                        # ray parallel to this edge
+        if abs(den) < 1e-12                                  # ray parallel to this edge
+            continue
+        end
         t = ((ax - cx) * ey - (ay - cy) * ex) / den          # distance along the ray
         s = ((ax - cx) * dy - (ay - cy) * dx) / den          # position along the edge
-        (t >= 0 && -1e-12 <= s <= 1 + 1e-12 && t < best) && (best = t)
+        if t >= 0 && -1e-12 <= s <= 1 + 1e-12 && t < best
+            best = t
+        end
     end
-    isfinite(best) || return (cx, cy)
+    if !isfinite(best)
+        return (cx, cy)
+    end
     return (cx + best * dx, cy + best * dy)
 end
 
@@ -121,8 +137,13 @@ end
 # ─────────────────────────────────────────────────────────────────────────────
 
 function _node_color(node::AbstractNode)
-    node isa FunctionalNode && return "orange"
-    return isprecise(node) ? "lightgreen" : "limegreen"
+    if node isa FunctionalNode
+        return "orange"
+    elseif isprecise(node)
+        return "lightgreen"
+    else
+        return "limegreen"
+    end
 end
 
 function _node_strokewidth(node::AbstractNode)
@@ -150,11 +171,12 @@ function _build_node_contexts(locs_x, locs_y, node_list, hw, hh)
     ctxs = Compose.Context[]
     for (i, node) in enumerate(node_list)
         push!(ctxs,
-            compose(context(),
+            compose(
+                context(),
                 _node_form(node, locs_x[i], locs_y[i], hw, hh),
                 fill(_node_color(node)),
                 Compose.stroke("black"),
-                linewidth(_node_strokewidth(node))
+                linewidth(_node_stroskewidth(node))
             )
         )
     end

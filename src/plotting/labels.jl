@@ -1,4 +1,3 @@
-
 function _build_labels(node_list, locs_x, locs_y, labelsize, label_scale)
     labels = Compose.Context[]
     for (i, node) in enumerate(node_list)

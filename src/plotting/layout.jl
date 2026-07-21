@@ -5,15 +5,21 @@ function _compute_layers(A::SparseMatrixCSC)
     n = size(A, 1)
     layer = fill(-1, n)
     for i in 1:n
-        nnz(A[:, i]) == 0 && (layer[i] = 0)
+        if nnz(A[:, i]) == 0
+            layer[i] = 0
+        end
     end
     changed = true
     while changed
         changed = false
         for j in 1:n
             parent_idxs = findnz(A[:, j])[1]
-            isempty(parent_idxs) && continue
-            all(layer[p] >= 0 for p in parent_idxs) || continue
+            if isempty(parent_idxs)
+                continue
+            end
+            if !all(layer[p] >= 0 for p in parent_idxs)
+                continue
+            end
             new_layer = maximum(layer[p] for p in parent_idxs) + 1
             if layer[j] != new_layer
                 layer[j] = new_layer
@@ -40,7 +46,9 @@ function _layered_positions(A::SparseMatrixCSC, border_pad::Float64=0.12, top_pa
     innery = 1 - border_pad - top_pad
 
     for (l, group) in enumerate(layer_groups)
-        isempty(group) && continue
+        if isempty(group)
+            continue
+        end
         k = length(group)
         for (pos, idx) in enumerate(group)
             x_frac = k == 1 ? 0.5 : (pos - 1) / (k - 1)

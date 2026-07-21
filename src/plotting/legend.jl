@@ -10,23 +10,36 @@ function _legend_label(y, label, fs)
     compose(context(), Compose.text(_LEGEND_X_LABEL, y, label, hleft, vcenter), fontsize(fs * pt))
 end
 
-_legend_header(i::Int, label, fs) = compose(context(),
-    Compose.text(_LEGEND_X_HEAD, _legend_y(i), label, hleft, vcenter), fontsize(fs * pt))
+_legend_header(i::Int, label, fs) = compose(context(), Compose.text(_LEGEND_X_HEAD, _legend_y(i), label, hleft, vcenter), fontsize(fs * pt))
 
 # A shape row: `formfn` receives the row's y and returns the outlined icon.
 function _legend_shape(formfn, i::Int, label, fs; fillcolor=nothing, linew=0.3mm)
     y = _legend_y(i)
-    compose(context(),
-        compose(context(), formfn(y), fill(fillcolor), Compose.stroke("black"), linewidth(linew)),
-        _legend_label(y, label, fs))
+    compose(
+        context(),
+        compose(
+            context(),
+            formfn(y),
+            fill(fillcolor),
+            Compose.stroke("black"),
+            linewidth(linew)
+        ),
+        _legend_label(y, label, fs)
+    )
 end
 
 # A colour row: a filled bar instead of a shape icon.
 function _legend_color(i::Int, label, fs, colour, bar_w, bar_h)
     y = _legend_y(i)
-    compose(context(),
-        compose(context(), rectangle(_LEGEND_X_ICON - bar_w / 2, y - bar_h / 2, bar_w, bar_h), fill(colour)),
-        _legend_label(y, label, fs))
+    compose(
+        context(),
+        compose(
+            context(),
+            rectangle(_LEGEND_X_ICON - bar_w / 2, y - bar_h / 2, bar_w, bar_h),
+            fill(colour)
+        ),
+        _legend_label(y, label, fs)
+    )
 end
 
 function _build_legend(scale; x_fraction=0.72, y_fraction=0.62)
