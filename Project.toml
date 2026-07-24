@@ -16,6 +16,7 @@ UncertaintyQuantification = "7183a548-a887-11e9-15ce-a56ab60bad7a"
 
 [compat]
 Compose = "0.9.5"
+DataFrames = "1.8.2"
 DelimitedFiles = "1.9.1"
 Reexport = "1.2.2"
 SparseArrays = "1.11.0"
