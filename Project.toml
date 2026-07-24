@@ -17,6 +17,7 @@ UncertaintyQuantification = "7183a548-a887-11e9-15ce-a56ab60bad7a"
 [compat]
 Compose = "0.9.5"
 DelimitedFiles = "1.9.1"
+Polyhedra = "0.8.1"
 Reexport = "1.2.2"
 SparseArrays = "1.11.0"
 UncertaintyQuantification = "0.14.0"
