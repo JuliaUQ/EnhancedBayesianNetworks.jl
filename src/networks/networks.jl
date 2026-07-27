@@ -1,6 +1,7 @@
 abstract type AbstractNetwork end
 
 include("../utils/topologically_sort.jl")
+include("../utils/cyclicality_and_connection.jl")
 include("../utils/require_unique.jl")
 include("../utils/sum_intervals_and_floats.jl")
 include("bn/bayesnet.jl")

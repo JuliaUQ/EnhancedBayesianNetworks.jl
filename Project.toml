@@ -6,7 +6,6 @@ authors = ["Andrea Perin <andrea.perin@irz.uni-hannover.de>"]
 [deps]
 Compose = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Polyhedra = "67491407-f73d-577b-9b50-8179a7c68029"
@@ -17,7 +16,6 @@ UncertaintyQuantification = "7183a548-a887-11e9-15ce-a56ab60bad7a"
 [compat]
 Compose = "0.9.5"
 DataFrames = "1.8.2"
-DelimitedFiles = "1.9.1"
 Polyhedra = "0.8.1"
 Reexport = "1.2.2"
 SparseArrays = "1.11.0"
