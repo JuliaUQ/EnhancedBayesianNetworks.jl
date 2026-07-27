@@ -719,7 +719,7 @@ end
     @test size(A) == (0, 0)
 end
 
-@testitem "Verify add_child!" begin
+@testitem "Networks Common - verify add_child!" begin
     weather = DiscreteNode(:W)
     weather[:W=>:sunny] = 0.5
     weather[:W=>:cloudy] = 0.5
