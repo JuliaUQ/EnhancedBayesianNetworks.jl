@@ -5,7 +5,6 @@ using EnhancedBayesianNetworks
 
 # Add dependencies only needed for testing
 @testsnippet ExtraDeps begin
-    using CSV
     using DataFrames
     using SparseArrays
     using Suppressor
