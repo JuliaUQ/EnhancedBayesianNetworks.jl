@@ -99,15 +99,17 @@ end
 @testitem "Show - node helpers" setup = [SetupShowNet] begin
     @test helper(_show_parents, W) == "Parents: none\n"
     @test helper(_show_parents, S) == "Parents: W\n"
-    @test helper(_show_discretization, ExactDiscretization([-1.0, 1.0])) ==
-          "Discretization: ExactDiscretization\n  Intervals: -1.0, 1.0\n"
-    @test helper(_show_discretization, ApproximatedDiscretization([-1.0, 1.0], 2)) ==
-          "Discretization: ApproximatedDiscretization\n  Sigma: 2\n  Intervals: -1.0, 1.0\n"
+    @test helper(_show_discretization, ExactDiscretization([-1.0, 1.0])) == "Discretization: ExactDiscretization\n  Intervals: -1.0, 1.0\n"
+    @test helper(_show_discretization, ApproximatedDiscretization([-1.0, 1.0], 2)) == "Discretization: ApproximatedDiscretization\n  Sigma: 2\n  Intervals: -1.0, 1.0\n"
     @test helper(_show_discretization, D.discretization) == ""
     @test helper(_show_models, cf.models) == "Models: 1\n  Names: fc\n"
     @test helper(_show_parameters, W.parameters) == ""
-    @test helper(_show_parameters, Sp.parameters) ==
-          "Parameters:\n  on: UncertaintyQuantification.Parameter(0.5, :Sp)\n  off: UncertaintyQuantification.Parameter(0.0, :Sp)\n"
+    @test helper(_show_parameters, W.parameters) == ""
+    # build the expected Parameter repr exactly as the helper does, so the test is robust to
+    # module-qualified show ("UncertaintyQuantification.Parameter" inside a @testitem module)
+    p_on = string(Parameter(0.5, :Sp))
+    p_off = string(Parameter(0.0, :Sp))
+    @test helper(_show_parameters, Sp.parameters) == "Parameters:\n  on: $(p_on)\n  off: $(p_off)\n"
 end
 
 @testitem "Show - DiscreteNode" setup = [SetupShowNet] begin
