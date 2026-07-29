@@ -4,3 +4,8 @@ DocumenterCitations = "daee34ce-89f3-4625-b898-19384cb65244"
 DocumenterVitepress = "4710194d-e776-4893-9690-8d956a29c365"
 EnhancedBayesianNetworks = "886a9665-f0d4-4b74-bc12-f95153dc1848"
 LiveServer = "16fef848-5104-11e9-1b77-fb7a48bbb589"
+
+[compat]
+Documenter = "1"
+DocumenterCitations = "1"
+DocumenterVitepress = "0.2"
