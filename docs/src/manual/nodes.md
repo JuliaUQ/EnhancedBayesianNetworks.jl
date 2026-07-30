@@ -31,11 +31,18 @@ Cutting across both is the distinction that decides *which type you actually con
 | [`DiscreteFunctionalNode`](@ref) | discrete | **not** known a priori | child only |
 | [`ContinuousFunctionalNode`](@ref) | continuous | **not** known a priori | child only |
 
+The distributions and uncertainty models a node is built from — `Parameter`,
+`RandomVariable`, `Interval`, `ProbabilityBox`, `Model`, and the simulation types such as
+`MonteCarlo` — come from
+[UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl)
+[behrensdorf_uncertaintyquantificationjl_2023](@cite) and are re-exported by
+EnhancedBayesianNetworks, so they are available without a separate `using`.
+
 Entries may also be **precise** or **imprecise**: a discrete entry is a `Real`
 probability for a **precise** discrete node or an `Interval` an **imprecise** 
-(or **credal**) discrete node; a continuous entry is a `UnivariateDistribution` for 
+(or **credal**) discrete node [weichselberger_theory_2000, Levi1980-LEVTEO-7](@cite); a continuous entry is a `UnivariateDistribution` for 
 a **precise** continuous node, or an`Interval`/`ProbabilityBox` for an **imprecise** 
-continuous node. Imprecision decides the resulting network type. Among the purely discrete networks, one
+continuous node [beer_imprecise_2013-1](@cite). Imprecision decides the resulting network type. Among the purely discrete networks, one
 holding an imprecise discrete node is a [`CredalNetwork`](@ref) rather than a
 [`BayesianNetwork`](@ref); and an [`EnhancedBayesianNetwork`](@ref) that contains *any*
 imprecise node — discrete, continuous, or functional — reduces to a [`CredalNetwork`](@ref)
@@ -110,7 +117,7 @@ entry makes the whole node imprecise.
 
 Reduction eliminates continuous nodes, so a continuous node's posterior cannot be recovered
 afterwards. To keep evidence observable on a continuous node — and to let it enter discrete
-inference — it can be **discretized**: its support is partitioned at a list of interval
+inference — it can be **discretized** [straub_bayesian_2010](@cite): its support is partitioned at a list of interval
 edges into a discrete node plus a conditioned continuous remainder. The strategy is attached
 to the node and depends on its position:
 
@@ -134,8 +141,9 @@ Cd = ContinuousNode(:Cd, [:W], ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5)
 ## Nodes with an a-priori-unknown CPT (functional nodes)
 
 When a node's CPT is **not** known a priori, it is defined by a functional relationship
-with its parents: one or more `UncertaintyQuantification` models, plus a simulation that
-propagates the parents' uncertainty through them. The resulting table is a collection of
+with its parents: one or more
+[UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl)
+models, plus a simulation that propagates the parents' uncertainty through them. The resulting table is a collection of
 *structural reliability problems*, evaluated only when the enclosing network is
 [`reduce`](@ref)d. A functional node is therefore always a child, and never a root.
 
