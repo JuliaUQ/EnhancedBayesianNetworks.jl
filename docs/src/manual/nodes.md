@@ -39,9 +39,9 @@ The distributions and uncertainty models a node is built from — `Parameter`,
 EnhancedBayesianNetworks, so they are available without a separate `using`.
 
 Entries may also be **precise** or **imprecise**: a discrete entry is a `Real`
-probability for a **precise** discrete node or an `Interval` an **imprecise** 
+probability for a **precise** discrete node or an `Interval` for an **imprecise** 
 (or **credal**) discrete node [weichselberger_theory_2000, Levi1980-LEVTEO-7](@cite); a continuous entry is a `UnivariateDistribution` for 
-a **precise** continuous node, or an`Interval`/`ProbabilityBox` for an **imprecise** 
+a **precise** continuous node, or an `Interval`/`ProbabilityBox` for an **imprecise** 
 continuous node [beer_imprecise_2013-1](@cite). Imprecision decides the resulting network type. Among the purely discrete networks, one
 holding an imprecise discrete node is a [`CredalNetwork`](@ref) rather than a
 [`BayesianNetwork`](@ref); and an [`EnhancedBayesianNetwork`](@ref) that contains *any*
@@ -108,7 +108,7 @@ scenarios(C)
 ```
 
 A continuous entry is precise when it is a `UnivariateDistribution`; using an `Interval` or
-a `ProbabilityBox` instead represents epistemic uncertainty. As with discrete nodes, a
+a `ProbabilityBox` [P_box_FAES](@cite) instead represents epistemic uncertainty. As with discrete nodes, a
 child's entries may be mixed across parent-state combinations — a `UnivariateDistribution`
 for some scenarios and an `Interval` or `ProbabilityBox` for others — and a single imprecise
 entry makes the whole node imprecise.
@@ -192,7 +192,7 @@ constructor.
 
 Constructing a functional node only records its models and simulation — no sampling runs
 until reduction, which is why `states(DF)` above returns immediately. Like any discrete
-node, a `DiscreteFunctionalNode` may carry `parameters` for when it in turn feeds a further
+node, a [`DiscreteFunctionalNode`](@ref) may carry `parameters` for when it in turn feeds a further
 functional node.
 
 !!! note "Imprecise parents and the double loop"
