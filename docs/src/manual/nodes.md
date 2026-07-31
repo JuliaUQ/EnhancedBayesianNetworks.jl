@@ -2,15 +2,17 @@
 
 Nodes are the fundamental building blocks of a network: together with the edges, they
 graphically represent the random variables of the network. Every node carries a name (a
-`Symbol`) that uniquely identifies it, and is classified along two independent lines.
+`Symbol`) that uniquely identifies it, a conditional probability table (CPT), which 
+might by a priori **known** or **unknown**, and **continuous** or **discrete**. 
+A node is classified along two independent lines.
 
 **By position in the graph** a node is either a **root** — no parents, its state depending
 on nothing else — or a **child**, with one or more parents that influence it. This is a
 property of the assembled network, read back with [`isroot`](@ref), not a separate type.
 
 **By the nature of its variable** a node is either **discrete** — a finite set of mutually
-exclusive states — or **continuous** — a real-valued quantity described by a probability
-distribution.
+exclusive states (discrete CPT) — or **continuous** — a real-valued quantity described by a probability
+distribution (continuous CPT).
 
 Cutting across both is the distinction that decides *which type you actually construct*:
 
