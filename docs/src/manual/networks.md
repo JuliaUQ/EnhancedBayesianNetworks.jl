@@ -1,6 +1,6 @@
 # Networks
 
-A network is a directed acyclic graph whose vertices are [nodes](nodes.md) and whose
+A network is a directed acyclic graph (DAG) whose vertices are [nodes](nodes.md) and whose
 edges encode direct probabilistic dependence: an edge `parent → child` means the child's
 distribution is conditioned on the parent. Three network types make up the modelling
 front-end, differing only in the kind of nodes they admit:
@@ -8,15 +8,16 @@ front-end, differing only in the kind of nodes they admit:
 | Type | Nodes | Purpose |
 |:--|:--|:--|
 | [`BayesianNetwork`](@ref) | discrete, **precise** | classical BN, ready for inference |
-| [`CredalNetwork`](@ref) | discrete, some **imprecise** | credal network over interval CPTs |
-| [`EnhancedBayesianNetwork`](@ref) | discrete + continuous + functional | general model that is *reduced* to one of the above |
+| [`CredalNetwork`](@ref) | discrete, at least one **imprecise** | CN over interval CPTs, ready for inference |
+| [`EnhancedBayesianNetwork`](@ref) | discrete + continuous + functional, **precise** or **imprecise** | general model that is *reduced* to one of the above |
 
 The [`EnhancedBayesianNetwork`](@ref) (eBN) is the expressive modelling layer: it may mix
 discrete, continuous, and functional nodes [straub_bayesian_2010](@cite). Inference is not
 performed on it directly — it is first [`reduce`](@ref)d to a purely discrete
-[`BayesianNetwork`](@ref) or [`CredalNetwork`](@ref), depending on whether any imprecision
-survives. A [`BayesianNetwork`](@ref) or [`CredalNetwork`](@ref) can also be built directly
-when the model is already discrete [jensen2007bayesian](@cite).
+[`BayesianNetwork`](@ref) (BN) or [`CredalNetwork`](@ref) (CN), depending on whether any imprecision
+survives. A [`BayesianNetwork`](@ref) [jensen2007bayesian](@cite) or
+[`CredalNetwork`](@ref) [cozman_credal_2000](@cite) can also be built directly when the
+model is already discrete.
 
 ## Building and validating a network
 
@@ -61,7 +62,7 @@ chapter).
 ## Credal networks
 
 When a discrete CPT carries interval-valued entries, the node is *imprecise* and the network
-becomes a [`CredalNetwork`](@ref). Each local CPT is then a closed convex set of probability
+becomes a [`CredalNetwork`](@ref) [cozman_credal_2000](@cite). Each local CPT is then a closed convex set of probability
 measures — a *credal set* [Levi1980-LEVTEO-7](@cite) — and the network stands for the whole
 family of Bayesian networks that share its graph but differ in the measures drawn from those
 sets. Imprecision is expressed with interval probabilities [weichselberger_theory_2000](@cite),
@@ -136,7 +137,8 @@ influence diagrams [Shachter86a](@cite):
    (`_transfer_continuous_functional_node!`). This is a computational optimization of the
    evaluation stage. A continuous-functional node that merely feeds another functional node
    would otherwise be evaluated on its own — sampling its models and fitting an
-   `EmpiricalDistribution` per scenario — only for that distribution to be re-sampled by the
+   `EmpiricalDistribution` from [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) 
+   per scenario — only for that distribution to be re-sampled by the
    child and then thrown away when the node is eliminated. Instead, its models are *prepended*
    to the child's model chain, so the samples already drawn for the child are propagated
    straight through them during the child's single structural reliability problem. The
@@ -146,7 +148,18 @@ influence diagrams [Shachter86a](@cite):
    reliability problem over the scenario grid of its
    [`discrete_ancestors`](@ref), using the node's simulation
    [behrensdorf_uncertaintyquantificationjl_2023](@cite). The functional node is then replaced
-   by the resulting discrete (or continuous) node.
+   by a plain node whose kind and precision mirror what was evaluated:
+     - a [`DiscreteFunctionalNode`](@ref) becomes a [`DiscreteNode`](@ref). Each scenario
+       contributes a failure probability and its complement. In the **precise** case these are
+       real numbers, so the reduced node has a real-valued CPT and stays precise; in the
+       **imprecise** case the failure probability comes out as an `Interval`, so the CPT carries
+       at least one interval entry and the node stays imprecise.
+     - a [`ContinuousFunctionalNode`](@ref) becomes a [`ContinuousNode`](@ref) whose
+       distribution is refit from the drawn samples. In the **precise** case each scenario
+       yields a single `EmpiricalDistribution`; in the **imprecise** case each scenario yields
+       *two* — a lower-bound and an upper-bound `EmpiricalDistribution` that bracket the family
+       of admissible distributions. (Consolidating this lower/upper pair into a single
+       `ProbabilityBox` [P_box_FAES](@cite) per scenario is ongoing work.)
 5. **Eliminate** continuous parents. A continuous node that fed only the just-evaluated node
    is removed and its parents reconnected to its children (`_eliminate_node!` — node removal
    [Shachter86a](@cite)); one that still feeds other functional nodes keeps its remaining
@@ -159,7 +172,7 @@ influence diagrams [Shachter86a](@cite):
 reduced = reduce(ebn)                       # -> BayesianNetwork (or CredalNetwork if imprecise)
 ```
 
-Structural reliability problems are not solved over the whole network but on **Markov
+Structural reliability problems can be solved over the whole network or on **Markov
 envelopes** [straub_bayesian_2010](@cite): continuous nodes linked through their Markov
 blankets are grouped, and each group's envelope — the union of its members' Markov blankets —
 is the minimal sub-network on which the corresponding reliability problem is evaluated.
