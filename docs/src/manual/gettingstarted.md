@@ -1,0 +1,93 @@
+# Getting Started
+
+## Installation
+
+EnhancedBayesianNetworks.jl is not yet registered in Julia's General registry, so install it
+directly from its GitHub repository. From the Julia REPL, enter the package manager with `]` and
+add it by URL:
+
+```julia
+pkg> add https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl
+```
+
+or, equivalently, from code:
+
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl")
+```
+
+Then load it — this also brings in the re-exported
+[UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) types
+(`Model`, `Parameter`, `RandomVariable`, `Interval`, `ProbabilityBox`, the simulation methods)
+and the distributions used to define nodes:
+
+```@example gettingstarted
+using EnhancedBayesianNetworks
+```
+
+## Your first Bayesian network
+
+Building a network always follows the same three steps: **construct the nodes**, **wire the
+edges** with [`add_child!`](@ref), and **finalize** with [`order!`](@ref). Here is a two-node
+weather/sprinkler model — a root node `W` and a child `S` whose CPT is conditioned on it:
+
+```@example gettingstarted
+W = DiscreteNode(:W)
+W[:W => :sunny]  = 0.5
+W[:W => :cloudy] = 0.5
+
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+
+bn = BayesianNetwork([W, S])
+add_child!(bn, :W, :S)
+order!(bn)
+```
+
+Now query it. [`infer`](@ref) returns the posterior over a query variable given some evidence:
+
+```@example gettingstarted
+infer(bn, :S, Evidence(:W => :sunny))       # P(S | W = sunny)
+```
+
+With no evidence you get the prior marginal:
+
+```@example gettingstarted
+infer(bn, :S, Evidence())                   # P(S)
+```
+
+## A first enhanced Bayesian network
+
+The real power of the package is mixing in continuous and **functional** nodes — a node whose
+conditional table comes from a reliability analysis rather than being tabulated. The enhanced
+network is reduced to a discrete one with [`reduce`](@ref), then queried exactly as above:
+
+```julia
+Load = DiscreteNode(:Load, [:low => [Parameter(1.0, :Load)], :high => [Parameter(3.0, :Load)]])
+Load[:Load => :low] = 0.7; Load[:Load => :high] = 0.3
+R = ContinuousNode(:R, Normal(3.0, 0.5))                 # a continuous resistance
+model = Model(df -> df.R .- df.Load, :g)                 # limit state g = R - Load
+F = DiscreteFunctionalNode(:F, [model], df -> df.g, MonteCarlo(2000))
+
+ebn = EnhancedBayesianNetwork([Load, R, F])
+add_child!(ebn, :Load, :F); add_child!(ebn, :R, :F); order!(ebn)
+
+reduced = reduce(ebn)                                    # -> BayesianNetwork
+infer(reduced, :F, Evidence(:Load => :high))            # failure probability given a high load
+```
+
+Making the resistance imprecise — `ContinuousNode(:R, Interval(2.0, 4.0))` with a
+`DoubleLoop(MonteCarlo(1000))` simulation — turns the result into interval bounds and reduces to
+a [`CredalNetwork`](@ref) instead. See [Reduction & Reliability Analysis](reduction.md) for the
+full story.
+
+## Where to next
+
+- [Introduction](introduction.md) — the concepts behind enhanced Bayesian networks.
+- [Nodes](nodes.md) and [Networks](networks.md) — the building blocks in depth.
+- [Reduction & Reliability Analysis](reduction.md) — evaluating enhanced networks, with and
+  without imprecision.
+- [Inference](inference.md), [Parameter Learning](parameterlearning.md), and
+  [Plotting](plotting.md).

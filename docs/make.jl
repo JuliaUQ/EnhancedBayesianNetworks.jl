@@ -2,6 +2,9 @@ using Documenter
 using DocumenterCitations
 using DocumenterVitepress
 using EnhancedBayesianNetworks
+using Cairo
+using Fontconfig
+
 
 DocMeta.setdocmeta!(
     EnhancedBayesianNetworks,
@@ -18,19 +21,18 @@ format = DocumenterVitepress.MarkdownVitepress(
     devurl="dev"
 )
 
-
 pages = [
     "Home" => "index.md",
-    # "Manual" => [
-    #     "Introduction"       => "manual/introduction.md",
-    #     "Getting Started"    => "manual/gettingstarted.md",
-    "Nodes" => "manual/nodes.md",
-    "Networks" => "manual/networks.md",
-    #     "Inference"          => "manual/inference.md",
-    #     "Parameter Learning" => "manual/parameterlearning.md",
-    #     "Discretization"     => "manual/discretization.md",
-    #     "Plotting"           => "manual/plotting.md",
-    # ],
+    "Manual" => [
+        "Introduction" => "manual/introduction.md",
+        "Getting Started" => "manual/gettingstarted.md",
+        "Nodes" => "manual/nodes.md",
+        "Networks" => "manual/networks.md",
+        "Reduction & Reliability Analysis" => "manual/reduction.md",
+        "Inference" => "manual/inference.md",
+        "Parameter Learning" => "manual/parameterlearning.md",
+        "Plotting" => "manual/plotting.md",
+    ],
     # "Examples" => [
     #     "Asia Network"     => "examples/asia_bn.md",
     #     "Fire Protection"  => "examples/fire_protection.md",

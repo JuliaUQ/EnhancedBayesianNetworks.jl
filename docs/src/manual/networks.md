@@ -115,76 +115,22 @@ network and a node name:
   ones; these define the scenario grid over which a functional node is evaluated.
 - [`markov_blanket`](@ref) — a node's parents, children, and co-parents; the minimal set that
   renders it conditionally independent of the rest of the network.
-- [`markov_envelope`](@ref) — the sub-networks used during reduction (below).
+- [`markov_envelope`](@ref) — the groups of continuous nodes linked through shared Markov
+  blankets, together with those blankets; a structural query over the network.
 
 ```@example networks
 (parents = parents(ebn, :F), discrete_ancestors = discrete_ancestors(ebn, :F))
 ```
 
-## Reduction
-
-[`reduce`](@ref) turns an [`EnhancedBayesianNetwork`](@ref) into an inference-ready discrete
-network. The transformation follows the enhanced-Bayesian-network procedure of
-[straub_bayesian_2010](@cite) and rests on the node-removal operations for evaluating
-influence diagrams [Shachter86a](@cite):
-
-1. **Order** the network ([`order!`](@ref)).
-2. **Discretize** every continuous node that carries a discretization strategy — it is
-   replaced by a discrete surrogate (the per-interval probability masses) plus a residual
-   continuous node, with parents rewired to the discrete part and children to the continuous
-   part (`discretize!`).
-3. **Transfer** each continuous-functional node's models into its children
-   (`_transfer_continuous_functional_node!`). This is a computational optimization of the
-   evaluation stage. A continuous-functional node that merely feeds another functional node
-   would otherwise be evaluated on its own — sampling its models and fitting an
-   `EmpiricalDistribution` from [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) 
-   per scenario — only for that distribution to be re-sampled by the
-   child and then thrown away when the node is eliminated. Instead, its models are *prepended*
-   to the child's model chain, so the samples already drawn for the child are propagated
-   straight through them during the child's single structural reliability problem. The
-   intermediate empirical distribution is never built for a node that reduction removes anyway.
-4. **Evaluate** functional nodes in dependency order. A node whose parents are all
-   non-functional has ready inputs: its conditional table is filled by solving a structural
-   reliability problem over the scenario grid of its
-   [`discrete_ancestors`](@ref), using the node's simulation
-   [behrensdorf_uncertaintyquantificationjl_2023](@cite). The functional node is then replaced
-   by a plain node whose kind and precision mirror what was evaluated:
-     - a [`DiscreteFunctionalNode`](@ref) becomes a [`DiscreteNode`](@ref). Each scenario
-       contributes a failure probability and its complement. In the **precise** case these are
-       real numbers, so the reduced node has a real-valued CPT and stays precise; in the
-       **imprecise** case the failure probability comes out as an `Interval`, so the CPT carries
-       at least one interval entry and the node stays imprecise.
-     - a [`ContinuousFunctionalNode`](@ref) becomes a [`ContinuousNode`](@ref) whose
-       distribution is refit from the drawn samples. In the **precise** case each scenario
-       yields a single `EmpiricalDistribution`; in the **imprecise** case each scenario yields
-       *two* — a lower-bound and an upper-bound `EmpiricalDistribution` that bracket the family
-       of admissible distributions. (Consolidating this lower/upper pair into a single
-       `ProbabilityBox` [P_box_FAES](@cite) per scenario is ongoing work.)
-5. **Eliminate** continuous parents. A continuous node that fed only the just-evaluated node
-   is removed and its parents reconnected to its children (`_eliminate_node!` — node removal
-   [Shachter86a](@cite)); one that still feeds other functional nodes keeps its remaining
-   edges, and only the spent edge is cut.
-6. **Dispatch** to the concrete type: once no node is continuous, an all-precise network
-   becomes a [`BayesianNetwork`](@ref) and a network with any surviving imprecision a
-   [`CredalNetwork`](@ref).
-
-```julia
-reduced = reduce(ebn)                       # -> BayesianNetwork (or CredalNetwork if imprecise)
-```
-
-Structural reliability problems can be solved over the whole network or on **Markov
-envelopes** [straub_bayesian_2010](@cite): continuous nodes linked through their Markov
-blankets are grouped, and each group's envelope — the union of its members' Markov blankets —
-is the minimal sub-network on which the corresponding reliability problem is evaluated.
-[`markov_envelope`](@ref) exposes these groups:
-
 ```@example networks
 markov_envelope(ebn)
 ```
 
-!!! note "Imprecision propagates to the reduced network"
-    If any node feeding a structural reliability problem is imprecise — an interval-valued
-    discrete parent, or a continuous parent given as an `Interval` or `ProbabilityBox` — the
-    evaluated failure probability is itself an interval, obtained through a double-loop
-    analysis. Reduction then yields a [`CredalNetwork`](@ref) rather than a
-    [`BayesianNetwork`](@ref).
+## Reduction
+
+An [`EnhancedBayesianNetwork`](@ref) is not queried directly — it is transformed into an
+inference-ready discrete network by [`reduce`](@ref), which discretizes its continuous nodes and
+evaluates its functional nodes as structural reliability problems, yielding a
+[`BayesianNetwork`](@ref) or a [`CredalNetwork`](@ref). Because reduction is the core operation
+of the library — and the route through which imprecision reaches the inference result — it has
+its own chapter: [Reduction & Reliability Analysis](reduction.md).
