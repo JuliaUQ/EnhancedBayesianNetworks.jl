@@ -84,8 +84,9 @@ order!(learned)
 
 ### Expectation-Maximization
 
-When some entries are `missing`, [`learn_parameters_em`](@ref) estimates the CPTs iteratively.
-Starting from uniform tables, each iteration performs:
+When some entries are `missing`, [`learn_parameters_em`](@ref) estimates the CPTs iteratively by
+Expectation-Maximization [dempster_maximum_1977](@cite). Starting from uniform tables, each
+iteration performs:
 
 - an **E-step** — every row with missing values is expanded into all completions of its missing
   variables, each weighted by ``P(\text{missing} \mid \text{observed})`` under the current
