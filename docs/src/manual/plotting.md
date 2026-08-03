@@ -4,18 +4,22 @@
 other node one row below its deepest parent, with edges attached to the exact border of each
 shape. It works on any network — a [`BayesianNetwork`](@ref), [`CredalNetwork`](@ref), or
 [`EnhancedBayesianNetwork`](@ref) — and on a [`DirectAcyclicGraph`](@ref), so a structure can be
-inspected before its parameters are even learned.
+inspected before its parameters are even [learned](parameterlearning.md).
 
 ```@example plotting
 using EnhancedBayesianNetworks # hide
-W = DiscreteNode(:W); W[:W => :sunny] = 0.7; W[:W => :rainy] = 0.3
-U = ContinuousNode(:U, [:W]); U[:W => :sunny] = Normal(); U[:W => :rainy] = Normal(2, 1)
+W = DiscreteNode(:W)
+W[:W => :sunny] = 0.7
+W[:W => :rainy] = 0.3
+U = ContinuousNode(:U, [:W])
+U[:W => :sunny] = Normal()
+U[:W => :rainy] = Normal(2, 1)
 
 net = EnhancedBayesianNetwork([W, U])
 add_child!(net, W, U)
 order!(net)
 
-gplot(net; title = "weather", legend = true)
+gplot(net; title = "weather", legend = true, background_color="white")
 ```
 
 ## The visual language

@@ -24,7 +24,7 @@ Cutting across both is the distinction that decides *which type you actually con
 >   so the node **must be functional** ([`DiscreteFunctionalNode`](@ref),
 >   [`ContinuousFunctionalNode`](@ref)). Its table does not exist up front: it is
 >   materialized only when the network is reduced, by propagating the parents' uncertainty
->   through the node's models (structural reliability problems).
+>   through the node's models ([structural reliability problems](reduction.md)).
 
 | Type | Variable | CPT | Role |
 |:--|:--|:--|:--|
@@ -117,7 +117,7 @@ entry makes the whole node imprecise.
 
 ### Discretization
 
-Reduction eliminates continuous nodes, so a continuous node's posterior cannot be recovered
+[Reduction](reduction.md) eliminates continuous nodes, so a continuous node's posterior cannot be recovered
 afterwards. To keep evidence observable on a continuous node — and to let it enter discrete
 inference — it can be **discretized** [straub_bayesian_2010](@cite): its support is partitioned at a list of interval
 edges into a discrete node plus a conditioned continuous remainder. The strategy is attached
@@ -129,6 +129,44 @@ to the node and depends on its position:
   generally available, so the tails are approximated (a uniform assumption over each
   bounded interval and an exponential assumption, with rate/spread `sigma`, over an
   unbounded tail).
+
+Writing ``x_{ik}^-`` and ``x_{ik}^+`` for the lower and upper edges of the ``k``-th
+discretization interval, the conditional CDF of the continuous remainder ``X_i'`` given the
+discrete state ``k`` follows one of three forms. An [`ExactDiscretization`](@ref) on a **root**
+truncates the node's own CDF ``F_{X_i}`` to the interval, exactly
+[straub_bayesian_2010](@cite):
+
+```math
+F_{X_i'}(x_i \mid k) =
+\begin{cases}
+0 & x_i \le x_{ik}^-, \\
+\dfrac{F_{X_i}(x_i) - F_{X_i}(x_{ik}^-)}{F_{X_i}(x_{ik}^+) - F_{X_i}(x_{ik}^-)} & x_{ik}^- \le x_i \le x_{ik}^+, \\
+1 & x_i \ge x_{ik}^+.
+\end{cases}
+```
+
+An [`ApproximatedDiscretization`](@ref) on a **child** cannot use the (unknown) marginal, so each
+bounded interval is filled with a **uniform** assumption,
+
+```math
+F_{X_i}(x_i \mid k) =
+\begin{cases}
+0 & x_i \le x_{ik}^-, \\
+\dfrac{x_i - x_{ik}^-}{x_{ik}^+ - x_{ik}^-} & x_{ik}^- \le x_i \le x_{ik}^+, \\
+1 & x_i \ge x_{ik}^+,
+\end{cases}
+```
+
+and an unbounded (right) tail with an **exponential** assumption of rate ``\lambda`` (the `sigma`
+argument):
+
+```math
+F_{X_i}(x_i \mid k) =
+\begin{cases}
+0 & x_i \le x_{ik}^-, \\
+1 - \exp\!\left[-\lambda\,(x_i - x_{ik}^-)\right] & x_i > x_{ik}^-.
+\end{cases}
+```
 
 ```@example nodes
 Tr = ContinuousNode(:Tr, Normal(), ExactDiscretization([-2.0, 0.0, 2.0]))   # root
@@ -200,7 +238,7 @@ functional node.
 !!! note "Imprecise parents and the double loop"
     A functional node with only precise parents can use any single-loop simulation (FORM,
     Monte Carlo, Line/Importance/Subset sampling). If **any** parent is imprecise (interval
-    or p-box), the analysis needs a *double-loop* scheme — an outer optimization over the
+    or p-box), the analysis needs a [*double-loop* scheme](reduction.md) — an outer optimization over the
     imprecise sets — and the reduced network becomes a [`CredalNetwork`](@ref).
 
 ## Inspecting nodes

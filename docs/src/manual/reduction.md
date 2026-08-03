@@ -15,7 +15,7 @@ inputs through to the inference result.
 diagrams [Shachter86a](@cite):
 
 1. **Order** the network ([`order!`](@ref)).
-2. **Discretize** every continuous node that carries a discretization strategy — it is
+2. **Discretize** every continuous node that carries a [discretization strategy](nodes.md) — it is
    replaced by a discrete surrogate (the per-interval probability masses) plus a residual
    continuous node, with parents rewired to the discrete part and children to the continuous
    part (`discretize!`).

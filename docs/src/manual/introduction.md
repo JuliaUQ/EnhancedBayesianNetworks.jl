@@ -25,6 +25,36 @@ An enhanced Bayesian network closes that gap by admitting three kinds of node si
 
 See the [Nodes](nodes.md) chapter for the full taxonomy.
 
+## The system probability distribution
+
+A Bayesian network encodes a joint distribution that *factorizes* over the graph. By the local
+Markov property each variable is conditionally independent of its non-descendants given its
+parents, so the joint distribution of ``n`` variables ``z_1, \dots, z_n`` is the product of the
+per-node conditional tables [jensen2007bayesian](@cite):
+
+```math
+p(z_1, \dots, z_n) = \prod_{i=1}^{n} p\!\left(z_i \mid \mathrm{Pa}(z_i)\right),
+```
+
+where ``\mathrm{Pa}(z_i)`` denotes the parents of ``z_i``.
+
+An enhanced Bayesian network keeps this factorized structure but admits both a set of
+**discrete** nodes ``\mathbf{Y} = \{Y_1, \dots, Y_{n_Y}\}`` and a set of **continuous** nodes
+``\mathbf{X} = \{\mathbf{X}_1, \dots, \mathbf{X}_{n_X}\}``. Its system joint distribution is then
+the combined measure of the discrete probability mass functions and the continuous probability
+density functions [straub_bayesian_2010](@cite):
+
+```math
+p(\mathbf{y} \mid \mathbf{x})\, f(\mathbf{x}) =
+\prod_{Y_i \in \mathbf{Y}} p\!\left(y_i \mid \mathrm{Pa}(Y_i)\right)
+\prod_{X_i \in \mathbf{X}} f\!\left(\mathbf{x}_i \mid \mathrm{Pa}(\mathbf{X}_i)\right),
+```
+
+where the ``p(\cdot)`` are the conditional PMFs of the discrete nodes and the ``f(\cdot)`` the
+conditional PDFs of the continuous ones. Functional nodes are exactly the factors of this product
+whose conditional table is *not* given a priori: it is obtained, during reduction, by solving a
+structural reliability problem (see [Reduction & Reliability Analysis](reduction.md)).
+
 ## Precision and imprecision
 
 Every quantity in the model may be **precise** or **imprecise**. A discrete CPT entry can be a

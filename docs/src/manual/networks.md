@@ -49,15 +49,15 @@ children** (a continuous quantity cannot condition a plain discrete CPT).
 [`order!`](@ref) sorts the nodes into a topological order and runs the global checks: the
 graph must be acyclic and connected, no CPT may reference a parent that was never linked, and
 every discrete CPT must be exhaustive over all parent/own-state combinations. Run it once the
-structure is complete, before reduction, inference, or sampling.
+structure is complete, before [reduction](reduction.md), [inference](inference.md), or sampling.
 
 ## Bayesian networks
 
 A [`BayesianNetwork`](@ref) is a DAG of discrete, precise nodes — the classical formulation
 [jensen2007bayesian](@cite). Its constructor rejects any imprecise node, pointing you to a
 [`CredalNetwork`](@ref) instead, and it requires node names and states to be globally unique.
-Once ordered, it supports the full inference and sampling machinery (see the Inference
-chapter).
+Once ordered, it supports the full inference and sampling machinery (see the
+[Inference](inference.md) chapter).
 
 ## Credal networks
 
@@ -117,6 +117,14 @@ network and a node name:
   renders it conditionally independent of the rest of the network.
 - [`markov_envelope`](@ref) — the groups of continuous nodes linked through shared Markov
   blankets, together with those blankets; a structural query over the network.
+
+Formally, the Markov blanket of a node ``X_i`` is the union of its parents ``\mathrm{Pa}(X_i)``,
+its children ``\mathrm{Ch}(X_i)``, and its *spouses* ``\mathrm{Sp}(X_i)`` — the other parents of
+its children [jensen2007bayesian](@cite):
+
+```math
+\mathrm{Bl}(X_i) = \mathrm{Pa}(X_i) \cup \mathrm{Ch}(X_i) \cup \mathrm{Sp}(X_i).
+```
 
 ```@example networks
 (parents = parents(ebn, :F), discrete_ancestors = discrete_ancestors(ebn, :F))
