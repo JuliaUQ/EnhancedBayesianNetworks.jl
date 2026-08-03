@@ -113,17 +113,17 @@ network and a node name:
 - [`parents`](@ref) / [`children`](@ref) — the direct predecessors / successors of a node.
 - [`discrete_ancestors`](@ref) — the discrete nodes reachable upstream, skipping continuous
   ones; these define the scenario grid over which a functional node is evaluated.
-- [`markov_blanket`](@ref) — a node's parents, children, and co-parents; the minimal set that
-  renders it conditionally independent of the rest of the network.
+- [`markov_blanket`](@ref) — a node's parents, children, and spouses (co-parents); the minimal set
+  that renders it conditionally independent of the rest of the network.
 - [`markov_envelope`](@ref) — the groups of continuous nodes linked through shared Markov
   blankets, together with those blankets; a structural query over the network.
 
-Formally, the Markov blanket of a node ``X_i`` is the union of its parents ``\mathrm{Pa}(X_i)``,
-its children ``\mathrm{Ch}(X_i)``, and its *spouses* ``\mathrm{Sp}(X_i)`` — the other parents of
+Formally, the Markov blanket of a node ``Z_i`` is the union of its parents ``\mathrm{Pa}(Z_i)``,
+its children ``\mathrm{Ch}(Z_i)``, and its *spouses* ``\mathrm{Sp}(Z_i)`` — the other parents of
 its children [jensen2007bayesian](@cite):
 
 ```math
-\mathrm{Bl}(X_i) = \mathrm{Pa}(X_i) \cup \mathrm{Ch}(X_i) \cup \mathrm{Sp}(X_i).
+\mathrm{Bl}(Z_i) = \mathrm{Pa}(Z_i) \cup \mathrm{Ch}(Z_i) \cup \mathrm{Sp}(Z_i).
 ```
 
 ```@example networks

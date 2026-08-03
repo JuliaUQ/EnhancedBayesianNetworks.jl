@@ -64,15 +64,18 @@ To force a specific algorithm, call it directly.
 ### Maximum likelihood
 
 [`learn_parameters_mle`](@ref) is the closed-form estimator for **complete** data. For every node
-and every parent configuration it sets
+``Y_i``, each of its states ``s``, and each configuration ``c`` of its parents ``\mathrm{Pa}(Y_i)``,
+it sets
 
 ```math
-P(\text{node} = s \mid \text{parents} = c) = \frac{\text{count}(s, c) + \alpha}{\text{total}(c) + \alpha\,k},
+P(Y_i = s \mid \mathrm{Pa}(Y_i) = c) = \frac{N(s, c) + \alpha}{N(c) + \alpha\,k_i},
 ```
 
-where `k` is the number of node states and `alpha` the pseudo-count (`alpha = 0` is pure
-maximum likelihood; `alpha > 0` smooths, keeping never-observed states off exactly `0`). A parent
-configuration that never appears in the data falls back to a uniform distribution.
+where ``N(s, c)`` counts the training rows with ``Y_i = s`` and ``\mathrm{Pa}(Y_i) = c``, ``N(c)``
+those with ``\mathrm{Pa}(Y_i) = c``, ``k_i`` is the number of states of ``Y_i``, and `alpha` the
+pseudo-count (`alpha = 0` is pure maximum likelihood; `alpha > 0` smooths, keeping never-observed
+states off exactly `0`). A parent configuration that never appears in the data falls back to a
+uniform distribution.
 
 ```julia
 learned = learn_parameters_mle(dag, df; alpha = 1)

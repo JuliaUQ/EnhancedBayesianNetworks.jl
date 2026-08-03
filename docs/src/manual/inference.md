@@ -42,6 +42,36 @@ marginalised away. Multiplying the surviving factors and normalising yields the 
 the query. The cost of the computation is dominated by the largest intermediate factor built
 along the way, which depends heavily on the **order** in which variables are eliminated.
 
+Formally, write the joint distribution as a product of **factors** (potentials) — initially one
+per node, its CPT ``\phi_i = p(y_i \mid \mathrm{Pa}(Y_i))``:
+
+```math
+p(y_1, \dots, y_n) = \prod_{i=1}^{n} \phi_i .
+```
+
+To answer a query over the variables ``Q`` given evidence ``E = e``, every factor is first
+*restricted* to the observed states, ``\phi_i\big|_{E=e}``. Each remaining variable that is
+neither in ``Q`` nor in ``E`` is then **eliminated** with the two elementary factor operations —
+the *product* of all factors that mention it, followed by *marginalization*, i.e. summing the
+variable out of that product. Eliminating a variable ``Y_k`` yields a single new factor
+
+```math
+\psi \;=\; \sum_{y_k}\; \prod_{i\,:\, Y_k \,\in\, \operatorname{scope}(\phi_i)} \phi_i ,
+```
+
+which no longer mentions ``Y_k`` and replaces the factors it was built from. Once every
+non-query, non-evidence variable has been eliminated, the product of the surviving factors is the
+unnormalized joint ``p(Q, E=e)``; dividing by its total gives the posterior:
+
+```math
+p(Q \mid E = e) \;=\;
+\frac{\displaystyle \sum_{\mathbf{h}} \prod_i \phi_i\big|_{E=e}}
+     {\displaystyle \sum_{Q} \sum_{\mathbf{h}} \prod_i \phi_i\big|_{E=e}} ,
+```
+
+where ``\mathbf{h}`` ranges over the variables other than ``Q`` and ``E``, and the denominator is
+the normalizing constant ``p(E=e)``.
+
 ## Elimination order
 
 The elimination order is chosen greedily on the network's *interaction graph* (the moral
@@ -58,6 +88,22 @@ committing to a single complexity measure, it exposes two and combines them:
   *add* to the edges it would *remove*, favouring nodes that introduce few new dependencies.
 - [`factor_score`](@ref) — a *min-factor* heuristic: the size of the factor an elimination would
   create, the product of the state-space sizes of the node and its current neighbours.
+
+Writing ``N(Y)`` for the current neighbours of a node ``Y`` in the interaction graph ``(V, E)``, and
+``|\mathrm{dom}(Y')|`` for the number of states of a neighbour ``Y'``, the two scores are
+
+```math
+s_{\mathrm{fill}}(Y) =
+\frac{\bigl|\{\, \{a,b\} \subseteq N(Y) \;:\; \{a,b\} \notin E \,\}\bigr|}{|N(Y)|},
+```
+```math
+s_{\mathrm{factor}}(Y) = |\mathrm{dom}(Y)| \prod_{Y' \in N(Y)} |\mathrm{dom}(Y')| ,
+```
+
+with ``s_{\mathrm{fill}}(Y) = 0`` when ``Y`` has no neighbours. The numerator of ``s_{\mathrm{fill}}``
+counts the neighbour pairs not yet adjacent (the fill-in edges elimination would add) and its
+denominator is the degree ``|N(Y)|`` (the edges it would remove); ``s_{\mathrm{factor}}`` is the
+number of entries of the factor that elimination would build.
 
 The default, [`fill_factor_score`](@ref), is the **mix** of the two: a tuple
 `(fill_score, factor_score, node)` compared lexicographically, so the min-fill score decides,

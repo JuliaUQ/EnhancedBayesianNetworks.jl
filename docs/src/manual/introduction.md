@@ -27,27 +27,36 @@ See the [Nodes](nodes.md) chapter for the full taxonomy.
 
 ## The system probability distribution
 
+!!! note "Notation"
+    Throughout the manual, ``Y`` denotes a **discrete** node, ``X`` a **continuous** node, and
+    ``Z`` a node of **either** kind. An uppercase symbol (``Y_i``, ``X_i``, ``Z_i``) is the node —
+    a random variable — while the matching lowercase symbol (``y_i``, ``x_i``, ``z_i``) is one of
+    its realizations. **Bold** marks a collection: a *set* of nodes (``\mathbf{Y}``, ``\mathbf{X}``)
+    or a full joint assignment (``\mathbf{y}``, ``\mathbf{x}``). A node's parents, children, and
+    spouses (co-parents) are written ``\mathrm{Pa}(\cdot)``, ``\mathrm{Ch}(\cdot)``, and
+    ``\mathrm{Sp}(\cdot)``.
+
 A Bayesian network encodes a joint distribution that *factorizes* over the graph. By the local
 Markov property each variable is conditionally independent of its non-descendants given its
-parents, so the joint distribution of ``n`` variables ``z_1, \dots, z_n`` is the product of the
-per-node conditional tables [jensen2007bayesian](@cite):
+parents, so the joint distribution of ``n`` discrete variables ``Y_1, \dots, Y_n`` is the product
+of the per-node conditional tables [jensen2007bayesian](@cite):
 
 ```math
-p(z_1, \dots, z_n) = \prod_{i=1}^{n} p\!\left(z_i \mid \mathrm{Pa}(z_i)\right),
+p(y_1, \dots, y_n) = \prod_{i=1}^{n} p\!\left(y_i \mid \mathrm{Pa}(Y_i)\right),
 ```
 
-where ``\mathrm{Pa}(z_i)`` denotes the parents of ``z_i``.
+where ``\mathrm{Pa}(Y_i)`` denotes the parents of ``Y_i``.
 
 An enhanced Bayesian network keeps this factorized structure but admits both a set of
 **discrete** nodes ``\mathbf{Y} = \{Y_1, \dots, Y_{n_Y}\}`` and a set of **continuous** nodes
-``\mathbf{X} = \{\mathbf{X}_1, \dots, \mathbf{X}_{n_X}\}``. Its system joint distribution is then
+``\mathbf{X} = \{X_1, \dots, X_{n_X}\}``. Its system joint distribution is then
 the combined measure of the discrete probability mass functions and the continuous probability
 density functions [straub_bayesian_2010](@cite):
 
 ```math
 p(\mathbf{y} \mid \mathbf{x})\, f(\mathbf{x}) =
 \prod_{Y_i \in \mathbf{Y}} p\!\left(y_i \mid \mathrm{Pa}(Y_i)\right)
-\prod_{X_i \in \mathbf{X}} f\!\left(\mathbf{x}_i \mid \mathrm{Pa}(\mathbf{X}_i)\right),
+\prod_{X_i \in \mathbf{X}} f\!\left(x_i \mid \mathrm{Pa}(X_i)\right),
 ```
 
 where the ``p(\cdot)`` are the conditional PMFs of the discrete nodes and the ``f(\cdot)`` the
