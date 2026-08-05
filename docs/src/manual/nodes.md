@@ -33,8 +33,12 @@ Cutting across both is the distinction that decides *which type you actually con
 | [`DiscreteFunctionalNode`](@ref) | discrete | **not** known a priori | child only |
 | [`ContinuousFunctionalNode`](@ref) | continuous | **not** known a priori | child only |
 
-The distributions and uncertainty models a node is built from — `Parameter`,
-`RandomVariable`, `Interval`, `ProbabilityBox`, `Model`, and the simulation types such as
+The distributions and uncertainty models a node is built from —
+[`Parameter`](@extref `UncertaintyQuantification.Parameter`),
+[`RandomVariable`](@extref `UncertaintyQuantification.RandomVariable`),
+[`Interval`](@extref `UncertaintyQuantification.Interval`),
+[`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`),
+[`Model`](@extref `UncertaintyQuantification.Model`), and the simulation types such as
 `MonteCarlo` — come from
 [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl)
 [behrensdorf_uncertaintyquantificationjl_2023](@cite) and are re-exported by

@@ -99,6 +99,9 @@ a Bayesian network, or lower/upper posterior bounds for a credal one (see
 - [Plotting](plotting.md) — visualizing a network.
 
 The package builds directly on [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl)
-[behrensdorf_uncertaintyquantificationjl_2023](@cite), whose `Model`, `Parameter`,
-`RandomVariable`, `Interval`, and `ProbabilityBox` types (and its simulation methods) are
-re-exported and used throughout.
+[behrensdorf_uncertaintyquantificationjl_2023](@cite), whose [`Model`](@extref `UncertaintyQuantification.Model`),
+[`Parameter`](@extref `UncertaintyQuantification.Parameter`),
+[`RandomVariable`](@extref `UncertaintyQuantification.RandomVariable`),
+[`Interval`](@extref `UncertaintyQuantification.Interval`), and
+[`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`) types (and its simulation
+methods) are re-exported and used throughout.

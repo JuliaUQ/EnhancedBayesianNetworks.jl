@@ -4,7 +4,7 @@ using DocumenterVitepress
 using EnhancedBayesianNetworks
 using Cairo
 using Fontconfig
-
+using DocumenterInterLinks
 
 DocMeta.setdocmeta!(
     EnhancedBayesianNetworks,
@@ -14,6 +14,8 @@ DocMeta.setdocmeta!(
 )
 
 bib=CitationBibliography(joinpath(@__DIR__, "citations.bib"))
+
+links = InterLinks("UncertaintyQuantification" => "https://juliauq.github.io/UncertaintyQuantification.jl/stable/objects.inv")
 
 format = DocumenterVitepress.MarkdownVitepress(
     repo="https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl",
@@ -50,7 +52,7 @@ pages = [
 
 makedocs(;
     modules=[EnhancedBayesianNetworks],
-    plugins=[bib],
+    plugins=[bib, links],
     authors="Andrea Perin & Jasper Behrensdorf",
     sitename="EnhancedBayesianNetworks.jl",
     pages=pages,

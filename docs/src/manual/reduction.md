@@ -57,7 +57,8 @@ result is precise or imprecise.
 ### Precise inputs
 
 When every input is precise, the SRP is solved with a standard reliability simulation —
-`MonteCarlo`, `SubSetSimulation`, `LineSampling`, and the like. Each scenario yields a single
+`MonteCarlo`, [`SubSetSimulation`](@extref `UncertaintyQuantification.SubSetSimulation`),
+`LineSampling`, and the like. Each scenario yields a single
 failure probability, so the reduced node is precise and [`reduce`](@ref) returns a
 [`BayesianNetwork`](@ref).
 
@@ -82,7 +83,8 @@ When any input is imprecise — a continuous parent given as an `Interval` or `P
 [P_box_FAES](@cite), or an interval-valued discrete parent — the failure probability is no
 longer a single number but an **interval** [beer_imprecise_2013-1](@cite). It is estimated by an
 *outer* search over the imprecise inputs wrapping an *inner* reliability simulation: a
-`DoubleLoop`, or the more efficient `RandomSlicing`
+[`DoubleLoop`](@extref `UncertaintyQuantification.DoubleLoop`), or the more efficient
+[`RandomSlicing`](@extref `UncertaintyQuantification.RandomSlicing`)
 [behrensdorf_uncertaintyquantificationjl_2023](@cite). Each scenario then produces a lower and an
 upper failure probability, the reduced node carries interval CPT entries, and [`reduce`](@ref)
 returns a [`CredalNetwork`](@ref).
