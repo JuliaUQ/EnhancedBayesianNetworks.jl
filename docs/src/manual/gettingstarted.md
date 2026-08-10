@@ -15,7 +15,7 @@ using Pkg
 Pkg.add(url = "https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl")
 ```
 
-Then load it — this also brings in the re-exported [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) types (`Model`, `Parameter`, `RandomVariable`, `Interval`, `ProbabilityBox`, the simulation methods)
+Then load it — this also brings in the re-exported [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) types ([`UQModel`](@extref `UncertaintyQuantification.UQModel`), [`Parameter`](@extref `UncertaintyQuantification.Parameter`), [`Interval`](@extref `UncertaintyQuantification.Interval`), [`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`), the simulation methods)
 
 ```@example gettingstarted
 using EnhancedBayesianNetworks
@@ -71,7 +71,7 @@ reduced = reduce(ebn)                                    # -> BayesianNetwork
 infer(reduced, :F, Evidence(:Load => :high))            # failure probability given a high load
 ```
 
-The package allows for an imprecise description of both [`ContinuousNode`](@ref)s and [`DiscreteNode`](@ref)s.
+The package allows for an imprecise description of both discrete and continuous nodes.
 See [Reduction & Reliability Analysis](reduction.md) for the full story.
 
 ## Where to next
