@@ -2,9 +2,7 @@
 
 ## Installation
 
-EnhancedBayesianNetworks.jl is not yet registered in Julia's General registry, so install it
-directly from its GitHub repository. From the Julia REPL, enter the package manager with `]` and
-add it by URL:
+EnhancedBayesianNetworks.jl is not yet registered in Julia's General registry, so install it directly from its GitHub repository. From the Julia REPL, enter the package manager with `]` and add it by URL:
 
 ```julia
 pkg> add https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl
@@ -17,10 +15,7 @@ using Pkg
 Pkg.add(url = "https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl")
 ```
 
-Then load it — this also brings in the re-exported
-[UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) types
-(`Model`, `Parameter`, `RandomVariable`, `Interval`, `ProbabilityBox`, the simulation methods)
-and the distributions used to define nodes:
+Then load it — this also brings in the re-exported [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) types (`Model`, `Parameter`, `RandomVariable`, `Interval`, `ProbabilityBox`, the simulation methods)
 
 ```@example gettingstarted
 using EnhancedBayesianNetworks
@@ -28,9 +23,8 @@ using EnhancedBayesianNetworks
 
 ## Your first Bayesian network
 
-Building a network always follows the same three steps: **construct the nodes**, **wire the
-edges** with [`add_child!`](@ref), and **finalize** with [`order!`](@ref). Here is a two-node
-weather/sprinkler model — a root node `W` and a child `S` whose CPT is conditioned on it:
+Building a network always follows the same three steps: **construct the nodes**, **wire the edges** with [`add_child!`](@ref), and **finalize** with [`order!`](@ref).  
+Here is a two-node weather/sprinkler model — a *root node* `W` and a *child node* `S` whose *Conditional Probability Table* (CPT) is conditioned on it:
 
 ```@example gettingstarted
 W = DiscreteNode(:W)
@@ -46,13 +40,13 @@ add_child!(bn, :W, :S)
 order!(bn)
 ```
 
-Now query it. [`infer`](@ref) returns the posterior over a query variable given some evidence:
+Now query it. [`infer`](@ref) returns the *posterior* over a query variable given some evidence:
 
 ```@example gettingstarted
 infer(bn, :S, Evidence(:W => :sunny))       # P(S | W = sunny)
 ```
 
-With no evidence you get the prior marginal:
+With no evidence you get the posterior is just the *prior* marginal:
 
 ```@example gettingstarted
 infer(bn, :S, Evidence())                   # P(S)
@@ -60,9 +54,8 @@ infer(bn, :S, Evidence())                   # P(S)
 
 ## A first enhanced Bayesian network
 
-The real power of the package is mixing in continuous and **functional** nodes — a node whose
-conditional table comes from a reliability analysis rather than being tabulated. The enhanced
-network is reduced to a discrete one with [`reduce`](@ref), then queried exactly as above:
+The real power of the package is mixing in [`ContinuousNode`](@ref)s and *functional nodes* — a node whose CPT comes from a reliability analysis rather than being tabulated and can be either a [`DiscreteFunctionalNode`](@ref) or a [`ContinuousFunctionalNode`](@ref). 
+The [`EnhancedBayesianNetwork`](@ref) (eBN) is reduced to a standard [`BayesianNetwork`](@ref) (BN) with [`reduce`](@ref) function, then queried exactly as above:
 
 ```julia
 Load = DiscreteNode(:Load, [:low => [Parameter(1.0, :Load)], :high => [Parameter(3.0, :Load)]])
@@ -78,10 +71,8 @@ reduced = reduce(ebn)                                    # -> BayesianNetwork
 infer(reduced, :F, Evidence(:Load => :high))            # failure probability given a high load
 ```
 
-Making the resistance imprecise — `ContinuousNode(:R, Interval(2.0, 4.0))` with a
-`DoubleLoop(MonteCarlo(1000))` simulation — turns the result into interval bounds and reduces to
-a [`CredalNetwork`](@ref) instead. See [Reduction & Reliability Analysis](reduction.md) for the
-full story.
+The package allows for an imprecise description of both [`ContinuousNode`](@ref)s and [`DiscreteNode`](@ref)s.
+See [Reduction & Reliability Analysis](reduction.md) for the full story.
 
 ## Where to next
 
