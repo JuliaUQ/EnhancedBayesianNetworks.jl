@@ -19,7 +19,7 @@ Cutting across both is the distinction that decides *which type you actually con
 > - **No** — the CPT is instead defined by a *functional relationship* with the parents,
 >   so the node **must be functional** ([`DiscreteFunctionalNode`](@ref),
 >   [`ContinuousFunctionalNode`](@ref)). Its table does not exist up front: it is
->   materialized only when the network is reduced, by propagating the parents' uncertainty
+>   materialized only when the enhanced Bayesian Network is reduced, by propagating the parents' uncertainty
 >   through the node's models ([structural reliability problems](reduction.md)).
 
 | Type | Variable | CPT | Role |
@@ -34,7 +34,8 @@ The distributions, models and simulation methods a node is built from belong to 
 CPT's entries may also be **precise** or **imprecise**: a discrete entry is a `Real` probability for a **precise** discrete node or a *probability* [`Interval`](@extref `UncertaintyQuantification.Interval`) for an **imprecise** (or **credal**) discrete node [weichselberger_theory_2000, Levi1980-LEVTEO-7](@cite); 
 a continuous entry is a `UnivariateDistribution` for a **precise** continuous node, or an [`Interval`](@extref `UncertaintyQuantification.Interval`)/[`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`) [P_box_FAES](@cite) for an **imprecise** continuous node [beer_imprecise_2013-1](@cite). 
 Imprecision decides the resulting network type. 
-Among the purely discrete networks, one holding an imprecise discrete node is a [`CredalNetwork`](@ref) rather than a [`BayesianNetwork`](@ref); and an [`EnhancedBayesianNetwork`](@ref) that contains *any* imprecise node — discrete or continuous — reduces to a Credal Network instead of a Bayesian Network.
+Among the purely discrete networks, one holding an imprecise discrete node is a [`CredalNetwork`](@ref) rather than a [`BayesianNetwork`](@ref).
+An [`EnhancedBayesianNetwork`](@ref) that contains *any* imprecise node — discrete or continuous — reduces to a Credal Network instead of a Bayesian Network.
 
 ## Nodes with an a-priori-known CPT
 

@@ -21,9 +21,9 @@ Then load it — this also brings in the re-exported [UncertaintyQuantification.
 using EnhancedBayesianNetworks
 ```
 
-## Your first Bayesian network
+## Your first Bayesian Network
 
-Building a network always follows the same three steps: **construct the nodes**, **wire the edges** with [`add_child!`](@ref), and **finalize** with [`order!`](@ref).  
+Building a Bayesian, Credal or Enhanced Bayesian network always follows the same three steps: **construct the nodes**, **wire the edges** with [`add_child!`](@ref), and **finalize** with [`order!`](@ref).  
 Here is a two-node weather/sprinkler model — a *root node* `W` and a *child node* `S` whose *Conditional Probability Table* (CPT) is conditioned on it:
 
 ```@example gettingstarted
@@ -52,7 +52,7 @@ With no evidence you get the posterior is just the *prior* marginal:
 infer(bn, :S, Evidence())                   # P(S)
 ```
 
-## A first enhanced Bayesian network
+## A first Enhanced Bayesian Network
 
 The real power of the package is mixing in [`ContinuousNode`](@ref)s and *functional nodes* — a node whose CPT comes from a reliability analysis rather than being tabulated and can be either a [`DiscreteFunctionalNode`](@ref) or a [`ContinuousFunctionalNode`](@ref). 
 The [`EnhancedBayesianNetwork`](@ref) (eBN) is reduced to a standard [`BayesianNetwork`](@ref) (BN) with [`reduce`](@ref) function, then queried exactly as above:
@@ -76,9 +76,9 @@ See [Reduction & Reliability Analysis](reduction.md) for the full story.
 
 ## Where to next
 
-- [Introduction](introduction.md) — the concepts behind enhanced Bayesian networks.
+- [Introduction](introduction.md) — the concepts behind enhanced Bayesian Networks.
 - [Nodes](nodes.md) and [Networks](networks.md) — the building blocks in depth.
-- [Reduction & Reliability Analysis](reduction.md) — evaluating enhanced networks, with and
+- [Reduction & Reliability Analysis](reduction.md) — evaluating enhanced Bayesian Networks, with and
   without imprecision.
 - [Inference](inference.md), [Parameter Learning](parameterlearning.md), and
   [Plotting](plotting.md).

@@ -43,13 +43,13 @@ It rejects self-loops, requires every referenced node to exist, checks that a di
 [`order!`](@ref) sorts the nodes into a topological order and runs the global checks: the graph must be *acyclic* and *connected*, no CPT may reference a parent that was never linked, and every discrete CPT must be *exhaustive* over all parent/own-state combinations. 
 Run it once the structure is complete, before [reduction](reduction.md), [inference](inference.md), or sampling.
 
-## Bayesian networks
+## Bayesian Networks
 
 A [`BayesianNetwork`](@ref) is a DAG of discrete, precise nodes — the classical formulation [jensen2007bayesian](@cite). 
 Its constructor rejects any imprecise node, pointing you to a [`CredalNetwork`](@ref) instead, and it requires node names and states to be globally unique.
 Once ordered, it supports the full inference and sampling machinery (see the [Inference](inference.md) chapter).
 
-## Credal networks
+## Credal Networks
 
 When a discrete CPT carries interval-valued probability entries, the node is *imprecise* and the network becomes a [`CredalNetwork`](@ref) [cozman_credal_2000](@cite). 
 Each local CPT is then a closed convex set of probability measures — a *credal set* [Levi1980-LEVTEO-7](@cite) — and the network stands for the whole family of BNs that share its graph but differ in the measures drawn from those sets. 
@@ -69,7 +69,7 @@ add_child!(cn, :Wc, :Sc); order!(cn)
 Constructing a [`CredalNetwork`](@ref) whose nodes all turn out precise emits a warning — a [`BayesianNetwork`](@ref) is the right structure in that case. 
 The reverse transition happens automatically: after reduction, a credal network whose imprecision has vanished is narrowed back to a [`BayesianNetwork`](@ref).
 
-## Enhanced Bayesian networks
+## Enhanced Bayesian Networks
 
 An [`EnhancedBayesianNetwork`](@ref) is the general modelling front-end [straub_bayesian_2010](@cite): it may hold discrete nodes, continuous nodes, and functional nodes side by side. 
 Continuous and functional nodes carry the physics of the problem — the [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) models

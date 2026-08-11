@@ -4,12 +4,12 @@ EnhancedBayesianNetworks.jl is a Julia package for building, reducing, and query
 *continuous nodes* and *functional nodes* and evaluated via *structural reliability analysis*. 
 On top of this the package allows to add **imprecision** — interval and probability boxes (p-box) — carried consistently from the inputs through to the inference result.
 
-## Why enhanced Bayesian networks
+## Why enhanced Bayesian Networks
 
 A classical BN [jensen2007bayesian](@cite) is a directed acyclic graph of **discrete** random variables, each with a *Conditional Probability Table* (CPT) given its parents. 
 That is expressive for categorical reasoning, but engineering models rarely stop there: quantities are continuous, uncertainties and imprecision are involved and the probabilities that matter — a component's failure probability, say — are not tabulated in advance but *computed* from a physical models.
 
-An enhanced Bayesian network closes that gap by admitting three kinds of node side by side:
+An enhanced Bayesian Network closes that gap by admitting three kinds of node side by side:
 
 - **discrete** nodes, whose CPT is known a priori;
 - **continuous** nodes, holding probability distributions;
@@ -57,7 +57,7 @@ Imprecision expresses *epistemic* uncertainty — what is not known well enough 
 
 ## From model to answer
 
-Because a functional or continuous node cannot be queried directly, an eBN is first **reduced** to a purely discrete network: its continuous nodes are discretized and its functional nodes are evaluated as reliability problems, yielding a BN when everything stays precise or a CN when imprecision survives. 
+Because a functional or continuous node cannot be queried directly, an eBN is first **reduced** to a purely discrete nodes network: its continuous nodes are discretized and its functional nodes are evaluated as reliability problems, yielding a BN when everything stays precise or a CN when imprecision survives. 
 This reduction is the core operation of the library — see [Reduction & Reliability Analysis](reduction.md).
 
 The reduced network is then ready for **inference**: exact posteriors by *variable elimination* for a BN, or lower/upper posterior bounds for a credal one (see[Inference](inference.md)). 
@@ -68,7 +68,7 @@ The package also supports learning CPTs from data ([Parameter Learning](paramete
 
 - [Getting Started](gettingstarted.md) — install the package and run a first model.
 - [Nodes](nodes.md) — the building blocks: discrete, continuous, and functional nodes.
-- [Networks](networks.md) — Bayesian, credal, and enhanced Bayesian networks.
+- [Networks](networks.md) — Bayesian, credal, and enhanced Bayesian Networks.
 - [Reduction & Reliability Analysis](reduction.md) — reducing an eBN, and imprecise reliability.
 - [Inference](inference.md) — variable elimination and credal inference.
 - [Parameter Learning](parameterlearning.md) — learning CPTs from data.
