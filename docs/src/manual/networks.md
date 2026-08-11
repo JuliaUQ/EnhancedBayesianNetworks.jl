@@ -118,4 +118,4 @@ markov_envelope(ebn)
 
 An [`EnhancedBayesianNetwork`](@ref) is not queried directly — it is transformed into an inference-ready discrete network (BN or CN) by [`reduce`](@ref), which discretizes its continuous nodes and
 evaluates its functional nodes as structural reliability problems, yielding a [`BayesianNetwork`](@ref) or a [`CredalNetwork`](@ref). 
-Because reduction is the core operation of the library — and the route through which imprecision reaches the inference result — it has its own chapter: [Reduction & Reliability Analysis](reduction.md).
+Because reduction is the core operation of the library — and the route through which imprecision reaches the inference result — it has its own chapter: [Reduction & Structural Reliability Problem](reduction.md).

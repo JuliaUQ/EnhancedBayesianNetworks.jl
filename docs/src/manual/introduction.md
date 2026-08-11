@@ -47,7 +47,7 @@ p(\mathbf{y} \mid \mathbf{x})\, f(\mathbf{x}) =
 ```
 
 where the ``p(\cdot)`` are the conditional PMFs of the discrete nodes and the ``f(\cdot)`` the conditional PDFs of the continuous ones. 
-Functional nodes are exactly the factors of this product whose conditional table is *not* given a priori: it is obtained, during reduction, by solving a *structural reliability problem* (see [Reduction & Reliability Analysis](reduction.md)).
+Functional nodes are exactly the factors of this product whose conditional table is *not* given a priori: it is obtained, during reduction, by solving a *structural reliability problem* (see [Reduction & Structural Reliability Problem](reduction.md)).
 
 ## Precision and imprecision
 
@@ -58,7 +58,7 @@ Imprecision expresses *epistemic* uncertainty — what is not known well enough 
 ## From model to answer
 
 Because a functional or continuous node cannot be queried directly, an eBN is first **reduced** to a purely discrete nodes network: its continuous nodes are discretized and its functional nodes are evaluated as reliability problems, yielding a BN when everything stays precise or a CN when imprecision survives. 
-This reduction is the core operation of the library — see [Reduction & Reliability Analysis](reduction.md).
+This reduction is the core operation of the library — see [Reduction & Structural Reliability Problem](reduction.md).
 
 The reduced network is then ready for **inference**: exact posteriors by *variable elimination* for a BN, or lower/upper posterior bounds for a credal one (see[Inference](inference.md)). 
 
@@ -69,7 +69,7 @@ The package also supports learning CPTs from data ([Parameter Learning](paramete
 - [Getting Started](gettingstarted.md) — install the package and run a first model.
 - [Nodes](nodes.md) — the building blocks: discrete, continuous, and functional nodes.
 - [Networks](networks.md) — Bayesian, credal, and enhanced Bayesian Networks.
-- [Reduction & Reliability Analysis](reduction.md) — reducing an eBN, and imprecise reliability.
+- [Reduction & Structural Reliability Problem](reduction.md) — reducing an eBN, and imprecise reliability.
 - [Inference](inference.md) — variable elimination and credal inference.
 - [Parameter Learning](parameterlearning.md) — learning CPTs from data.
 - [Plotting](plotting.md) — visualizing a network.

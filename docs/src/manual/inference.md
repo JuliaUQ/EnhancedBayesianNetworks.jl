@@ -5,7 +5,7 @@ distribution over one or more **query** variables? [`infer`](@ref) computes this
 exactly, by variable elimination, on a discrete network — a [`BayesianNetwork`](@ref) or a
 [`CredalNetwork`](@ref) [jensen2007bayesian](@cite). An [`EnhancedBayesianNetwork`](@ref) is
 not queried directly: it is first [`reduce`](@ref)d to one of these (see the
-[Reduction & Reliability Analysis](reduction.md) chapter).
+[Reduction & Structural Reliability Problem](reduction.md) chapter).
 
 Evidence is given as an `Evidence` — a `Dict{Symbol,Symbol}` mapping node names to observed
 states — and the query as a single node name or a vector of them.

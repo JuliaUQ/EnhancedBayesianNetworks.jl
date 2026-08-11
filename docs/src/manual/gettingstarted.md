@@ -72,13 +72,13 @@ infer(reduced, :F, Evidence(:Load => :high))            # failure probability gi
 ```
 
 The package allows for an imprecise description of both discrete and continuous nodes.
-See [Reduction & Reliability Analysis](reduction.md) for the full story.
+See [Reduction & Structural Reliability Problem](reduction.md) for the full story.
 
 ## Where to next
 
 - [Introduction](introduction.md) — the concepts behind enhanced Bayesian Networks.
 - [Nodes](nodes.md) and [Networks](networks.md) — the building blocks in depth.
-- [Reduction & Reliability Analysis](reduction.md) — evaluating enhanced Bayesian Networks, with and
+- [Reduction & Structural Reliability Problem](reduction.md) — evaluating enhanced Bayesian Networks, with and
   without imprecision.
 - [Inference](inference.md), [Parameter Learning](parameterlearning.md), and
   [Plotting](plotting.md).

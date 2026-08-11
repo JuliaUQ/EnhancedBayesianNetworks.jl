@@ -1,4 +1,4 @@
-# Reduction & Reliability Analysis
+# Reduction & Structural Reliability Problem
 
 An [`EnhancedBayesianNetwork`](@ref) mixes discrete, continuous, and functional nodes, so it
 cannot be queried directly. [`reduce`](@ref) turns it into an inference-ready **discrete**
