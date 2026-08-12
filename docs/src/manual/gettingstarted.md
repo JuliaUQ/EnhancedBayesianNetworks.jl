@@ -15,7 +15,7 @@ using Pkg
 Pkg.add(url = "https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl")
 ```
 
-Then load it — this also brings in the re-exported [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) types ([`UQModel`](@extref `UncertaintyQuantification.UQModel`), [`Parameter`](@extref `UncertaintyQuantification.Parameter`), [`Interval`](@extref `UncertaintyQuantification.Interval`), [`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`), the simulation methods)
+Then load it, this also brings in the re-exported [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) types ([`UQModel`](@extref `UncertaintyQuantification.UQModel`), [`Parameter`](@extref `UncertaintyQuantification.Parameter`), [`Interval`](@extref `UncertaintyQuantification.Interval`), [`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`) and the simulation methods)
 
 ```@example gettingstarted
 using EnhancedBayesianNetworks
@@ -24,7 +24,7 @@ using EnhancedBayesianNetworks
 ## Your first Bayesian Network
 
 Building a Bayesian, Credal or Enhanced Bayesian network always follows the same three steps: **construct the nodes**, **wire the edges** with [`add_child!`](@ref), and **finalize** with [`order!`](@ref).  
-Here is a two-node weather/sprinkler model — a *root node* `W` and a *child node* `S` whose *Conditional Probability Table* (CPT) is conditioned on it:
+Here is a two-node weather/sprinkler model, a *root node* `W` and a *child node* `S` whose *Conditional Probability Table* (CPT) is conditioned on it:
 
 ```@example gettingstarted
 W = DiscreteNode(:W)
@@ -52,9 +52,9 @@ With no evidence you get the posterior is just the *prior* marginal:
 infer(bn, :S, Evidence())                   # P(S)
 ```
 
-## A first Enhanced Bayesian Network
+## A first enhanced Bayesian Network
 
-The real power of the package is mixing in [`ContinuousNode`](@ref)s and *functional nodes* — a node whose CPT comes from a reliability analysis rather than being tabulated and can be either a [`DiscreteFunctionalNode`](@ref) or a [`ContinuousFunctionalNode`](@ref). 
+The real power of the package is mixing in [`DiscreteNode`](@ref)s, [`ContinuousNode`](@ref)s and *functional nodes*, a node whose CPT comes from a reliability analysis rather than being tabulated and can be either a [`DiscreteFunctionalNode`](@ref) or a [`ContinuousFunctionalNode`](@ref). 
 The [`EnhancedBayesianNetwork`](@ref) (eBN) is reduced to a standard [`BayesianNetwork`](@ref) (BN) with [`reduce`](@ref) function, then queried exactly as above:
 
 ```julia
@@ -76,9 +76,7 @@ See [Reduction & Structural Reliability Problem](reduction.md) for the full stor
 
 ## Where to next
 
-- [Introduction](introduction.md) — the concepts behind enhanced Bayesian Networks.
-- [Nodes](nodes.md) and [Networks](networks.md) — the building blocks in depth.
-- [Reduction & Structural Reliability Problem](reduction.md) — evaluating enhanced Bayesian Networks, with and
-  without imprecision.
-- [Inference](inference.md), [Parameter Learning](parameterlearning.md), and
-  [Plotting](plotting.md).
+- [Introduction](introduction.md): the concepts behind enhanced Bayesian Networks.
+- [Nodes](nodes.md) and [Networks](networks.md): the building blocks in depth.
+- [Reduction & Structural Reliability Problem](reduction.md): evaluating enhanced Bayesian Networks, with and without imprecision.
+- [Inference](inference.md), [Parameter Learning](parameterlearning.md), and [Plotting](plotting.md).
