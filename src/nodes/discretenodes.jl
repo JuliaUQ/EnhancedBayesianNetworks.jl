@@ -167,12 +167,8 @@ parents(node::DiscreteNode) = Symbol.(names(node.cpt.data[:, Not(node.name, "Π"
 
 """
     sample(node::DiscreteNode, evidence::Evidence)
-    sample(bn::BayesianNetwork, n::Int=1)
 
-Draw discrete samples. Given a `DiscreteNode` and an `Evidence` fixing its parents (and,
-optionally, the node itself), return one sampled state of the node; sampling a node whose entries
-are imprecise raises an error. Given a `BayesianNetwork`, perform ancestral sampling of `n` joint
-draws (ordering the network first) and return them as a `DataFrame` with one column per node.
+Draw discrete samples. Given a `DiscreteNode` and an `Evidence` fixing its parents (and, optionally, the node itself), return one sampled state of the node; sampling a node whose entries are imprecise raises an error.
 
 # Examples
 ```julia
@@ -182,9 +178,6 @@ S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 
 sample(S, Evidence(:W => :sunny))           # e.g. :on
-
-bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
-sample(bn, 3)                               # 3×2 DataFrame with columns :W, :S
 ```
 """
 function sample(node::DiscreteNode, evidence::Evidence)
