@@ -25,5 +25,5 @@ scenarios
 parents
 isroot
 isprecise
-sample
+sample(node::DiscreteNode, evidence::Evidence)
 ```

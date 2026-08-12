@@ -26,4 +26,5 @@ discrete_ancestors
 markov_blanket
 markov_envelope
 reduce
+sample(bn::BayesianNetwork, n::Int=1)
 ```
