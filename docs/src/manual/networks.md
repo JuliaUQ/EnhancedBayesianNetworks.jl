@@ -10,7 +10,7 @@ Three network types make up the modelling front-end, differing only in the kind 
 |:--|:--|:--|
 | [`BayesianNetwork`](@ref) [jensen2007bayesian](@cite) | discrete, **precise** | classical BN, ready for inference |
 | [`CredalNetwork`](@ref) (CN) [cozman_credal_2000](@cite) | discrete, at least one **imprecise** | CN over interval CPTs, ready for inference |
-| [`ENhancedBayesianNetwork`](@ref) (eBN) [straub_bayesian_2010](@cite) | discrete + continuous + functional, **precise** or **imprecise** | general model that is *reduced* to one of the above |
+| [`EnhancedBayesianNetwork`](@ref) (eBN) [straub_bayesian_2010](@cite) | discrete + continuous + functional, **precise** or **imprecise** | general model that is *reduced* to one of the above |
 
 An eBN is the expressive modelling layer: it may mix discrete, continuous, and functional nodes. 
 [Inference](inference.md) is not performed on it directly, it is first reduced (see [Reduction & Structural Reliability Problem](reduction.md)) to a purely discrete BN or CN, depending on whether any imprecision is present. 
@@ -46,7 +46,7 @@ It rejects self-loops, requires every referenced node to exist, checks that a di
 
 A [`BayesianNetwork`](@ref) is a DAG of discrete and precise nodes, the classical formulation [jensen2007bayesian](@cite). 
 Its constructor rejects any imprecise node, pointing you to a CN instead, and it requires node names and states to be globally unique.
-Once ordered, it supports the full inference and sampling machinery (see the [Inference](inference.md)).
+Once ordered, it supports the full inference and sampling machinery (see [Inference](inference.md)).
 
 ## Credal Network
 
@@ -71,7 +71,7 @@ The reverse transition happens automatically: after reduction, a credal network 
 ## Enhanced Bayesian Network
 
 An [`EnhancedBayesianNetwork`](@ref) is the general modelling front-end: it may hold discrete nodes, continuous nodes, and functional nodes side by side. 
-Continuous and functional nodes carry the physics of the problem (see [Nodes](@ref)), so the eBN cannot be queried directly.
+Continuous and functional nodes carry the physics of the problem (see [Nodes](nodes.md)), so the eBN cannot be queried directly.
 
 ```@example networks
 Wf = DiscreteNode(:Wf, [:sunny => [Parameter(1.0, :Wf)], :cloudy => [Parameter(2.0, :Wf)]])
