@@ -1,5 +1,11 @@
 # Introduction
 
+```@raw html
+<p align="center">
+  <img src="../assets/logo.png" alt="EnhancedBayesianNetworks.jl logo" width="220"/>
+</p>
+```
+
 EnhancedBayesianNetworks.jl is a Julia package for building, reducing, and querying **enhanced Bayesian Networks** (eBNs) [straub_bayesian_2010](@cite): Bayesian Networks (BNs) enhanced with *Structural Reliability Methods* for including *discrete nodes*, *continuous nodes* and *functional nodes* in the same framework.
 
 On top of this the package allows for including **imprecision** [beer_imprecise_2013-1](@cite) — interval and probability boxes (p-box) [P_box_FAES](@cite) — carried consistently from the inputs through to the inference result.
