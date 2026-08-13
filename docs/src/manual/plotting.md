@@ -44,6 +44,7 @@ Discrete nodes also show their number of states below the name. Pass `legend = t
 - `node_scale`: scale every node shape up or down.
 - `label_scale`: scale the node-label font independently of the shapes.
 - `figsize`: the canvas size, a tuple of `Compose` measures (e.g. `(20cm, 20cm)`, the default).
+- `background_color`: the canvas background colour (default `"transparent"`; pass e.g. `"white"` for an opaque figure).
 - `legend`, `legend_scale`, `legend_x`, `legend_y`: toggle, scale, and position the legend.
 
 ```julia
