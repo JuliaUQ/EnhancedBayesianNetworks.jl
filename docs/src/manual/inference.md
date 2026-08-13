@@ -2,9 +2,9 @@
 
 Inference answers **any** probabilistic queries: given some observed **evidence**, what is the distribution over one or more **query** variables? 
 [`infer`](@ref) computes this posterior exactly, by variable elimination, on a discrete network, i.e. a [Bayesian Network](@ref) (BN) or a [Credal Network](@ref) (CN). 
-An [Enhanced Bayesian Network`](@ref) (eBN) is not queried directly: it is first [`reduce`](@ref)d to one of these (see the [Reduction & Structural Reliability Problem](reduction.md) chapter).
+An [Enhanced Bayesian Network](@ref) (eBN) is not queried directly: it is first [`reduce`](@ref)d to one of these (see the [Reduction & Structural Reliability Problem](reduction.md) chapter).
 
-Evidence is given as an [`Evidence`](@ref), a `Dict{Symbol,Symbol}` mapping node names to observed states, and the query as a single node name or a vector of them.
+Evidence is given as an `Evidence`, a `Dict{Symbol,Symbol}` mapping node names to observed states, and the query as a single node name or a vector of them.
 
 ```@example inference
 using EnhancedBayesianNetworks # hide
@@ -24,11 +24,11 @@ Passing an empty `Evidence()` returns the prior marginal:
 infer(bn, :S, Evidence())                   # prior marginal P(S)
 ```
 
-The query must not overlap the evidence, and both must name states that actually exist in the network.
+The query **must not** overlap the evidence, and both must name states that actually exist in the network.
 
 ## Variable elimination
 
-[`infer`](@ref) uses **variable elimination** [zhang_simple](@cite): the network's conditional probability tables become *factors*, the evidence restricts every factor that mentions an observed variable to its observed state, and each non-query, non-evidence variable is then *summed out* in turn , the factors mentioning it are multiplied together, and the variable is marginalised away. 
+[`infer`](@ref) uses **variable elimination** [zhang_simple](@cite): the network's conditional probability tables become *factors*, the evidence restricts every factor that mentions an observed variable to its observed state, and each non-query, non-evidence variable is then *summed out* in turn, the factors mentioning it are *multiplied* together, and the variable is *marginalised* away. 
 Multiplying the surviving factors and normalising yields the posterior over the query. 
 The cost of the computation is dominated by the largest intermediate factor built along the way, which depends heavily on the **order** in which variables are eliminated.
 
@@ -38,7 +38,8 @@ Formally, write the joint distribution as a product of **factors** (potentials),
 p(y_1, \dots, y_n) = \prod_{i=1}^{n} \phi_i .
 ```
 
-To answer a query over the variables ``Q`` given evidence ``E = e``, every factor is first *restricted* to the observed states, ``\phi_i\big|_{E=e}``. Each remaining variable that is neither in ``Q`` nor in ``E`` is then **eliminated** with the two elementary factor operations, the *product* of all factors that mention it, followed by *marginalization*, i.e. summing the variable out of that product. 
+To answer a query over the variables ``Q`` given evidence ``E = e``, every factor is first *restricted* to the observed states, ``\phi_i\big|_{E=e}``. 
+Each remaining variable that is neither in ``Q`` nor in ``E`` is then **eliminated** with the two elementary factor operations, the *product* of all factors that mention it, followed by *marginalization*, i.e. summing the variable out of that product. 
 Eliminating a variable ``Y_k`` yields a single new factor
 
 ```math
@@ -61,7 +62,8 @@ where ``\mathbf{h}`` ranges over the variables other than ``Q`` and ``E``, and t
 The elimination order is chosen greedily on the network's *interaction graph* (the moral graph): repeatedly eliminate the remaining node with the lowest score, adding the fill-in edges its removal induces, until none are left. Ren et al. [ren_bayesian_2022](@cite) survey heuristics for constructing a good order and find the *minimum-increase-in-complexity* search, greedily removing the node whose elimination least increases the problem's complexity, to outperform the
 alternatives.
 
-EnhancedBayesianNetworks.jl adapts this idea into a **mixed scored function**. Rather than committing to a single complexity measure, it exposes two and combines them:
+EnhancedBayesianNetworks.jl adapts this idea into a **mixed scored function**. 
+Rather than committing to a single complexity measure, it exposes two and combines them:
 
 - [`fill_score`](@ref), *min-fill* heuristic: the ratio of fill-in edges an elimination would *add* to the edges it would *remove*, favouring nodes that introduce few new dependencies.
 - [`factor_score`](@ref), *min-factor* heuristic: the size of the factor an elimination would create, the product of the state-space sizes of the node and its current neighbours.
@@ -80,7 +82,7 @@ with ``s_{\mathrm{fill}}(Y) = 0`` when ``Y`` has no neighbours.
 The numerator of ``s_{\mathrm{fill}}`` counts the neighbour pairs not yet adjacent (the fill-in edges elimination would add) and its denominator is the degree ``|N(Y)|`` (the edges it would remove); ``s_{\mathrm{factor}}`` is the number of entries of the factor that elimination would build.
 
 The default, [`fill_factor_score`](@ref), is the **mix** of the two: a tuple `(fill_score, factor_score, node)` compared lexicographically, so the min-fill score decides, ties are broken by the smaller resulting factor, and the node id breaks any remaining tie for a deterministic order. 
-Either single heuristic can be selected instead by passing it as the last argument to [`infer`](@ref):
+Either single heuristic can be selected instead by passing it as the last argument to perform inference:
 
 ```@example inference
 infer(bn, :S, Evidence(:W => :sunny), fill_score)   # min-fill ordering only
@@ -101,7 +103,7 @@ It requires a **complete** scenario, i.e. one state per node; for partial eviden
 
 ## Credal inference
 
-On a [Credal Network](@ref) the local tables are interval-valued, so the network stands for a whole credal set of Bayesian networks [cozman_credal_2000](@cite). [`infer`](@ref) then returns a [`CredalPosterior`](@ref) carrying **lower** and **upper** posterior probabilities. 
+On a [Credal Network](@ref) the local tables are interval-valued, so the network stands for a whole credal set of Bayesian networks [cozman_credal_2000](@cite). Inference then returns a [`CredalPosterior`](@ref) carrying **lower** and **upper** posterior probabilities. 
 These are obtained by running variable elimination over the *extreme* Bayesian networks of the credal sets, and taking the element-wise minimum and maximum over the resulting posteriors.
 
 ```@example inference
