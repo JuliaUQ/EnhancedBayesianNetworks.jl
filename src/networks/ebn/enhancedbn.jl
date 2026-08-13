@@ -61,7 +61,7 @@ EnhancedBayesianNetwork(nodes::AbstractVector{<:AbstractNode}) = EnhancedBayesia
 
 Return the Markov envelopes of `net` as a vector of node-name vectors. Continuous nodes
 linked through their Markov blankets are first collected into groups
-([`_markov_continuous_group`](@ref)); each group's envelope is the union of its members'
+(`_markov_continuous_group`); each group's envelope is the union of its members'
 Markov blankets together with the members themselves. Envelopes that are a subset of
 another envelope are discarded, so only the maximal (non-redundant) envelopes remain.
 

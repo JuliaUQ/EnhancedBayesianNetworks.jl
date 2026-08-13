@@ -51,7 +51,8 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     legend::Bool=false,
     legend_scale::Float64=1.0,
     legend_x::Float64=0.72,
-    legend_y::Float64=0.62
+    legend_y::Float64=0.62,
+    background_color::String="transparent"
 )
     node_list = net.nodes
     n = length(node_list)
@@ -122,6 +123,7 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
         legend_ctx,
         compose(context(), polygon(edge_arrows), fill("black")),                        # arrowheads
         compose(context(), line(edge_lines), Compose.stroke("black"), linewidth(ew)),   # edge lines (back)
+        compose(context(), rectangle(), fill(background_color))                         # background
     )
 end
 
