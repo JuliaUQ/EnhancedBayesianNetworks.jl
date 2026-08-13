@@ -1,46 +1,50 @@
----
-layout: home
+# EnhancedBayesianNetworks.jl
 
-hero:
-  name: EnhancedBayesianNetworks.jl
-  text: Bayesian networks with continuous, functional, and imprecise nodes
-  tagline: Build enhanced Bayesian networks, reduce them through structural reliability analysis, and query them with exact or credal inference.
-  actions:
-    - theme: brand
-      text: Getting Started
-      link: /manual/gettingstarted
-    - theme: alt
-      text: Introduction
-      link: /manual/introduction
-    - theme: alt
-      text: View on GitHub
-      link: https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl
+A Julia package for building, reducing, and querying **enhanced Bayesian networks** — Bayesian
+networks extended with the continuous and functional nodes of structural reliability analysis, and
+with imprecision carried consistently from the inputs through to the inference result.
 
-features:
-  - title: Enhanced Bayesian networks
-    details: Mix discrete, continuous, and functional nodes in a single model, with precise or imprecise (interval / probability-box) quantities.
-  - title: Reduction & reliability
-    details: Reduce an enhanced network to a Bayesian or credal network, evaluating functional nodes as structural reliability problems through UncertaintyQuantification.jl.
-  - title: Exact & credal inference
-    details: Variable elimination on Bayesian networks and lower/upper bounds on credal networks, alongside parameter learning and network plotting.
+## Features
 
-authors:
-  - name: Andrea Perin
-    platform: github
-    link: https://github.com/andreaperin
-  - name: Jasper Behrensdorf
-    platform: github
-    link: https://github.com/FriesischScott
-  - name: Matteo Broggi
-    platform: github
-    link: https://github.com/teobros
-  - name: Laurenz Knipper
-    platform: github
-    link: https://github.com/sitoryu
+Current functionality includes:
+
+* Node types
+  * Discrete and continuous nodes, with conditional probability tables or distributions known a priori
+  * Discrete and continuous *functional* nodes, whose tables are derived from the parents through [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) models
+  * Imprecision at every level — interval probabilities and probability boxes
+* Network types
+  * Bayesian networks
+  * Credal networks (imprecise)
+  * Enhanced Bayesian networks — discrete, continuous, and functional nodes side by side
+* Reduction & reliability analysis
+  * Discretization of continuous nodes
+  * Evaluation of functional nodes as structural reliability problems (Monte Carlo, Subset Simulation, Line Sampling, …)
+  * Imprecise reliability by Double Loop and Random Slicing
+  * Precise inputs reduce to a Bayesian network, imprecise inputs to a credal network
+* Inference
+  * Exact inference by variable elimination
+  * Credal inference with lower/upper posterior bounds
+* Parameter learning
+  * Maximum likelihood estimation from complete data
+  * Expectation–Maximization for data with missing entries
+* Visualization
+  * Layered, top-down network plots that encode each node's kind, precision, and discretization
+
 ---
 
-EnhancedBayesianNetworks.jl extends the classical Bayesian-network formalism with the
-continuous and functional nodes of structural reliability analysis, and with imprecision at
-every level. New here? Start with the [Introduction](manual/introduction.md) for the concepts,
-or jump to [Getting Started](manual/gettingstarted.md) to install the package and run your first
-model.
+## Installation
+
+EnhancedBayesianNetworks.jl is not yet registered. Install the latest version directly from GitHub through the Julia package manager:
+
+```julia
+julia> ]add https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl
+julia> using EnhancedBayesianNetworks
+```
+
+New here? Start with the [Introduction](manual/introduction.md) for the concepts, or jump to [Getting Started](manual/gettingstarted.md) to run your first model.
+
+---
+
+## Related packages
+
+* [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl): the structural-reliability and uncertainty-propagation backbone that EnhancedBayesianNetworks.jl builds on — its models, inputs, and simulation methods evaluate every functional node.
