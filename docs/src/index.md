@@ -1,5 +1,11 @@
 # EnhancedBayesianNetworks.jl
 
+```@raw html
+<p align="center">
+  <img src="./assets/logo.png" alt="EnhancedBayesianNetworks.jl logo" width="220"/>
+</p>
+```
+
 A Julia package for building, reducing, and querying **enhanced Bayesian networks** — Bayesian
 networks extended with the continuous and functional nodes of structural reliability analysis, and
 with imprecision carried consistently from the inputs through to the inference result.
