@@ -1,0 +1,45 @@
+cff-version: 1.2.0
+title: EnhancedBayesianNetworks.jl
+# message: >-
+#   If you use this software, please cite it using the
+#   metadata from this file.
+type: software
+authors:
+  - given-names: Andrea
+    family-names: Perin
+    orcid: 'https://orcid.org/0009-0007-4710-7939'
+  - given-names: Jasper
+    family-names: Behrensdorf
+    orcid: 'https://orcid.org/0000-0001-9628-7250'
+    email: behrensdorf@irz.uni-hannover.de
+  - given-names: Matteo
+    family-names: Broggi
+    orcid: 'https://orcid.org/0000-0002-3683-3907'
+  - given-names: Laurenz
+    family-names: Knipper
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.14054154
+repository-code: 'https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl'
+license: MIT
+version: 0.1.0
+# preferred-citation:
+#   authors:
+#     - given-names: Jasper
+#       family-names: Behrensdorf
+#     - given-names: Ander
+#       family-names: Gray
+#     - given-names: Matteo
+#       family-names: Broggi
+#     - given-names: Michael
+#       family-names: Beer
+#   title: 'UncertaintyQuantification.jl : A New Framework for Uncertainty Quantification in Julia'
+#   type: conference-paper
+#   conference:
+#     name: UNCECOMP 2023
+#     country: GR
+#     city: Athens
+#     date-start: "2023-06-12"
+#     date-end: "2023-06-14"
+#   doi: 10.7712/120223.10347.19810
+#   year: 2023
