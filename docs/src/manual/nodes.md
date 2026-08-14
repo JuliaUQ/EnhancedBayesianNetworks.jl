@@ -53,8 +53,10 @@ W[:W => :sunny]  = 0.5
 W[:W => :cloudy] = 0.5
 
 S = DiscreteNode(:S, [:W])                  # child of W
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
-S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+S[:W => :sunny,  :S => :on] = 0.9 
+S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2 
+S[:W => :cloudy, :S => :off] = 0.8
 S
 ```
 
@@ -145,7 +147,7 @@ Tr = ContinuousNode(:Tr, Normal(), ExactDiscretization([-2.0, 0.0, 2.0]))   # ro
 Tr.discretization
 ```
 
-```julia
+```@example nodes
 # child: interval edges plus the exponential tail rate (here 1.5)
 Cd = ContinuousNode(:Cd, [:W], ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5))
 ```
@@ -164,7 +166,7 @@ A functional node is therefore always a child, and never a root.
 A [`DiscreteFunctionalNode`](@ref) derives two states: `:<name>_safe` and `:<name>_failed`. 
 A `performance` function maps the models' output to a limit state (*failed* where `performance < 0`), and the evaluated CPT stores the estimated failure probability against `:<name>_failed` and its complement against `:<name>_safe`:
 
-```@example functional
+```@example nodes
 using EnhancedBayesianNetworks # hide
 model = Model(df -> df.x .^ 2, :y)          # y is computed from parent x
 performance = df -> df.y .- 1.0             # failed when y < 1
@@ -177,7 +179,7 @@ states(DF)                                  # [:DF_safe, :DF_failed]
 
 A [`ContinuousFunctionalNode`](@ref) has no performance function: after evaluation, its model output samples are fitted into an [`EmpiricalDistribution`](@extref `UncertaintyQuantification.EmpiricalDistribution`), one per scenario of its discrete ancestors.
 
-```julia
+```@example nodes
 model = Model(df -> df.x .^ 2, :y)
 CF = ContinuousFunctionalNode(:CF, [model], MonteCarlo(1000))
 ```
@@ -187,7 +189,7 @@ CF = ContinuousFunctionalNode(:CF, [model], MonteCarlo(1000))
 Passing a single simulation, e.g `MonteCarlo(1000)` above, reuses it for every scenario of the node's discrete ancestors. 
 To tune the effort, or even the method, per scenario, list the parents explicitly in the constructor and then assign a simulation to each scenario the same way you would fill a CPT:
 
-```julia
+```@example nodes
 DF = DiscreteFunctionalNode(:DF, [:a, :b], [model], performance)   # list the parents
 DF[:a => :a1, :b => :b1] = MonteCarlo(1000)
 DF[:a => :a1, :b => :b2] = SubSetSimulation(500, 0.1, 10, Uniform(-0.2, 0.2))
@@ -222,6 +224,11 @@ The same accessors work across node types:
 
 Sampling draws a state consistent with fixed parent evidence (precise nodes only):
 
-```julia
+```@example nodes
+S = DiscreteNode(:S, [:W])                  # child of W
+S[:W => :sunny,  :S => :on] = 0.9
+S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2
+S[:W => :cloudy, :S => :off] = 0.8
 sample(S, Evidence(:W => :sunny))           # e.g. :on
 ```

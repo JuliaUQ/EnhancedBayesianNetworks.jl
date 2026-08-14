@@ -47,7 +47,7 @@ Discrete nodes also show their number of states below the name. Pass `legend = t
 - `background_color`: the canvas background colour (default `"transparent"`; pass e.g. `"white"` for an opaque figure).
 - `legend`, `legend_scale`, `legend_x`, `legend_y`: toggle, scale, and position the legend.
 
-```julia
+```@example plotting
 gplot(net; title = "weather", node_scale = 1.2, label_scale = 0.9, figsize = (16cm, 12cm))
 ```
 

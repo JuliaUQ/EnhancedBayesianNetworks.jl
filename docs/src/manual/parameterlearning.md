@@ -13,7 +13,9 @@ operations that need CPTs ([`order!`](@ref), [`infer`](@ref), `sample`).
 Build the DAG top-down with [`add_node!`](@ref), listing each node's `parents` (which must already be present). 
 Edges are wired for you as you declare the parents.
 
-```julia
+```@example parameters_learning
+using EnhancedBayesianNetworks
+
 dag = DirectAcyclicGraph()
 add_node!(dag, :W)                          # root
 add_node!(dag, :R; parents = [:W])          # edge :W -> :R wired here
@@ -25,7 +27,7 @@ Each node's **domain** is taken from the data at learn time.
 Any states passed to [`add_node!`](@ref) are *added* to that domain. Those are the states you want to keep even if they never occur in the dataset. 
 They end up in the learned CPT with probability `0` (or an `alpha`-smoothed mass):
 
-```julia
+```@example parameters_learning
 add_node!(dag, :W, [:foggy])                # :sunny/:cloudy come from data; :foggy guaranteed
 ```
 
@@ -34,7 +36,7 @@ add_node!(dag, :W, [:foggy])                # :sunny/:cloudy come from data; :fo
 [`learn`](@ref) estimates the CPTs and chooses the algorithm from the data: **complete** data uses maximum likelihood, data with any `missing` entries uses Expectation-Maximization. 
 It returns a BN; call [`order!`](@ref) on it before inference or sampling.
 
-```julia
+```@example parameters_learning
 using DataFrames
 df = DataFrame(W = [:sunny, :sunny, :cloudy, :cloudy],
                S = [:on,    :off,   :on,     :off])
@@ -49,7 +51,7 @@ order!(learned)
 
 `alpha` is a Laplace/Dirichlet pseudo-count applied by both algorithms; `max_iter` and `tol` control EM's convergence:
 
-```julia
+```@example parameters_learning
 learn(dag, df; alpha = 1)                            # add-one smoothing
 learn(dag, df_with_missing; tol = 1e-6, max_iter = 500)
 ```
@@ -68,7 +70,7 @@ P(Y_i = s \mid \mathrm{Pa}(Y_i) = c) = \frac{N(s, c) + \alpha}{N(c) + \alpha\,k_
 where ``N(s, c)`` counts the training rows with ``Y_i = s`` and ``\mathrm{Pa}(Y_i) = c``, ``N(c)`` those with ``\mathrm{Pa}(Y_i) = c``, ``k_i`` is the number of states of ``Y_i``, and `alpha` the pseudo-count (`alpha = 0` is pure maximum likelihood; `alpha > 0` smooths, keeping never-observed states off exactly `0`). 
 A parent configuration that never appears in the data falls back to a uniform distribution.
 
-```julia
+```@example parameters_learning
 learned = learn_parameters_mle(dag, df; alpha = 1)
 order!(learned)
 ```
@@ -84,7 +86,7 @@ Iteration stops when no CPT entry moves by more than `tol`, or after `max_iter` 
 Because EM converges only to a *local* optimum, the (uniform) initialization matters. 
 With no missing values it reduces exactly to [`learn_parameters_mle`](@ref).
 
-```julia
+```@example parameters_learning
 learned = learn_parameters_em(dag, df_with_missing; alpha = 1, tol = 1e-6)
 order!(learned)
 ```
