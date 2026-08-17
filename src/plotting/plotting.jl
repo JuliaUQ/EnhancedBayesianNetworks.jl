@@ -122,7 +122,8 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     legend_ctx = legend ? _build_legend(
         legend_scale;
         x_fraction=legend_x * ar,
-        y_fraction=legend_y
+        y_fraction=legend_y,
+        font_scale=figsize[2] / 20   # legend text tracks canvas height (default 20)
     ) : context()
 
     compose(context(units=UnitBox(0, 0, ar, 1)),

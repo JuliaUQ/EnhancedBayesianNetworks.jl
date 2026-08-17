@@ -42,14 +42,16 @@ function _legend_color(i::Int, label, fs, colour, bar_w, bar_h)
     )
 end
 
-function _build_legend(scale; x_fraction=0.72, y_fraction=0.62)
+# `font_scale` ties the legend text size to the canvas height: the box is sized in
+# coordinate fractions (so it scales with the canvas) while fonts are absolute points,
+function _build_legend(scale; x_fraction=0.72, y_fraction=0.62, font_scale=1.0)
     r = 0.035 * scale
     hw = 0.035 * scale
     hh = 0.026 * scale
     bar_w = 0.07 * scale
     bar_h = 0.014 * scale
-    fs = 9 * scale
-    header_fs = 10 * scale
+    fs = 9 * scale * font_scale
+    header_fs = 10 * scale * font_scale
     x = _LEGEND_X_ICON
 
     compose(context(x_fraction, y_fraction, 0.26, 0.34),
