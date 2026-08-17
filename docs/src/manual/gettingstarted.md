@@ -40,6 +40,7 @@ S[:W => :cloudy, :S => :off] = 0.8
 bn = BayesianNetwork([W, S])
 add_child!(bn, :W, :S)
 order!(bn)
+bn
 ```
 
 Now query it. [`infer`](@ref) returns the *posterior* over a query variable given some evidence:
@@ -67,8 +68,12 @@ model = Model(df -> df.R .- df.Load, :g)                 # limit state g = R - L
 F = DiscreteFunctionalNode(:F, [model], df -> df.g, MonteCarlo(2000))
 
 ebn = EnhancedBayesianNetwork([Load, R, F])
-add_child!(ebn, :Load, :F); add_child!(ebn, :R, :F); order!(ebn)
-
+add_child!(ebn, :Load, :F)
+add_child!(ebn, :R, :F)
+order!(ebn)
+ebn
+```
+```@example gettingstarted
 reduced = reduce(ebn)                                    # -> BayesianNetwork
 infer(reduced, :F, Evidence(:Load => :high))            # failure probability given a high load
 ```

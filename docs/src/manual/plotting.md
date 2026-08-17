@@ -48,7 +48,15 @@ Discrete nodes also show their number of states below the name. Pass `legend = t
 - `legend`, `legend_scale`, `legend_x`, `legend_y`: toggle, scale, and position the legend.
 
 ```@example plotting
-gplot(net; title = "weather", node_scale = 1.2, label_scale = 0.9, figsize = (16, 12), background_color="white")
+gplot(net; 
+    title = "weather", 
+    node_scale = 1.2, 
+    label_scale = 0.9, 
+    figsize = (22, 18),
+    legend = true,
+    legend_scale = 1.2, 
+    background_color="white"
+)
 ```
 
 ## Saving to a file

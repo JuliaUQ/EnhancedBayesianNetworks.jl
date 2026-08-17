@@ -21,6 +21,7 @@ add_node!(dag, :W)                          # root
 add_node!(dag, :R; parents = [:W])          # edge :W -> :R wired here
 add_node!(dag, :P; parents = [:W])
 add_node!(dag, :G; parents = [:R, :P])
+dag
 ```
 
 Each node's **domain** is taken from the data at learn time. 
@@ -28,7 +29,9 @@ Any states passed to [`add_node!`](@ref) are *added* to that domain. Those are t
 They end up in the learned CPT with probability `0` (or an `alpha`-smoothed mass):
 
 ```@example parameters_learning
+dag = DirectAcyclicGraph()
 add_node!(dag, :W, [:foggy])                # :sunny/:cloudy come from data; :foggy guaranteed
+dag
 ```
 
 ## Learning the parameters
@@ -38,14 +41,18 @@ It returns a BN; call [`order!`](@ref) on it before inference or sampling.
 
 ```@example parameters_learning
 using DataFrames
-df = DataFrame(W = [:sunny, :sunny, :cloudy, :cloudy],
-               S = [:on,    :off,   :on,     :off])
+df = DataFrame(
+    W = [:sunny, :sunny, :cloudy, :cloudy],
+    S = [:on, :off, :on, :off]
+    )
 
 dag = DirectAcyclicGraph()
 add_node!(dag, :W)
 add_node!(dag, :S; parents = [:W])
 
 learned = learn(dag, df)                    # complete data -> MLE
+```
+```@example parameters_learning
 order!(learned)
 ```
 
@@ -53,6 +60,13 @@ order!(learned)
 
 ```@example parameters_learning
 learn(dag, df; alpha = 1)                            # add-one smoothing
+```
+```@example parameters_learning
+df_with_missing = DataFrame(
+    W = [:sunny, :sunny, :cloudy, :cloudy, :cloudy, :sunny],
+    S = [:on, :off, :on, :off, :missing, :on]
+    )
+
 learn(dag, df_with_missing; tol = 1e-6, max_iter = 500)
 ```
 
@@ -72,6 +86,8 @@ A parent configuration that never appears in the data falls back to a uniform di
 
 ```@example parameters_learning
 learned = learn_parameters_mle(dag, df; alpha = 1)
+```
+```@example parameters_learning
 order!(learned)
 ```
 
@@ -88,6 +104,8 @@ With no missing values it reduces exactly to [`learn_parameters_mle`](@ref).
 
 ```@example parameters_learning
 learned = learn_parameters_em(dag, df_with_missing; alpha = 1, tol = 1e-6)
+```
+```@example parameters_learning
 order!(learned)
 ```
 

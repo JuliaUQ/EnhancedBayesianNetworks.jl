@@ -66,6 +66,9 @@ As soon as at least one entry is an Interval, the whole node is **imprecise**, i
 
 ```@example nodes
 S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)
+S
+```
+```@example nodes
 isprecise(S)
 ```
 
@@ -74,7 +77,8 @@ These are inert on their own; they matter only when the node feeds a functional 
 
 ```@example nodes
 P = DiscreteNode(:P, [:on => [Parameter(0.5, :P)], :off => [Parameter(0.0, :P)]])
-P[:P => :on] = 0.7; P[:P => :off] = 0.3
+P[:P => :on] = 0.7
+P[:P => :off] = 0.3
 P
 ```
 
@@ -85,6 +89,9 @@ A **root** is built directly from a single distribution; a **child** names its p
 
 ```@example nodes
 T = ContinuousNode(:T, Normal())            # root from one distribution
+T
+```
+```@example nodes
 isroot(T), isprecise(T)
 ```
 
@@ -92,6 +99,9 @@ isroot(T), isprecise(T)
 C = ContinuousNode(:C, [:W])                # child: one distribution per parent state
 C[:W => :sunny]  = Normal()
 C[:W => :cloudy] = Normal(2, 1)
+C
+```
+```@example nodes
 scenarios(C)
 ```
 
@@ -144,7 +154,6 @@ F_{X_i}(x_i \mid k) =
 
 ```@example nodes
 Tr = ContinuousNode(:Tr, Normal(), ExactDiscretization([-2.0, 0.0, 2.0]))   # root
-Tr.discretization
 ```
 
 ```@example nodes
@@ -167,11 +176,12 @@ A [`DiscreteFunctionalNode`](@ref) derives two states: `:<name>_safe` and `:<nam
 A `performance` function maps the models' output to a limit state (*failed* where `performance < 0`), and the evaluated CPT stores the estimated failure probability against `:<name>_failed` and its complement against `:<name>_safe`:
 
 ```@example nodes
-using EnhancedBayesianNetworks # hide
 model = Model(df -> df.x .^ 2, :y)          # y is computed from parent x
 performance = df -> df.y .- 1.0             # failed when y < 1
 
 DF = DiscreteFunctionalNode(:DF, [model], performance, MonteCarlo(1000))
+```
+```@example nodes
 states(DF)                                  # [:DF_safe, :DF_failed]
 ```
 
@@ -195,6 +205,7 @@ DF[:a => :a1, :b => :b1] = MonteCarlo(1000)
 DF[:a => :a1, :b => :b2] = SubSetSimulation(500, 0.1, 10, Uniform(-0.2, 0.2))
 DF[:a => :a2, :b => :b1] = MonteCarlo(200)
 DF[:a => :a2, :b => :b2] = MonteCarlo(200)
+DF
 ```
 
 Different scenarios may use entirely different techniques (standard `MonteCarlo`, `SubSetSimulation`, a `DoubleLoop`, `RandomSlicing` or others). 
