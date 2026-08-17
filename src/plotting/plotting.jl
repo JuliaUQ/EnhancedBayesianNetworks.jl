@@ -67,8 +67,16 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     ts = _BASE_TITLESIZE * title_scale
 
     # ── positions ────────────────────────────────────────────────────────────
+    # Work in an isotropic coordinate system so shapes stay round and arrows stay
+    # seated at any figsize: the canvas aspect ratio `ar = width/height` is folded
+    # into a UnitBox spanning [0, ar] × [0, 1] (set below), and every x coordinate
+    # is spread across that range. One x-unit and one y-unit then map to the same
+    # physical length, so all the geometry (radii, angles, border points, arrows)
+    # computed downstream is undistorted.
+    ar = figsize[1] / figsize[2]
     top_pad = isempty(title) ? 0.12 : 0.18
     locs_x, locs_y = _layered_positions(net.A, _BORDER_PAD, top_pad)
+    locs_x = locs_x .* ar
 
     # ── edges ────────────────────────────────────────────────────────────────
     edge_list = [(i, j) for i in 1:n for j in 1:n if net.A[i, j] != 0]
@@ -102,7 +110,7 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     # ── optional title ───────────────────────────────────────────────────────
     title_ctx = isempty(title) ? context() : compose(
         context(),
-        Compose.text(0.5, _BORDER_PAD / 2, title, hcenter, vcenter),
+        Compose.text(0.5 * ar, _BORDER_PAD / 2, title, hcenter, vcenter),
         fill("black"),
         fontsize(ts),
         Compose.font("Helvetica")
@@ -113,11 +121,11 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
 
     legend_ctx = legend ? _build_legend(
         legend_scale;
-        x_fraction=legend_x,
+        x_fraction=legend_x * ar,
         y_fraction=legend_y
     ) : context()
 
-    compose(context(),
+    compose(context(units=UnitBox(0, 0, ar, 1)),
         title_ctx,
         label_ctxs...,                                                                  # labels (front)
         node_ctxs...,                                                                   # node shapes

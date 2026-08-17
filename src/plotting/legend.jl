@@ -60,7 +60,7 @@ function _build_legend(scale; x_fraction=0.72, y_fraction=0.62)
         _legend_shape(y -> polygon(_rounded_polygon(_hexagon_vertices(x, y, hw, hh), _HEX_CORNER_RADIUS * hw)),
             4, "Continuous functional", fs),
         _legend_shape(y -> polygon(_hexagon_vertices(x, y, hw, hh)), 5, "Discrete functional", fs),
-        _legend_shape(y -> circle(x, y, r), 6, "Discretized", fs; fillcolor="lightgreen", linew=1.2mm * scale),
+        _legend_shape(y -> circle(x, y, r), 6, "To be discretized", fs; linew=1.2mm * scale),
         _legend_header(7, "Color", header_fs),
         _legend_color(8, "Precise", fs, "lightgreen", bar_w, bar_h),
         _legend_color(9, "Imprecise", fs, "limegreen", bar_w, bar_h),
