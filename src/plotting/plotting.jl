@@ -22,8 +22,9 @@ a continuous node carrying a discretization. Discrete nodes also show their numb
 states below the name. Edges attach to the exact border of each shape.
 
 Pass `legend=true` to draw the shape/colour key, positioned by `legend_x` and `legend_y`
-as fractions of the canvas. Returns a `Compose.Context`, which [`saveplot`](@ref) writes
-to SVG.
+as fractions of the canvas. `figsize` is the canvas size in centimeters, given as a
+`(width, height)` tuple of numbers (default `(20, 20)`). Returns a `Compose.Context`,
+which [`saveplot`](@ref) writes to SVG.
 
 # Examples
 ```julia
@@ -47,7 +48,7 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     label_scale::Float64=1.0,
     title::String="",
     title_scale::Float64=1.0,
-    figsize::Tuple=(20cm, 20cm),
+    figsize::Tuple{Real,Real}=(20, 20),
     legend::Bool=false,
     legend_scale::Float64=1.0,
     legend_x::Float64=0.72,
@@ -108,7 +109,7 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     )
 
     # ── assemble (painter's order: back → front) ─────────────────────────────
-    Compose.set_default_graphic_size(figsize[1], figsize[2])
+    Compose.set_default_graphic_size(figsize[1] * cm, figsize[2] * cm)
 
     legend_ctx = legend ? _build_legend(
         legend_scale;

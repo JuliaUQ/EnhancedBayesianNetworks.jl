@@ -1,6 +1,5 @@
 @testsnippet SetupPlotNet begin
-    using EnhancedBayesianNetworks: Compose, cm, mm, pt,
-        _node_shape, _hexagon_vertices, _rounded_polygon,
+    using EnhancedBayesianNetworks: Compose, mm, pt, _node_shape, _hexagon_vertices, _rounded_polygon,
         _circle_border, _rect_border, _polygon_border, _hexagon_border, _border_point,
         _node_color, _node_strokewidth, _node_form, _build_node_contexts,
         _compute_layers, _layered_positions, _arrowcoords, _midpoint, _build_edges,
@@ -66,7 +65,7 @@ end
     @test gplot(plotnet; title="a title") isa Compose.Context
     @test gplot(plotnet; node_scale=1.5, label_scale=2.0, title_scale=0.5) isa Compose.Context
     @test gplot(plotnet; legend=true, legend_scale=0.8, legend_x=0.1, legend_y=0.1) isa Compose.Context
-    @test gplot(plotnet; figsize=(10cm, 30cm)) isa Compose.Context
+    @test gplot(plotnet; figsize=(10, 30)) isa Compose.Context
 
     dag = DirectAcyclicGraph()
     add_node!(dag, :A)
