@@ -58,7 +58,7 @@ makedocs(;
     pages=pages,
     source="src",
     build="build",
-    warnonly=true,
+    warnonly=false,
     format=format,
     draft=false,
 )
