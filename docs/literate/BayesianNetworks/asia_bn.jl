@@ -1,4 +1,4 @@
-# # Asia Network
+# # Asia Bayesian Network
 #
 # The *Asia* network [lauritzen_local_1988](@cite) is the classic small
 # Bayesian network used to introduce probabilistic reasoning in medical

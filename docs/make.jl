@@ -36,9 +36,8 @@ pages = [
         "Plotting" => "manual/plotting.md",
     ],
     "Examples" => [
-        "Asia Network" => "examples/asia_bn.md",
-        #     "Fire Protection"  => "examples/fire_protection.md",
-        #     "Straub Example"   => "examples/straub_example.md",
+        "Bayesian Networks" => "examples/BayesianNetworks.md",
+        "Credal Networks" => "examples/CredalNetworks.md",
     ],
     "API" => [
         "Nodes" => "api/nodes.md",
