@@ -35,11 +35,11 @@ pages = [
         "Parameter Learning" => "manual/parameterlearning.md",
         "Plotting" => "manual/plotting.md",
     ],
-    # "Examples" => [
-    #     "Asia Network"     => "examples/asia_bn.md",
-    #     "Fire Protection"  => "examples/fire_protection.md",
-    #     "Straub Example"   => "examples/straub_example.md",
-    # ],
+    "Examples" => [
+        "Asia Network" => "examples/asia_bn.md",
+        #     "Fire Protection"  => "examples/fire_protection.md",
+        #     "Straub Example"   => "examples/straub_example.md",
+    ],
     "API" => [
         "Nodes" => "api/nodes.md",
         "Networks" => "api/networks.md",
