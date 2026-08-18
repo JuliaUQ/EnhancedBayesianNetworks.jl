@@ -1,71 +1,52 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Legend: a shape/colour key drawn at a fixed point on the canvas.
+#
+# Everything scales off one number, the font size. `fontsize_pt` is in points and
+# `em` is that same height expressed in canvas units (via `pt_to_units`), so the
+# icons, bars and row spacing all track the text automatically — change the font
+# and the whole legend grows or shrinks with it. `x`/`y` are the top-left corner,
+# also in canvas units (the caller converts them from centimetres).
+# ─────────────────────────────────────────────────────────────────────────────
+function _build_legend(x, y, fontsize_pt, pt_to_units)
+    em = fontsize_pt * pt_to_units      # font height, in canvas units
+    fs = fontsize_pt * pt
+    header_fs = 1.1 * fontsize_pt * pt
 
-const _LEGEND_X_HEAD = 0.06    # x of a section header, in legend-box fractions
-const _LEGEND_X_ICON = 0.11    # x of a row's icon
-const _LEGEND_X_LABEL = 0.21   # x where a row's text starts
+    row_h = 1.6 * em                    # vertical distance between rows
+    icon_x = x + 1.0 * em               # icon centre column
+    label_x = x + 2.2 * em              # label start column
+    r = 0.55 * em                       # icon radius / half-size
+    bar_w = 1.1 * em
+    bar_h = 0.4 * em
+    thin = 0.09 * fontsize_pt * pt    # stroke widths are absolute, but scale with the font
+    thick = 0.33 * fontsize_pt * pt
 
-# Vertical placement of legend row `i` (1-based, headers included).
-_legend_y(i::Int) = 0.05 + (i - 1) * 0.098
+    row_y(i) = y + (i - 0.5) * row_h
 
-function _legend_label(y, label, fs)
-    compose(context(), Compose.text(_LEGEND_X_LABEL, y, label, hleft, vcenter), fontsize(fs * pt))
-end
+    header(i, label) = compose(context(),
+        Compose.text(x + 0.3 * em, row_y(i), label, hleft, vcenter), fontsize(header_fs))
 
-_legend_header(i::Int, label, fs) = compose(context(), Compose.text(_LEGEND_X_HEAD, _legend_y(i), label, hleft, vcenter), fontsize(fs * pt))
+    lbl(i, label) = compose(context(),
+        Compose.text(label_x, row_y(i), label, hleft, vcenter), fontsize(fs))
 
-# A shape row: `formfn` receives the row's y and returns the outlined icon.
-function _legend_shape(formfn, i::Int, label, fs; fillcolor=nothing, linew=0.3mm)
-    y = _legend_y(i)
-    compose(
-        context(),
-        compose(
-            context(),
-            formfn(y),
-            fill(fillcolor),
-            Compose.stroke("black"),
-            linewidth(linew)
-        ),
-        _legend_label(y, label, fs)
-    )
-end
+    shape(i, formfn, label; fillcolor=nothing, linew=thin) = compose(context(),
+        compose(context(), formfn(icon_x, row_y(i)), fill(fillcolor), Compose.stroke("black"), linewidth(linew)),
+        lbl(i, label))
 
-# A colour row: a filled bar instead of a shape icon.
-function _legend_color(i::Int, label, fs, colour, bar_w, bar_h)
-    y = _legend_y(i)
-    compose(
-        context(),
-        compose(
-            context(),
-            rectangle(_LEGEND_X_ICON - bar_w / 2, y - bar_h / 2, bar_w, bar_h),
-            fill(colour)
-        ),
-        _legend_label(y, label, fs)
-    )
-end
+    colour(i, label, c) = compose(context(),
+        compose(context(), rectangle(icon_x - bar_w / 2, row_y(i) - bar_h / 2, bar_w, bar_h), fill(c)),
+        lbl(i, label))
 
-# `font_scale` ties the legend text size to the canvas height: the box is sized in
-# coordinate fractions (so it scales with the canvas) while fonts are absolute points,
-function _build_legend(scale; x_fraction=0.72, y_fraction=0.62, font_scale=1.0)
-    r = 0.035 * scale
-    hw = 0.035 * scale
-    hh = 0.026 * scale
-    bar_w = 0.07 * scale
-    bar_h = 0.014 * scale
-    fs = 9 * scale * font_scale
-    header_fs = 10 * scale * font_scale
-    x = _LEGEND_X_ICON
-
-    compose(context(x_fraction, y_fraction, 0.26, 0.34),
-        compose(context(), rectangle(), fill(nothing), Compose.stroke("black"), linewidth(0.3mm)),
-        _legend_header(1, "Shape", header_fs),
-        _legend_shape(y -> circle(x, y, r), 2, "Continuous", fs),
-        _legend_shape(y -> rectangle(x - hw, y - hh, 2hw, 2hh), 3, "Discrete", fs),
-        _legend_shape(y -> polygon(_rounded_polygon(_hexagon_vertices(x, y, hw, hh), _HEX_CORNER_RADIUS * hw)),
-            4, "Continuous functional", fs),
-        _legend_shape(y -> polygon(_hexagon_vertices(x, y, hw, hh)), 5, "Discrete functional", fs),
-        _legend_shape(y -> circle(x, y, r), 6, "To be discretized", fs; linew=1.2mm * scale),
-        _legend_header(7, "Color", header_fs),
-        _legend_color(8, "Precise", fs, "lightgreen", bar_w, bar_h),
-        _legend_color(9, "Imprecise", fs, "limegreen", bar_w, bar_h),
-        _legend_color(10, "Functional", fs, "orange", bar_w, bar_h),
+    compose(context(),
+        header(1, "Shape"),
+        shape(2, (cx, cy) -> circle(cx, cy, r), "Continuous"),
+        shape(3, (cx, cy) -> rectangle(cx - r, cy - r, 2r, 2r), "Discrete"),
+        shape(4, (cx, cy) -> polygon(_rounded_polygon(_hexagon_vertices(cx, cy, r, r), _HEX_CORNER_RADIUS * r)), "Continuous functional"),
+        shape(5, (cx, cy) -> polygon(_hexagon_vertices(cx, cy, r, r)), "Discrete functional"),
+        shape(6, (cx, cy) -> circle(cx, cy, r), "To be discretized"; linew=thick),
+        header(7, "Color"),
+        colour(8, "Precise", "lightgreen"),
+        colour(9, "Imprecise", "limegreen"),
+        colour(10, "Functional", "orange"),
     )
 end

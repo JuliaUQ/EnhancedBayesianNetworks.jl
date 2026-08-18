@@ -1,8 +1,8 @@
 
-# Internal base values — all user parameters scale these.
-const _BASE_LABELSIZE = 8pt    # node label font size
+# Internal base values.
 const _BASE_TITLESIZE = 18pt   # title font size
 const _BORDER_PAD = 0.12       # fraction of canvas kept free at each edge
+const _CM_PER_PT = 2.54 / 72   # one point, in centimetres
 
 include("layout.jl")
 include("shapes.jl")
@@ -11,7 +11,7 @@ include("labels.jl")
 include("legend.jl")
 
 """
-    gplot(net; node_scale, label_scale, title, title_scale, figsize, legend, legend_scale, legend_x, legend_y)
+    gplot(net; node_scale, label_size, title, title_scale, figsize, legend, legend_fontsize, legend_x, legend_y)
 
 Draw a network as a layered top-down graph. Nodes are placed by depth: roots on the
 first row, every other node one row below its deepest parent. Shape encodes the node
@@ -21,10 +21,12 @@ functional, pointy hexagon for discrete functional — while colour encodes prec
 a continuous node carrying a discretization. Discrete nodes also show their number of
 states below the name. Edges attach to the exact border of each shape.
 
-Pass `legend=true` to draw the shape/colour key, positioned by `legend_x` and `legend_y`
-as fractions of the canvas. `figsize` is the canvas size in centimeters, given as a
-`(width, height)` tuple of numbers (default `(20, 20)`). Returns a `Compose.Context`,
-which [`saveplot`](@ref) writes to SVG.
+`figsize` is the canvas size in centimetres, a `(width, height)` tuple of numbers
+(default `(20, 20)`). `label_size` is the node-label font size in points. Pass
+`legend=true` to draw the shape/colour key: its top-left corner sits at `(legend_x,
+legend_y)` centimetres from the top-left of the canvas, and `legend_fontsize` (in
+points) sets its text size — the icons and spacing scale with it. Returns a
+`Compose.Context`, which [`saveplot`](@ref) writes to SVG.
 
 # Examples
 ```julia
@@ -39,20 +41,33 @@ net = EnhancedBayesianNetwork([W, U])
 add_child!(net, W, U)
 order!(net)
 
-p = gplot(net; title="weather", legend=true)
+p = gplot(
+        net;
+        node_scale        = 1.0,           # scale every node shape
+        label_size        = 8,             # node-label font size, in points
+        title             = "",            # title text above the graph
+        title_scale       = 1.0,           # title font scale
+        figsize           = (20, 20),      # canvas (width, height), in cm
+        legend            = false,         # draw the shape/colour key
+        legend_fontsize   = 9,             # legend text size in points; icons scale with it
+        legend_x          = 13.0,          # legend top-left corner x, in cm from the left
+        legend_y          = 12.0,          # legend top-left corner y, in cm from the top
+        background_color  = "transparent", # canvas background colour
+)
+
 saveplot(p, "weather.svg")
 ```
 """
 function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     node_scale::Float64=1.0,
-    label_scale::Float64=1.0,
+    label_size::Real=8,
     title::String="",
     title_scale::Float64=1.0,
     figsize::Tuple{Real,Real}=(20, 20),
     legend::Bool=false,
-    legend_scale::Float64=1.0,
-    legend_x::Float64=0.72,
-    legend_y::Float64=0.62,
+    legend_fontsize::Real=9,
+    legend_x::Real=13.0,
+    legend_y::Real=12.0,
     background_color::String="transparent"
 )
     node_list = net.nodes
@@ -63,8 +78,11 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     al = 0.03 * node_scale
 
     ew = 0.3mm * node_scale
-    ls = _BASE_LABELSIZE * label_scale
     ts = _BASE_TITLESIZE * title_scale
+
+    # One point, expressed in canvas units: 1 unit == figsize[2] cm (see below),
+    # so anything measured in points converts to units by this factor.
+    pt_to_units = _CM_PER_PT / figsize[2]
 
     # ── positions ────────────────────────────────────────────────────────────
     # Work in an isotropic coordinate system so shapes stay round and arrows stay
@@ -103,8 +121,8 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
         node_list,
         locs_x,
         locs_y,
-        ls,
-        label_scale
+        label_size,
+        pt_to_units
     )
 
     # ── optional title ───────────────────────────────────────────────────────
@@ -120,10 +138,10 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
     Compose.set_default_graphic_size(figsize[1] * cm, figsize[2] * cm)
 
     legend_ctx = legend ? _build_legend(
-        legend_scale;
-        x_fraction=legend_x * ar,
-        y_fraction=legend_y,
-        font_scale=figsize[2] / 20   # legend text tracks canvas height (default 20)
+        legend_x / figsize[2],   # cm → canvas units (1 unit == figsize[2] cm)
+        legend_y / figsize[2],
+        legend_fontsize,
+        pt_to_units
     ) : context()
 
     compose(context(units=UnitBox(0, 0, ar, 1)),
