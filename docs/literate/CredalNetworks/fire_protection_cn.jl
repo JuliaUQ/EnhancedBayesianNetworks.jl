@@ -76,7 +76,7 @@ add_child!(cn, :Alarm, :Leaving)
 add_child!(cn, :Leaving, :Report)
 order!(cn)
 
-gplot(cn)
+gplot(cn, background_color="white", legend=true, label_size=10, legend_x=14.5, legend_y=13.5)
 
 # ## Inference without evidence
 #
@@ -122,3 +122,13 @@ infer(cn, [:Fire], Evidence(:Leaving => :YesL))
 # These are exactly the eight queries reported by Estrada-Lugo et al.
 # [estrada-lugo_pseudo_2019](@cite) (four without evidence, four with), whose
 # "Exact" bounds the values above reproduce.
+
+# ## Timing
+#
+# As a rough indication, the wall-clock time to answer one query after
+# compilation — measured on the machine building these docs, so treat it as
+# indicative rather than a controlled benchmark:
+
+infer(cn, [:Fire], Evidence(:Leaving => :YesL))   # warm up (trigger compilation)
+elapsed = @elapsed infer(cn, [:Fire], Evidence(:Leaving => :YesL))
+println("query solved in ", round(elapsed * 1e3; digits=3), " ms")

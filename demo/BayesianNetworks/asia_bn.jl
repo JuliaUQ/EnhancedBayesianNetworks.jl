@@ -63,12 +63,16 @@ add_child!(bn, :E, :D)
 add_child!(bn, :B, :D)
 order!(bn)
 
-gplot(bn; legend=true, background_color="white")
+gplot(bn, background_color="white", legend=true, label_size=10, node_scale=0.8, legend_x=5.5, legend_y=1)
 
 infer(bn, :D, Evidence())
 
 infer(bn, :D, Evidence(:A => :A_yes, :S => :S_yes))
 
 infer(bn, :L, Evidence(:X => :X_yes))
+
+infer(bn, :D, Evidence(:A => :A_yes, :S => :S_yes))   # warm up (trigger compilation)
+elapsed = @elapsed infer(bn, :D, Evidence(:A => :A_yes, :S => :S_yes))
+println("query solved in ", round(elapsed * 1e3; digits=3), " ms")
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl

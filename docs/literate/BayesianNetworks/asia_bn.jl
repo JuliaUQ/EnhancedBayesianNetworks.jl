@@ -107,8 +107,7 @@ order!(bn)
 # The layered layout makes the causal flow easy to read, root causes on top,
 # observations at the bottom.
 
-gplot(bn; legend=true, background_color="white")
-
+gplot(bn, background_color="white", legend=true, label_size=10, node_scale=0.8, legend_x=5.5, legend_y=1)
 # ## Inference
 #
 # Without evidence, [`infer`](@ref) returns the prior marginal of dyspnoea.
@@ -134,3 +133,13 @@ infer(bn, :L, Evidence(:X => :X_yes))
 # `P(D | asia, smoke) ≈ 0.563`, and `P(L | xray) ≈ 0.489`. This confirms that the
 # inference in EnhancedBayesianNetworks agrees with an established reference
 # implementation.
+
+# ## Timing
+#
+# As a rough indication, the wall-clock time to answer one query after
+# compilation — measured on the machine building these docs, so treat it as
+# indicative rather than a controlled benchmark:
+
+infer(bn, :D, Evidence(:A => :A_yes, :S => :S_yes))   # warm up (trigger compilation)
+elapsed = @elapsed infer(bn, :D, Evidence(:A => :A_yes, :S => :S_yes))
+println("query solved in ", round(elapsed * 1e3; digits=3), " ms")

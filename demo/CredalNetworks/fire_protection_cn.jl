@@ -44,7 +44,7 @@ add_child!(cn, :Alarm, :Leaving)
 add_child!(cn, :Leaving, :Report)
 order!(cn)
 
-gplot(cn)
+gplot(cn, background_color="white", legend=true, label_size=10, legend_x=14.5, legend_y=13.5)
 
 infer(cn, [:Smoke], Evidence())
 
@@ -61,5 +61,9 @@ infer(cn, [:Report], Evidence(:Fire => :YesF))
 infer(cn, [:Report], Evidence(:Alarm => :YesA))
 
 infer(cn, [:Fire], Evidence(:Leaving => :YesL))
+
+infer(cn, [:Fire], Evidence(:Leaving => :YesL))   # warm up (trigger compilation)
+elapsed = @elapsed infer(cn, [:Fire], Evidence(:Leaving => :YesL))
+println("query solved in ", round(elapsed * 1e3; digits=3), " ms")
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
