@@ -9,14 +9,21 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
     else
         rt = nothing
     end
-    new_continuous = ContinuousNode(node.name, discrete_ancestors(net, node), node.discretization, rt)
+    ancestors = discrete_ancestors(net, node)
+    if isempty(ancestors) && node.discretization isa ApproximatedDiscretization
+        disc = ExactDiscretization(node.discretization.intervals)
+    else
+        disc = node.discretization
+    end
+    new_continuous = ContinuousNode(node.name, ancestors, disc, rt)
+
     for i in inputs_vector
         scenario = i[1]
         uqinputs = i[2]
         if !UncertaintyQuantification.isimprecise(uqinputs)
             samples = UncertaintyQuantification.sample(uqinputs, node.simulation[scenario...])
             UncertaintyQuantification.evaluate!(node.models, samples)
-            new_continuous[scenario...] = EmpiricalDistribution(samples[:, node.models[end].name], node.nbins)
+            new_continuous[scenario...] = EmpiricalDistribution(samples[:, node.models[end].name]; nbins=node.nbins)
             if collect
                 new_continuous.results[scenario...] = samples
             end
@@ -25,8 +32,8 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
             UncertaintyQuantification.propagate_intervals!(node.models, samples)
             lbs = map(s -> s.lb, samples[:, node.name])
             ubs = map(s -> s.ub, samples[:, node.name])
-            lb_pdf = EmpiricalDistribution(lbs, node.nbins)
-            ub_pdf = EmpiricalDistribution(ubs, node.nbins)
+            lb_pdf = EmpiricalDistribution(lbs; nbins=node.nbins)
+            ub_pdf = EmpiricalDistribution(ubs; nbins=node.nbins)
             new_continuous[scenario...] = [:lb => lb_pdf, :ub => ub_pdf]
             if collect
                 new_continuous.results[scenario...] = samples
