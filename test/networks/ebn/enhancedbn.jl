@@ -285,7 +285,7 @@ end
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass)
     add_child!(net, [rain2], grass2)
-    @test_logs (:warn, "Node :G2 is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis") EnhancedBayesianNetworks._verify_functional_parents(net, grass2)
+    @test_logs (:warn, "Node :G2 is a FunctionalNode with no discrete parents: its evaluation a single Structural Reliability Problem and its CPT will contain a single scenario.") EnhancedBayesianNetworks._verify_functional_parents(net, grass2)
 
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
