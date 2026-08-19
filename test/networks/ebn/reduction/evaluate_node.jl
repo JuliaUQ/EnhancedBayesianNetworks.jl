@@ -55,28 +55,28 @@ end
     @test issetequal(scs, [Evidence(:A => :a1, :C => :c1), Evidence(:A => :a2, :C => :c1), Evidence(:A => :a1, :C => :c2), Evidence(:A => :a2, :C => :c2)])
 end
 
-@testitem "Evaluate Node - continuous precise" setup=[SetupEvaluateeBN] begin
+@testitem "Evaluate Node - continuous precise" setup=[SetupEvaluateeBN, ExtraDeps] begin
     EnhancedBayesianNetworks._build_simulations!(net, E)
-    evaluated_E = EnhancedBayesianNetworks.evaluate(net, E)
+    evaluated_E = @suppress EnhancedBayesianNetworks.evaluate(net, E)
     @test evaluated_E.name == E.name
     @test all(isa.(evaluated_E.cpt.data.Π, EmpiricalDistribution))
     @test isempty(evaluated_E.discretization)
     @test isa(evaluated_E.results, EnhancedBayesianNetworks.ScenariosTable{Any})
-    evaluated_E = EnhancedBayesianNetworks.evaluate(net, E, false)
+    evaluated_E = @suppress EnhancedBayesianNetworks.evaluate(net, E, false)
     @test evaluated_E.name == E.name
     @test all(isa.(evaluated_E.cpt.data.Π, EmpiricalDistribution))
     @test isempty(evaluated_E.discretization)
     @test isnothing(evaluated_E.results)
 end
 
-@testitem "Evaluate Node - continuous imprecise" setup=[SetupEvaluateeBN] begin
+@testitem "Evaluate Node - continuous imprecise" setup=[SetupEvaluateeBN, ExtraDeps] begin
     EnhancedBayesianNetworks._build_simulations!(net, F)
-    evaluated_F = EnhancedBayesianNetworks.evaluate(net, F)
+    evaluated_F = @suppress EnhancedBayesianNetworks.evaluate(net, F)
     @test evaluated_F.name == F.name
     @test all(isa.(evaluated_F.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
     @test isempty(evaluated_F.discretization)
     @test isa(evaluated_F.results, EnhancedBayesianNetworks.ScenariosTable{Any})
-    evaluated_F = EnhancedBayesianNetworks.evaluate(net, F, false)
+    evaluated_F = @suppress EnhancedBayesianNetworks.evaluate(net, F, false)
     @test evaluated_F.name == F.name
     @test all(isa.(evaluated_F.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
     @test isempty(evaluated_F.discretization)

@@ -56,6 +56,9 @@ function reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
         _push_node!(net, evaluated)
         add_child!(net, par, evaluated.name)
         add_child!(net, evaluated.name, chs)
+        if isa(evaluated, ContinuousNode) && !isempty(evaluated.discretization)
+            _discretize_node!(net, evaluated)
+        end
         functional_nodes = filter(n -> isa(n, FunctionalNode), net.nodes)
     end
     if size(net.A) != (1, 1)
