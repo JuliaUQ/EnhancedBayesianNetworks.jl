@@ -37,12 +37,12 @@ g = 981              # cm/s²     (gravity)
 # used in the paper.
 
 A = DiscreteNode(:A, [:road => [Parameter(0.15915, :A)], :offroad => [Parameter(0.8, :A)]])  # A in rad·cm²/m
-A[:A => :road] = 0.7
-A[:A => :offroad] = 0.3
+A[:A=>:road] = 0.7
+A[:A=>:offroad] = 0.3
 
 b₀ = DiscreteNode(:b₀, [:normal_load => [Parameter(0.27, :b₀)], :over_load => [Parameter(0.5, :b₀)]])
-b₀[:b₀ => :normal_load] = 0.7
-b₀[:b₀ => :over_load] = 0.3
+b₀[:b₀=>:normal_load] = 0.7
+b₀[:b₀=>:over_load] = 0.3
 
 # ## Vehicle speed
 #
