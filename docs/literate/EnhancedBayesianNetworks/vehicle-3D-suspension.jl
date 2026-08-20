@@ -110,9 +110,11 @@ gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, le
 # `C`, `Cₖ`, `K` are folded into the failure model and eliminated, while `V` —
 # because it carries a discretization — is kept as a discrete node `V_d`. The
 # result is a Bayesian network over the road surface, the load, the discretized
-# speed, and the collapse event.
+# speed, and the collapse event. We time the reduction, as a rough indication
+# measured on the machine building these docs:
 
-bn = reduce(ebn)
+elapsed = @elapsed bn = reduce(ebn)
+println("network reduced in ", round(elapsed; digits=3), " s")
 
 #-
 
@@ -125,7 +127,9 @@ gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Netw
 # `[9.5, 10.5]` band (i.e. around `V = 10`).
 
 evidence = Evidence(:V_d => Symbol("[9.5, 10.5]"), :A => :road, :b₀ => :normal_load)
-ϕ = infer(bn, :E, evidence)
+elapsed = @elapsed ϕ = infer(bn, :E, evidence)
+println("inference completed in ", round(elapsed; digits=3), " s")
+ϕ
 
 # ## Cross-check against a direct reliability analysis
 #
