@@ -58,7 +58,13 @@ function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, co
     for i in inputs_vector
         scenario = i[1]
         uqinputs = i[2]
-        res = probability_of_failure(node.models, node.performance, uqinputs, node.simulation[scenario...])
+        sim = node.simulation[scenario...]
+        if isa(sim, Union{DoubleLoop,RandomSlicing}) && !UncertaintyQuantification.isimprecise(uqinputs)
+            error(
+                "Invalid simulation for functional node $(repr(node.name)): the assigned $(nameof(typeof(sim))) is an imprecise (double-loop) simulation, but every input reaching $(repr(node.name)) is precise. This happens when an imprecise continuous ancestor of $(repr(node.name)) is discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding $(repr(node.name)). Use a single-loop simulation (e.g. MonteCarlo) for $(repr(node.name)); the network stays credal through the discretized node. Alternatively, remove the discretization from the imprecise continuous ancestor so its imprecision reaches $(repr(node.name)) directly."
+            )
+        end
+        res = probability_of_failure(node.models, node.performance, uqinputs, sim)
         if collect
             new_discrete.results[scenario...] = res[2:end]
         end

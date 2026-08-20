@@ -110,3 +110,35 @@ end
     @test isempty(evaluated_H.parameters)
     @test isnothing(evaluated_H.results)
 end
+
+@testitem "Evaluate Node - imprecise simulation error" setup=[ExtraDeps] begin
+    A = DiscreteNode(:A, [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]])
+    A[:A=>:a1] = 0.5
+    A[:A=>:a2] = 0.5
+
+    # imprecise continuous child of A, carrying a discretization
+    V = ContinuousNode(:V, [:A], ApproximatedDiscretization([0.0, 1.0, 2.0], 1))
+    V[:A=>:a1] = Interval(0.2, 0.8)
+    V[:A=>:a2] = Interval(1.2, 1.8)
+
+    model = Model(df -> df.A .+ df.V, :Z)
+    performance = df -> 1 .- df.Z
+
+    # discretizing V moves its imprecision into the credal surrogate V_d and leaves a
+    # precise residual feeding E, so an imprecise (double-loop) simulation is invalid
+    E = DiscreteFunctionalNode(:E, [model], performance, DoubleLoop(MonteCarlo(100)))
+    ebn = EnhancedBayesianNetwork([A, V, E])
+    add_child!(ebn, A, V)
+    add_child!(ebn, [A, V], E)
+    order!(ebn)
+
+    @test_throws ErrorException("Invalid simulation for functional node :E: the assigned DoubleLoop is an imprecise (double-loop) simulation, but every input reaching :E is precise. This happens when an imprecise continuous ancestor of :E is discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding :E. Use a single-loop simulation (e.g. MonteCarlo) for :E; the network stays credal through the discretized node. Alternatively, remove the discretization from the imprecise continuous ancestor so its imprecision reaches :E directly.") @suppress reduce(ebn)
+
+    # the same network with a single-loop simulation reduces to a CredalNetwork
+    E = DiscreteFunctionalNode(:E, [model], performance, MonteCarlo(100))
+    ebn = EnhancedBayesianNetwork([A, V, E])
+    add_child!(ebn, A, V)
+    add_child!(ebn, [A, V], E)
+    order!(ebn)
+    @test isa((@suppress reduce(ebn)), CredalNetwork)
+end
