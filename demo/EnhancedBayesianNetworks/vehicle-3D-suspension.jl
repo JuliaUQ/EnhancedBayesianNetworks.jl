@@ -40,12 +40,15 @@ order!(ebn)
 
 gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
 
-bn = reduce(ebn)
+elapsed = @elapsed bn = reduce(ebn)
+println("network reduced in ", round(elapsed; digits=3), " s")
 
 gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Network", label_size=12)
 
 evidence = Evidence(:V_d => Symbol("[9.5, 10.5]"), :A => :road, :b₀ => :normal_load)
-ϕ = infer(bn, :E, evidence)
+elapsed = @elapsed ϕ = infer(bn, :E, evidence)
+println("inference completed in ", round(elapsed; digits=3), " s")
+ϕ
 
 M = Parameter(3.2633, :M)                        # kg/cm/s²  (sprung mass)
 m = Parameter(0.8158, :m)                        # kg/cm/s²  (unsprung mass)
