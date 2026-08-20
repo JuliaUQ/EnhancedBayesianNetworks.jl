@@ -2,9 +2,9 @@
 #
 # This example reproduces the vehicle-suspension reliability benchmark of
 # Gerasimov & Vořechovský [gerasimov_failure_2023](@cite). They do not build a
-# Bayesian network for it — they use it as a plain structural-reliability
+# Bayesian Network for it — they use it as a plain structural-reliability
 # problem — so here it serves as a *validation* case: we cast the same problem as
-# an enhanced Bayesian network, reduce it, and check that the failure
+# an enhanced Bayesian Network, reduce it, and check that the failure
 # probability the network infers for a given scenario matches the one a direct
 # Monte-Carlo reliability analysis returns for that same scenario.
 #
@@ -87,7 +87,7 @@ end
 model = Model(df -> composite_model.(df.A, df.b₀, df.V, M, m, g, df.C, df.Cₖ, df.K), :y)
 performance = df -> df.y
 
-# ## Building the enhanced Bayesian network
+# ## Building the enhanced Bayesian Network
 #
 # The failure event `E` is a [`DiscreteFunctionalNode`](@ref) built from the
 # limit-state model and its performance function; the six inputs (`A`, `b₀`, `V`,
@@ -104,12 +104,12 @@ order!(ebn)
 
 gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
 
-# ## Reducing to a Bayesian network
+# ## Reducing to a Bayesian Network
 #
 # [`reduce`](@ref) evaluates the functional node: the continuous coefficients
 # `C`, `Cₖ`, `K` are folded into the failure model and eliminated, while `V` —
 # because it carries a discretization — is kept as a discrete node `V_d`. The
-# result is a Bayesian network over the road surface, the load, the discretized
+# result is a Bayesian Network over the road surface, the load, the discretized
 # speed, and the collapse event. We time the reduction, as a rough indication
 # measured on the machine building these docs:
 
@@ -137,7 +137,7 @@ println("inference completed in ", round(elapsed; digits=3), " s")
 # UncertaintyQuantification — fixing the road, load and speed to the scenario's
 # values and running a Monte-Carlo estimate of the failure probability. This is
 # the calculation Gerasimov & Vořechovský [gerasimov_failure_2023](@cite) perform;
-# the enhanced Bayesian network should reproduce it.
+# the enhanced Bayesian Network should reproduce it.
 
 M = Parameter(3.2633, :M)                        # kg/cm/s²  (sprung mass)
 m = Parameter(0.8158, :m)                        # kg/cm/s²  (unsprung mass)
@@ -154,11 +154,11 @@ inputs = [A, b₀, V, M, m, g, C, Cₖ, K]
 
 pf, cov, _ = probability_of_failure(model, performance, inputs, MonteCarlo(10^6))
 
-# The failure probability inferred by the Bayesian network (the `:E_failed`
+# The failure probability inferred by the Bayesian Network (the `:E_failed`
 # entry of `ϕ` above) and the one from the direct Monte-Carlo analysis (`pf`)
 # agree to within Monte-Carlo scatter — the network integrates the speed over the
 # whole `[9.5, 10.5]` band while the direct check pins it to `V = 10`, so a small
 # difference is expected. Both also match the reference value
 # `pF ≈ 5.2 × 10⁻⁴` that Gerasimov & Vořechovský [gerasimov_failure_2023](@cite)
 # report for this configuration (from 10⁶ importance-sampling evaluations),
-# confirming the enhanced Bayesian network reproduces their result.
+# confirming the enhanced Bayesian Network reproduces their result.

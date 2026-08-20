@@ -63,7 +63,7 @@ R[:Leaving=>:YesL, :Report=>:NoR] = Interval(0.240011, 0.250000)
 R[:Leaving=>:NoL, :Report=>:YesR] = Interval(0.171101, 0.190012)
 R[:Leaving=>:NoL, :Report=>:NoR] = Interval(0.809988, 0.828899)
 
-# ## Assembling the credal network
+# ## Assembling the Credal Network
 #
 # Because the nodes are imprecise, they are wrapped in a [`CredalNetwork`](@ref)
 # rather than a `BayesianNetwork`.
@@ -80,7 +80,7 @@ gplot(cn, background_color="white", legend=true, label_size=10, legend_x=14.5, l
 
 # ## Inference without evidence
 #
-# For a credal network [`infer`](@ref) returns **bounds**: the lowest and highest
+# For a Credal Network [`infer`](@ref) returns **bounds**: the lowest and highest
 # probability of each state across the whole family of networks.
 
 infer(cn, [:Smoke], Evidence())

@@ -1,7 +1,7 @@
 # # One-Bay Elasto-Plastic Frame
 #
-# The *enhanced Bayesian network* (eBN) framework of Straub & Der Kiureghian
-# [straub_bayesian_2010](@cite) couples a Bayesian network with structural
+# The *enhanced Bayesian Network* (eBN) framework of Straub & Der Kiureghian
+# [straub_bayesian_2010](@cite) couples a Bayesian Network with structural
 # reliability methods, so that continuous random variables and physical models
 # can live alongside ordinary discrete nodes. This example reproduces the
 # one-bay, one-storey elasto-plastic frame from their companion application
@@ -76,7 +76,7 @@ end
 model = Model(df -> frame_model.(df.r1, df.r2, df.r3, df.r4, df.r5, df.V, df.H), :G)
 performance = df -> df.G
 
-# ## Building the enhanced Bayesian network
+# ## Building the enhanced Bayesian Network
 #
 # `Uᵣ` feeds the five capacity nodes — each a [`ContinuousFunctionalNode`](@ref)
 # computed from its model — and the capacities together with the two loads feed
@@ -102,7 +102,7 @@ order!(ebn)
 
 gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
 
-# ## Reducing to a Bayesian network
+# ## Reducing to a Bayesian Network
 #
 # [`reduce`](@ref) evaluates the functional nodes in dependency order. Because
 # none of the continuous nodes carries a discretization, the five capacity
@@ -164,7 +164,7 @@ gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, le
 
 # Reducing this network keeps `R4` and `R5` as discrete nodes — each split into a
 # discrete surrogate and a residual continuous node — so the result is a hybrid
-# Bayesian network rather than a single failure node. We also time the
+# Bayesian Network rather than a single failure node. We also time the
 # reduction, as a rough indication measured on the machine building these docs:
 
 elapsed = @elapsed bn = reduce(ebn)

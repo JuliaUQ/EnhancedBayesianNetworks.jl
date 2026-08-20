@@ -1,7 +1,7 @@
 # # Asia Bayesian Network
 #
 # The *Asia* network [lauritzen_local_1988](@cite) is the classic small
-# Bayesian network used to introduce probabilistic reasoning in medical
+# Bayesian Network used to introduce probabilistic reasoning in medical
 # diagnosis. A patient may have visited Asia (raising the chance of
 # tuberculosis) and may smoke (raising the chance of lung cancer and
 # bronchitis). Tuberculosis and lung cancer both manifest through a chest
