@@ -1,18 +1,18 @@
 using EnhancedBayesianNetworks
 
-μ_gamma = 60
+μ_gamma = 60         # kN  (mean vertical load V)
 cov_gamma = 0.2
 α, θ = distribution_parameters(μ_gamma, μ_gamma * cov_gamma, Gamma)
 V = ContinuousNode(:V, Gamma(α, θ))
 
-μ_gumbel = 50
+μ_gumbel = 50        # kN  (mean horizontal load H)
 cov_gumbel = 0.4
 μ_loc, β = distribution_parameters(μ_gumbel, cov_gumbel * μ_gumbel, Gumbel)
 H = ContinuousNode(:H, Gumbel(μ_loc, β))
 
 function plastic_moment_capacities(uᵣ)
     ρ = 0.5477
-    μ = 150
+    μ = 150          # kN·m  (mean plastic moment capacity)
     cov = 0.2
     λ, ζ = distribution_parameters(μ, μ * cov, LogNormal)
     normal_μ = λ + ρ * ζ * uᵣ
@@ -27,6 +27,8 @@ model4 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r4)
 model5 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r5)
 
 function frame_model(r1, r2, r3, r4, r5, v, h)
+    # moment capacities rᵢ in kN·m, loads v, h in kN; the factor 5 is the
+    # member length in m, so 5·(load [kN]) is a moment in kN·m
     g1 = r1 + r2 + r4 + r5 - 5 * h
     g2 = r2 + 2 * r3 + r4 - 5 * v
     g3 = r1 + 2 * r3 + 2 * r4 + r5 - 5 * h - 5 * v
@@ -61,8 +63,8 @@ gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Netw
 
 bn.nodes[1].cpt.data
 
-discretizationr4 = ApproximatedDiscretization(collect(range(45, 255, 22)), 1.5)
-discretizationr5 = ApproximatedDiscretization(collect(range(45.1, 255.1, 22)), 1.5)
+discretizationr4 = ApproximatedDiscretization(collect(range(45, 255, 22)), 1.5)      # edges in kN·m
+discretizationr5 = ApproximatedDiscretization(collect(range(45.1, 255.1, 22)), 1.5)  # edges in kN·m
 
 Uᵣ = ContinuousNode(:Uᵣ, Normal())
 R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(1000))
