@@ -20,7 +20,8 @@ links = InterLinks("UncertaintyQuantification" => "https://juliauq.github.io/Unc
 format = DocumenterVitepress.MarkdownVitepress(
     repo="https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl",
     devbranch="main",
-    devurl="dev"
+    devurl="dev",
+    inventory_version=string(pkgversion(EnhancedBayesianNetworks)),
 )
 
 pages = [
@@ -38,6 +39,7 @@ pages = [
     "Examples" => [
         "Bayesian Networks" => "examples/BayesianNetworks.md",
         "Credal Networks" => "examples/CredalNetworks.md",
+        "Enhanced Bayesian Networks" => "examples/EnhancedBayesianNetworks.md",
     ],
     "API" => [
         "Nodes" => "api/nodes.md",
