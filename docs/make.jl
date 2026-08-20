@@ -49,6 +49,7 @@ pages = [
         ],
         "Imprecisions" => [
             "Continuous Nodes" => "examples/Imprecisions/Imprecise_continuous_nodes.md",
+            "Discrete Nodes" => "examples/Imprecisions/Imprecise_discrete_nodes.md",
         ],
     ],
     "API" => [
