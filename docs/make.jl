@@ -47,6 +47,9 @@ pages = [
             "One-Bay Frame (discretization)" => "examples/EnhancedBayesianNetworks/one-bay_elastoplastic_frame.md",
             "Vehicle Suspension" => "examples/EnhancedBayesianNetworks/vehicle-3D-suspension.md",
         ],
+        "Imprecisions" => [
+            "Continuous Nodes" => "examples/Imprecisions/Imprecise_continuous_nodes.md",
+        ],
     ],
     "API" => [
         "Nodes" => "api/nodes.md",
