@@ -83,6 +83,33 @@ end
     @test isnothing(evaluated_F.results)
 end
 
+@testitem "Evaluate Node - mismatched model output name" setup=[ExtraDeps] begin
+    # the imprecise branch must read the result column by the model's output name,
+    # not by the node name; here they differ (node :Y, model output :out)
+    A = DiscreteNode(:A, [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]])
+    A[:A=>:a1] = 0.5
+    A[:A=>:a2] = 0.5
+
+    X = ContinuousNode(:X, [:A])
+    X[:A=>:a1] = Interval(1, 2)
+    X[:A=>:a2] = Interval(2, 3)
+
+    D = ContinuousNode(:D, Normal())
+
+    model = Model(df -> df.A .* df.D .+ df.X, :out)
+    Y = ContinuousFunctionalNode(:Y, [model], MonteCarlo(100))
+
+    net = EnhancedBayesianNetwork([A, X, D, Y])
+    add_child!(net, A, X)
+    add_child!(net, [A, X, D], Y)
+    order!(net)
+
+    EnhancedBayesianNetworks._build_simulations!(net, Y)
+    evaluated_Y = @suppress EnhancedBayesianNetworks.evaluate(net, Y)
+    @test evaluated_Y.name == :Y
+    @test all(isa.(evaluated_Y.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
+end
+
 @testitem "Evaluate Node - discrete precise" setup=[SetupEvaluateeBN] begin
     EnhancedBayesianNetworks._build_simulations!(net, G)
     evaluated_G = EnhancedBayesianNetworks.evaluate(net, G)

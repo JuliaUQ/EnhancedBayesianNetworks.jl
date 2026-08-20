@@ -30,8 +30,8 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
         else
             samples = UncertaintyQuantification.sample(uqinputs, MonteCarlo(100))
             UncertaintyQuantification.propagate_intervals!(node.models, samples)
-            lbs = map(s -> s.lb, samples[:, node.name])
-            ubs = map(s -> s.ub, samples[:, node.name])
+            lbs = map(s -> s.lb, samples[:, node.models[end].name])
+            ubs = map(s -> s.ub, samples[:, node.models[end].name])
             lb_pdf = EmpiricalDistribution(lbs; nbins=node.nbins)
             ub_pdf = EmpiricalDistribution(ubs; nbins=node.nbins)
             new_continuous[scenario...] = [:lb => lb_pdf, :ub => ub_pdf]
