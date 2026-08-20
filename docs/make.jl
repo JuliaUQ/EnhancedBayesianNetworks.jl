@@ -37,9 +37,15 @@ pages = [
         "Plotting" => "manual/plotting.md",
     ],
     "Examples" => [
-        "Bayesian Networks" => "examples/BayesianNetworks.md",
-        "Credal Networks" => "examples/CredalNetworks.md",
-        "Enhanced Bayesian Networks" => "examples/EnhancedBayesianNetworks.md",
+        "Bayesian Networks" => [
+            "Asia" => "examples/BayesianNetworks/asia_bn.md",
+        ],
+        "Credal Networks" => [
+            "Fire Protection" => "examples/CredalNetworks/fire_protection_cn.md",
+        ],
+        "Enhanced Bayesian Networks" => [
+            "One-Bay Frame" => "examples/EnhancedBayesianNetworks/one-bay_elastoplastic_frame.md",
+        ],
     ],
     "API" => [
         "Nodes" => "api/nodes.md",

@@ -1,32 +1,27 @@
 using Literate
 
-"""
-    function fuseConvert(path::String, out::IOStream, r::String, dir::String)
-
-Groups all files from a directory into a temp file and creates one markdown-file (saved to ./docs/src/examples) using Literate.jl.
+const LITERATE_DIR = "./docs/literate"
+const EXAMPLES_DIR = "./docs/src/examples"
 
 """
-function fuseConvert(r::String, dir::String; documenter::Bool=true)
-    path = tempname(; cleanup=false)
+    convertExample(jl_path::String, out_dir::String; documenter::Bool=true)
 
-    # merge all example files of a subfolder into one
-    open(path, "a") do out
-        for (root, _, files) in walkdir(joinpath(r, dir))
-            for file in files
-                write(out, read(joinpath(root, file), String))
-            end
-        end
-    end
+Render a single Literate `.jl` example to its own markdown page in `out_dir`
+(one page per file, so each example is an individual page you can name and link
+explicitly from `make.jl`). For `documenter=true` pages, drop the leading
+`@meta` block that Literate prepends.
+"""
+function convertExample(jl_path::String, out_dir::String; documenter::Bool=true)
+    name = first(splitext(basename(jl_path)))
+    mkpath(out_dir)
 
-    Literate.markdown(path, "./docs/src/examples"; documenter=documenter, name=dir)
+    Literate.markdown(jl_path, out_dir; documenter=documenter, name=name)
 
-    rm(path) # delete the temporary file
-
-    #remove @meta block created by literate
+    # remove @meta block created by literate
     if documenter
-        example_file = joinpath("./docs/src/examples", "$dir.md")
-        lines = readlines(example_file; keep=true)
-        open(example_file, "w") do file
+        md_file = joinpath(out_dir, "$name.md")
+        lines = readlines(md_file; keep=true)
+        open(md_file, "w") do file
             write.(file, lines[5:end])
         end
     end
@@ -34,12 +29,22 @@ function fuseConvert(r::String, dir::String; documenter::Bool=true)
     return nothing
 end
 
-for (r, d, f) in walkdir("./docs/literate/")
-    for dir in d
-        if dir == "hpc" || dir == "external"
-            fuseConvert(r, dir; documenter=false)
-        else
-            fuseConvert(r, dir)
-        end
+# docs/src/examples is fully generated (and gitignored): start from a clean
+# slate so stale pages from removed/renamed examples never linger and trip
+# `warnonly=false`.
+rm(EXAMPLES_DIR; recursive=true, force=true)
+mkpath(EXAMPLES_DIR)
+
+for (root, _, files) in walkdir(LITERATE_DIR)
+    jl_files = filter(f -> endswith(f, ".jl"), files)
+    isempty(jl_files) && continue
+
+    rel = relpath(root, LITERATE_DIR)   # e.g. "BayesianNetworks"
+    rel == "." && continue              # skip the literate root itself
+
+    out_dir = joinpath(EXAMPLES_DIR, rel)
+    documenter = !(basename(root) in ("hpc", "external"))
+    for jl in jl_files
+        convertExample(joinpath(root, jl), out_dir; documenter=documenter)
     end
 end
