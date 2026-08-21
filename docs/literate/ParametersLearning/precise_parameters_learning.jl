@@ -55,9 +55,11 @@ gplot(bn, background_color="white")
 # ## Generating a dataset
 #
 # [`sample`](@ref) draws independent realizations of the whole network; a thousand rows
-# form our observed dataset — one column per node, one row per draw.
+# form our observed dataset — one column per node, one row per draw (only the first ten
+# are shown here).
 
 df = sample(bn, 1000)
+first(df, 10)
 
 # ## Maximum-likelihood learning
 #
