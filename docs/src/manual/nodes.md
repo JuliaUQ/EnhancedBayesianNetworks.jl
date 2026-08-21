@@ -172,9 +172,11 @@ When the node is **imprecise** the same partition is used, but both the surrogat
 The probability mass of interval ``k`` is ``p_{ik} = F_{X_i}(x_{ik}^+) - F_{X_i}(x_{ik}^-)``. For a **probability box** the CDF is bounded by a lower ``\underline{F}`` and an upper ``\overline{F}``, so this mass is itself an interval,
 
 ```math
-p_{ik} = \big[\, \min(d^-, d^+),\; \max(d^-, d^+) \,\big], \qquad
-d^- = \underline{F}(x_{ik}^+) - \underline{F}(x_{ik}^-), \quad
+\begin{aligned}
+p_{ik} &= \big[\, \min(d^-, d^+),\; \max(d^-, d^+) \,\big], \\
+d^- &= \underline{F}(x_{ik}^+) - \underline{F}(x_{ik}^-), \quad
 d^+ = \overline{F}(x_{ik}^+) - \overline{F}(x_{ik}^-),
+\end{aligned}
 ```
 
 while for a bare **interval** entry no CDF is available — only the support — so every interval receives the vacuous mass ``p_{ik} = [0, 1]``. Either way the surrogate node becomes imprecise (credal), and that is what carries the imprecision into inference.
@@ -182,6 +184,18 @@ while for a bare **interval** entry no CDF is available — only the support —
 The residual then differs by position. On a **root** it keeps the imprecision: a probability box is restricted to ``[x_{ik}^-, x_{ik}^+]`` (a narrower box) and an interval entry becomes the sub-interval ``[x_{ik}^-, x_{ik}^+]``. On a **child** the residual is the same precise uniform (or exponential-tail) approximation as in the precise case, regardless of the entry's imprecision.
 
 The asymmetry is deliberate: on a root the imprecision lives in both the surrogate probabilities and the residual; on a child it is pushed entirely into the surrogate's interval probabilities, leaving a precise residual.
+
+```@example nodes
+# imprecise root: an interval distribution, discretized exactly
+Ti = ContinuousNode(:Ti, Interval(-2.0, 2.0), ExactDiscretization([-2.0, 0.0, 2.0]))
+```
+
+```@example nodes
+# imprecise child: an interval entry plus the exponential tail rate
+Ci = ContinuousNode(:Ci, [:W], ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5))
+Ci[:W => :sunny] = Interval(-1.0, 1.0)
+Ci
+```
 
 ## Nodes with an a-priori-unknown CPT (functional nodes)
 
