@@ -25,7 +25,7 @@ add_child!(ebn, :W, :F); add_child!(ebn, :X, :F); order!(ebn)
 ```
 """
 mutable struct EnhancedBayesianNetwork <: AbstractNetwork
-    nodes::AbstractVector{<:AbstractNode}
+    nodes::Vector{AbstractNode}
     topology::Dict
     A::SparseMatrixCSC
 
@@ -98,21 +98,25 @@ function markov_envelope(net::EnhancedBayesianNetwork)
     return envelopes[keep]
 end
 
-# Replace every continuous node that carries a discretization with a discrete surrogate node (the
-# per-interval probability masses) plus a residual continuous node, rewiring the parents to the
-# discrete part and the children to the continuous part.
+# Split one continuous node that carries a discretization into a discrete surrogate (per-interval probability masses) and a residual continuous node, rewiring parents → surrogate → residual → children.
+function _discretize_node!(net::EnhancedBayesianNetwork, node::ContinuousNode)
+    pars = parents(net, node)
+    chs = children(net, node)
+    discretized_node, new_continuous = _discretize(node)
+    _remove_node!(net, node)
+    _push_node!(net, discretized_node)
+    _push_node!(net, new_continuous)
+    add_child!(net, discretized_node, new_continuous)
+    map(p -> add_child!(net, p, discretized_node.name), pars)
+    map(c -> add_child!(net, new_continuous.name, c), chs)
+    return nothing
+end
+
+# Replace every continuous node that carries a discretization with a discrete surrogate node (the per-interval probability masses) plus a residual continuous node, rewiring the parents to the discrete part and the children to the continuous part.
 function discretize!(net::EnhancedBayesianNetwork)
-    continuous_nodes = filter(x -> isa(x, ContinuousNode), net.nodes)
-    evidence_nodes = filter(n -> !isempty(n.discretization), continuous_nodes)
-    discretization_tuples = map(n -> (n, parents(net, n), children(net, n), _discretize(n)), evidence_nodes)
-    for (node, pars, chs, (discretized_node, new_continuous)) in discretization_tuples
-        _remove_node!(net, node)
-        _push_node!(net, discretized_node)
-        _push_node!(net, new_continuous)
-        add_child!(net, discretized_node, new_continuous)
-        map(p -> add_child!(net, p, discretized_node.name), pars)
-        map(c -> add_child!(net, new_continuous.name, c), chs)
-    end
+    evidence_nodes = filter(n -> isa(n, ContinuousNode) && !isempty(n.discretization), net.nodes)
+    foreach(n -> _discretize_node!(net, n), evidence_nodes)
+    return nothing
 end
 
 # A continuous functional node with no discretization but with children is not evaluated on its own:
@@ -165,7 +169,7 @@ function _verify_functional_parents(net::EnhancedBayesianNetwork, node::Function
         @warn "Node $(repr(node.name)) is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean"
     end
     if isempty(discrete_ancestors(net, node))
-        @warn "Node $(repr(node.name)) is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis"
+        @warn "Node $(repr(node.name)) is a FunctionalNode with no discrete parents: its evaluation a single Structural Reliability Problem and its CPT will contain a single scenario."
     end
 end
 

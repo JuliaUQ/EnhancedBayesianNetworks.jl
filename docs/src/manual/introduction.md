@@ -1,11 +1,5 @@
 # Introduction
 
-```@raw html
-<p align="center">
-  <img src="../assets/logo.png" alt="EnhancedBayesianNetworks.jl logo" width="220"/>
-</p>
-```
-
 EnhancedBayesianNetworks.jl is a Julia package for building, reducing, and querying **enhanced Bayesian Networks** (eBNs) [straub_bayesian_2010](@cite): Bayesian Networks (BNs) enhanced with *Structural Reliability Methods* for including *discrete nodes*, *continuous nodes* and *functional nodes* in the same framework.
 
 On top of this the package allows for including **imprecision** [beer_imprecise_2013-1](@cite) — interval and probability boxes (p-box) [P_box_FAES](@cite) — carried consistently from the inputs through to the inference result.
@@ -13,7 +7,7 @@ On top of this the package allows for including **imprecision** [beer_imprecise_
 ## Why enhanced Bayesian Networks
 
 A classical BN [jensen2007bayesian](@cite) is a directed acyclic graph of discrete random variables, each with a *Conditional Probability Table* (CPT) given its parents. 
-That is expressive for categorical reasoning, but engineering models rarely stop there: quantities are continuous, uncertainties and imprecision are involved and the probabilities that matter,such as component's failure probability, are not tabulated in advance but computed from a physical models.
+That is expressive for categorical reasoning, but engineering models rarely stop there: quantities are continuous, uncertainties and imprecision are involved and the probabilities that matter, such as component's failure probability, are not tabulated in advance but computed from a physical models.
 
 An eBN closes that gap by admitting three kinds of node side by side:
 

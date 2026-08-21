@@ -53,8 +53,10 @@ W[:W => :sunny]  = 0.5
 W[:W => :cloudy] = 0.5
 
 S = DiscreteNode(:S, [:W])                  # child of W
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
-S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+S[:W => :sunny,  :S => :on] = 0.9 
+S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2 
+S[:W => :cloudy, :S => :off] = 0.8
 S
 ```
 
@@ -64,6 +66,9 @@ As soon as at least one entry is an Interval, the whole node is **imprecise**, i
 
 ```@example nodes
 S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)
+S
+```
+```@example nodes
 isprecise(S)
 ```
 
@@ -72,7 +77,8 @@ These are inert on their own; they matter only when the node feeds a functional 
 
 ```@example nodes
 P = DiscreteNode(:P, [:on => [Parameter(0.5, :P)], :off => [Parameter(0.0, :P)]])
-P[:P => :on] = 0.7; P[:P => :off] = 0.3
+P[:P => :on] = 0.7
+P[:P => :off] = 0.3
 P
 ```
 
@@ -83,6 +89,9 @@ A **root** is built directly from a single distribution; a **child** names its p
 
 ```@example nodes
 T = ContinuousNode(:T, Normal())            # root from one distribution
+T
+```
+```@example nodes
 isroot(T), isprecise(T)
 ```
 
@@ -90,6 +99,9 @@ isroot(T), isprecise(T)
 C = ContinuousNode(:C, [:W])                # child: one distribution per parent state
 C[:W => :sunny]  = Normal()
 C[:W => :cloudy] = Normal(2, 1)
+C
+```
+```@example nodes
 scenarios(C)
 ```
 
@@ -105,9 +117,13 @@ The strategy is attached to the node and depends on its position:
 - a **root** carries an [`ExactDiscretization`](@ref): the discrete probabilities follow *exactly* from the node's distribution, because the marginal is known;
 - a **child** carries an [`ApproximatedDiscretization`](@ref): the marginal is not generally available, so the tails are approximated (a uniform assumption over each bounded interval and an exponential assumption, with rate/spread `sigma`, over an unbounded tail).
 
-Writing ``x_{ik}^-`` and ``x_{ik}^+`` for the lower and upper edges of the ``k``-th discretization interval, the conditional CDF of the continuous remainder ``X_i'`` given the discrete state ``k`` follows one of three forms.
- 
-A discretization on a **root** truncates the node's own CDF ``F_{X_i}`` to the interval, exactly [straub_bayesian_2010](@cite):
+Throughout, ``x_{ik}^-`` and ``x_{ik}^+`` denote the lower and upper edges of the ``k``-th discretization interval.
+
+##### Precise node
+
+The scheme follows [straub_bayesian_2010](@cite). The conditional CDF of the continuous remainder ``X_i'`` given the discrete state ``k`` takes one of three forms.
+
+A discretization on a **root** truncates the node's own CDF ``F_{X_i}`` to the interval, exactly:
 
 ```math
 F_{X_i'}(x_i \mid k) =
@@ -142,12 +158,43 @@ F_{X_i}(x_i \mid k) =
 
 ```@example nodes
 Tr = ContinuousNode(:Tr, Normal(), ExactDiscretization([-2.0, 0.0, 2.0]))   # root
-Tr.discretization
 ```
 
-```julia
+```@example nodes
 # child: interval edges plus the exponential tail rate (here 1.5)
 Cd = ContinuousNode(:Cd, [:W], ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5))
+```
+
+##### Imprecise node
+
+When the node is **imprecise** the same partition is used, but both the surrogate's interval probabilities and the residual are chosen to preserve the imprecision.
+
+The probability mass of interval ``k`` is ``p_{ik} = F_{X_i}(x_{ik}^+) - F_{X_i}(x_{ik}^-)``. For a **probability box** the CDF is bounded by a lower ``\underline{F}`` and an upper ``\overline{F}``, so this mass is itself an interval,
+
+```math
+\begin{aligned}
+p_{ik} &= \big[\, \min(d^-, d^+),\; \max(d^-, d^+) \,\big], \\
+d^- &= \underline{F}(x_{ik}^+) - \underline{F}(x_{ik}^-), \quad
+d^+ = \overline{F}(x_{ik}^+) - \overline{F}(x_{ik}^-),
+\end{aligned}
+```
+
+while for a bare **interval** entry no CDF is available — only the support — so every interval receives the vacuous mass ``p_{ik} = [0, 1]``. Either way the surrogate node becomes imprecise (credal), and that is what carries the imprecision into inference.
+
+The residual then differs by position. On a **root** it keeps the imprecision: a probability box is restricted to ``[x_{ik}^-, x_{ik}^+]`` (a narrower box) and an interval entry becomes the sub-interval ``[x_{ik}^-, x_{ik}^+]``. On a **child** the residual is the same precise uniform (or exponential-tail) approximation as in the precise case, regardless of the entry's imprecision.
+
+The asymmetry is deliberate: on a root the imprecision lives in both the surrogate probabilities and the residual; on a child it is pushed entirely into the surrogate's interval probabilities, leaving a precise residual.
+
+```@example nodes
+# imprecise root: an interval distribution, discretized exactly
+Ti = ContinuousNode(:Ti, Interval(-2.0, 2.0), ExactDiscretization([-2.0, 0.0, 2.0]))
+```
+
+```@example nodes
+# imprecise child: an interval entry plus the exponential tail rate
+Ci = ContinuousNode(:Ci, [:W], ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5))
+Ci[:W => :sunny] = Interval(-1.0, 1.0)
+Ci
 ```
 
 ## Nodes with an a-priori-unknown CPT (functional nodes)
@@ -164,12 +211,13 @@ A functional node is therefore always a child, and never a root.
 A [`DiscreteFunctionalNode`](@ref) derives two states: `:<name>_safe` and `:<name>_failed`. 
 A `performance` function maps the models' output to a limit state (*failed* where `performance < 0`), and the evaluated CPT stores the estimated failure probability against `:<name>_failed` and its complement against `:<name>_safe`:
 
-```@example functional
-using EnhancedBayesianNetworks # hide
+```@example nodes
 model = Model(df -> df.x .^ 2, :y)          # y is computed from parent x
 performance = df -> df.y .- 1.0             # failed when y < 1
 
 DF = DiscreteFunctionalNode(:DF, [model], performance, MonteCarlo(1000))
+```
+```@example nodes
 states(DF)                                  # [:DF_safe, :DF_failed]
 ```
 
@@ -177,22 +225,31 @@ states(DF)                                  # [:DF_safe, :DF_failed]
 
 A [`ContinuousFunctionalNode`](@ref) has no performance function: after evaluation, its model output samples are fitted into an [`EmpiricalDistribution`](@extref `UncertaintyQuantification.EmpiricalDistribution`), one per scenario of its discrete ancestors.
 
-```julia
+```@example nodes
 model = Model(df -> df.x .^ 2, :y)
 CF = ContinuousFunctionalNode(:CF, [model], MonteCarlo(1000))
 ```
+
+!!! note "Imprecise parents give a distribution-free p-box"
+    When a continuous functional node is fed by an *imprecise* continuous parent, its
+    fitted CPT is a **distribution-free (non-parametric) probability box** rather than an
+    ordinary `EmpiricalDistribution`. That representation is not yet available as a
+    dedicated type — it is planned for
+    [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) —
+    so for now **such a node cannot be discretized**.
 
 #### One simulation, or one per scenario
 
 Passing a single simulation, e.g `MonteCarlo(1000)` above, reuses it for every scenario of the node's discrete ancestors. 
 To tune the effort, or even the method, per scenario, list the parents explicitly in the constructor and then assign a simulation to each scenario the same way you would fill a CPT:
 
-```julia
+```@example nodes
 DF = DiscreteFunctionalNode(:DF, [:a, :b], [model], performance)   # list the parents
 DF[:a => :a1, :b => :b1] = MonteCarlo(1000)
 DF[:a => :a1, :b => :b2] = SubSetSimulation(500, 0.1, 10, Uniform(-0.2, 0.2))
 DF[:a => :a2, :b => :b1] = MonteCarlo(200)
 DF[:a => :a2, :b => :b2] = MonteCarlo(200)
+DF
 ```
 
 Different scenarios may use entirely different techniques (standard `MonteCarlo`, `SubSetSimulation`, a `DoubleLoop`, `RandomSlicing` or others). 
@@ -222,6 +279,11 @@ The same accessors work across node types:
 
 Sampling draws a state consistent with fixed parent evidence (precise nodes only):
 
-```julia
+```@example nodes
+S = DiscreteNode(:S, [:W])                  # child of W
+S[:W => :sunny,  :S => :on] = 0.9
+S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2
+S[:W => :cloudy, :S => :off] = 0.8
 sample(S, Evidence(:W => :sunny))           # e.g. :on
 ```

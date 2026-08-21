@@ -58,6 +58,21 @@ end
     @test size(ebn.A) == (0, 0)
 end
 
+@testitem "EnhancedBayesianNetwork - node vector type" setup=[ExtraDeps] begin
+    # a network with no discrete node must still store a widened vector, so
+    # discretization can push a DiscreteNode during reduce
+    X = ContinuousNode(:X, Normal())
+    Yf = ContinuousFunctionalNode(:Y, [Model(df -> df.X .* 2, :Y)], MonteCarlo(100),
+        ApproximatedDiscretization([-3.0, -1.0, 1.0, 3.0], 1.0))
+    net = EnhancedBayesianNetwork([X, Yf])
+    add_child!(net, X, Yf)
+    order!(net)
+
+    @test net.nodes isa Vector{EnhancedBayesianNetworks.AbstractNode}
+    reduced = @suppress reduce(net)
+    @test any(n -> isa(n, DiscreteNode), reduced.nodes)   # the surrogate was pushed
+end
+
 @testitem "EnhancedBayesianNetwork - add_child!" setup=[ExtraDeps, SetupSprinklereBN] begin
     model = Model(df -> df.Rc .+ df.S, :G2)
     performance = df -> df.G2
@@ -285,7 +300,7 @@ end
     add_child!(net, weather, [sprinkler, rain])
     add_child!(net, [rain, sprinkler], grass)
     add_child!(net, [rain2], grass2)
-    @test_logs (:warn, "Node :G2 is a FunctionalNode with no discrete parents. Resulting network is a standard reliability analysis") EnhancedBayesianNetworks._verify_functional_parents(net, grass2)
+    @test_logs (:warn, "Node :G2 is a FunctionalNode with no discrete parents: its evaluation a single Structural Reliability Problem and its CPT will contain a single scenario.") EnhancedBayesianNetworks._verify_functional_parents(net, grass2)
 
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)

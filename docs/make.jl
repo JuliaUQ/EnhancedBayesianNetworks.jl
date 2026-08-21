@@ -20,7 +20,8 @@ links = InterLinks("UncertaintyQuantification" => "https://juliauq.github.io/Unc
 format = DocumenterVitepress.MarkdownVitepress(
     repo="https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl",
     devbranch="main",
-    devurl="dev"
+    devurl="dev",
+    inventory_version=string(pkgversion(EnhancedBayesianNetworks)),
 )
 
 pages = [
@@ -35,11 +36,26 @@ pages = [
         "Parameter Learning" => "manual/parameterlearning.md",
         "Plotting" => "manual/plotting.md",
     ],
-    # "Examples" => [
-    #     "Asia Network"     => "examples/asia_bn.md",
-    #     "Fire Protection"  => "examples/fire_protection.md",
-    #     "Straub Example"   => "examples/straub_example.md",
-    # ],
+    "Examples" => [
+        "Bayesian Networks" => [
+            "Asia" => "examples/BayesianNetworks/asia_bn.md",
+        ],
+        "Credal Networks" => [
+            "Fire Protection" => "examples/CredalNetworks/fire_protection_cn.md",
+        ],
+        "Enhanced Bayesian Networks" => [
+            "One-Bay Frame" => "examples/EnhancedBayesianNetworks/one-bay_elastoplastic_frame.md",
+            "Vehicle Suspension" => "examples/EnhancedBayesianNetworks/vehicle-3D-suspension.md",
+        ],
+        "Imprecisions" => [
+            "Continuous Nodes" => "examples/Imprecisions/Imprecise_continuous_nodes.md",
+            "Discrete Nodes" => "examples/Imprecisions/Imprecise_discrete_nodes.md",
+        ],
+        "Parameters Learning" => [
+            "Precise Parameters" => "examples/ParametersLearning/precise_parameters_learning.md",
+        ],
+        "Utility Functions" => "examples/UtilityFunctions/utility_functions.md",
+    ],
     "API" => [
         "Nodes" => "api/nodes.md",
         "Networks" => "api/networks.md",
@@ -58,7 +74,7 @@ makedocs(;
     pages=pages,
     source="src",
     build="build",
-    warnonly=true,
+    warnonly=false,
     format=format,
     draft=false,
 )

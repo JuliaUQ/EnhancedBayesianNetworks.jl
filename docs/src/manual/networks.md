@@ -21,21 +21,6 @@ A BN and a CN can also be built directly when the model is already discrete.
 
 Every network is assembled the same way: construct the nodes, group them into a network, wire the edges with [`add_child!`](@ref), and finalize with [`order!`](@ref).
 
-```@example networks
-using EnhancedBayesianNetworks # hide
-W = DiscreteNode(:W)
-W[:W => :sunny]  = 0.5
-W[:W => :cloudy] = 0.5
-
-S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
-S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
-
-bn = BayesianNetwork([W, S])
-add_child!(bn, :W, :S)                      # wire parent → child (by name or by node)
-order!(bn)                                  # topologically sort and validate
-```
-
 [`add_child!`](@ref) records directed edges. 
 Each endpoint may be a single node or a vector, given by name (`Symbol`) or as node objects, so a whole fan-out can be wired at once, `add_child!(net, :W, [:S, :R])`. 
 It rejects self-loops, requires every referenced node to exist, checks that a discrete parent appears in each non-functional child's *Conditional Probability Table* (CPT), and enforces the structural rule that **continuous and functional parents may feed only functional children** (a continuous quantity cannot condition a plain discrete CPT).
@@ -48,6 +33,27 @@ A [`BayesianNetwork`](@ref) is a DAG of discrete and precise nodes, the classica
 Its constructor rejects any imprecise node, pointing you to a CN instead, and it requires node names and states to be globally unique.
 Once ordered, it supports the full inference and sampling machinery (see [Inference](inference.md)).
 
+```@example networks
+using EnhancedBayesianNetworks # hide
+W = DiscreteNode(:W)
+W[:W => :sunny]  = 0.5
+W[:W => :cloudy] = 0.5
+
+S = DiscreteNode(:S, [:W])
+S[:W => :sunny,  :S => :on] = 0.9
+S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2
+S[:W => :cloudy, :S => :off] = 0.8
+
+bn = BayesianNetwork([W, S])
+add_child!(bn, :W, :S)                      # wire parent → child (by name or by node)
+bn
+```
+```@example networks
+order!(bn)                                  # topologically sort and validate
+bn
+```
+
 ## Credal Network
 
 When a discrete CPT carries interval-valued probability entries, the node is *imprecise* and the network becomes a [`CredalNetwork`](@ref) [cozman_credal_2000](@cite). 
@@ -55,14 +61,23 @@ Each local CPT is then a closed convex set of probability measures, a *credal se
 Imprecision is expressed with probability [`Interval`](@extref `UncertaintyQuantification.Interval`)s.
 
 ```@example networks
-Wc = DiscreteNode(:Wc); Wc[:Wc => :sunny] = 0.5; Wc[:Wc => :cloudy] = 0.5
+Wc = DiscreteNode(:Wc)
+Wc[:Wc => :sunny] = 0.5
+Wc[:Wc => :cloudy] = 0.5
 Sc = DiscreteNode(:Sc, [:Wc])
 # a single interval entry makes the node — and hence the network — imprecise:
-Sc[:Wc => :sunny,  :Sc => :on]  = Interval(0.8, 0.95); Sc[:Wc => :sunny,  :Sc => :off] = Interval(0.05, 0.2)
-Sc[:Wc => :cloudy, :Sc => :on]  = 0.2;                 Sc[:Wc => :cloudy, :Sc => :off] = 0.8
+Sc[:Wc => :sunny,  :Sc => :on]  = Interval(0.8, 0.95)
+Sc[:Wc => :sunny,  :Sc => :off] = Interval(0.05, 0.2)
+Sc[:Wc => :cloudy, :Sc => :on]  = 0.2
+Sc[:Wc => :cloudy, :Sc => :off] = 0.8
 
 cn = CredalNetwork([Wc, Sc])
-add_child!(cn, :Wc, :Sc); order!(cn)
+add_child!(cn, :Wc, :Sc)
+cn
+```
+```@example networks
+order!(cn)
+cn
 ```
 
 Constructing a CN whose nodes all turn out precise emits a warning, a BN is the right structure in that case. 
@@ -75,13 +90,21 @@ Continuous and functional nodes carry the physics of the problem (see [Nodes](no
 
 ```@example networks
 Wf = DiscreteNode(:Wf, [:sunny => [Parameter(1.0, :Wf)], :cloudy => [Parameter(2.0, :Wf)]])
-Wf[:Wf => :sunny] = 0.5; Wf[:Wf => :cloudy] = 0.5
+Wf[:Wf => :sunny] = 0.5
+Wf[:Wf => :cloudy] = 0.5
 X = ContinuousNode(:X, Uniform(-1, 1), ExactDiscretization([-1.0, 0.0, 1.0]))
 model = Model(df -> df.X .+ df.Wf, :Y)
 F = DiscreteFunctionalNode(:F, [model], df -> df.Y, MonteCarlo(200))
 
 ebn = EnhancedBayesianNetwork([Wf, X, F])
-add_child!(ebn, :Wf, :F); add_child!(ebn, :X, :F); order!(ebn)
+add_child!(ebn, :Wf, :F) 
+add_child!(ebn, :X, :F)
+ebn
+```
+
+```@example networks
+order!(ebn)
+ebn
 ```
 
 ## Inspecting structure
@@ -101,10 +124,6 @@ Formally, the Markov blanket of a node ``Z_i`` is the union of its parents ``\ma
 
 ```math
 \mathrm{Bl}(Z_i) = \mathrm{Pa}(Z_i) \cup \mathrm{Ch}(Z_i) \cup \mathrm{Sp}(Z_i).
-```
-
-```@example networks
-(parents = parents(ebn, :F), discrete_ancestors = discrete_ancestors(ebn, :F))
 ```
 
 ```@example networks

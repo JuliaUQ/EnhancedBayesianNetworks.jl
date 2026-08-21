@@ -30,7 +30,7 @@ The`simulation` attached to the node decides *how* that probability is estimated
 When every input is precise, the SRP is solved with a **single-loop** Structural Reliability Method, such as `MonteCarlo`, [`FORM`](@extref `UncertaintyQuantification.FORM`), or advanced Monte Carlo methods ([`SubSetSimulation`](@extref `UncertaintyQuantification.SubSetSimulation`), `LineSampling`, and the like). 
 Each scenario yields a single failure probability, so the reduced node is precise and a BN is returned.
 
-```julia
+```@example reduction
 using EnhancedBayesianNetworks
 
 Load = DiscreteNode(:Load, [:low => [Parameter(1.0, :Load)], :high => [Parameter(3.0, :Load)]])
@@ -40,8 +40,12 @@ model = Model(df -> df.R .- df.Load, :g)                 # limit state g = R - L
 F = DiscreteFunctionalNode(:F, [model], df -> df.g, MonteCarlo(2000))
 
 ebn = EnhancedBayesianNetwork([Load, R, F])
-add_child!(ebn, :Load, :F); add_child!(ebn, :R, :F); order!(ebn)
-
+add_child!(ebn, :Load, :F)
+add_child!(ebn, :R, :F)
+order!(ebn)
+ebn
+```
+```@example reduction
 reduced = reduce(ebn)                                    # -> BayesianNetwork
 ```
 
@@ -53,26 +57,26 @@ Each scenario then produces a lower and an upper failure probability, the reduce
 
 Only the *type of the input* and the *simulation* change — the network is built exactly as before:
 
-```julia
-using EnhancedBayesianNetworks
-
+```@example reduction
 Load = DiscreteNode(:Load, [:low => [Parameter(1.0, :Load)], :high => [Parameter(3.0, :Load)]])
-Load[:Load => :low] = 0.7; Load[:Load => :high] = 0.3
+Load[:Load => :low] = 0.7 
+Load[:Load => :high] = 0.3
 R = ContinuousNode(:R, Interval(2.0, 4.0))               # imprecise resistance
 model = Model(df -> df.R .- df.Load, :g)
 F = DiscreteFunctionalNode(:F, [model], df -> df.g, DoubleLoop(MonteCarlo(1000)))
 
 ebn = EnhancedBayesianNetwork([Load, R, F])
-add_child!(ebn, :Load, :F); add_child!(ebn, :R, :F); order!(ebn)
+add_child!(ebn, :Load, :F)
+add_child!(ebn, :R, :F)
+order!(ebn)
+ebn
+```
 
+```@example reduction
 reduced = reduce(ebn)                                    # -> CredalNetwork
 ```
 
 The imprecision then flows straight into inference: querying the reduced credal network returns a CN with lower and upper bounds (see the [Inference](inference.md) chapter).
-
-```julia
-infer(reduced, :F, Evidence(:Load => :high))            # CredalPosterior: [lower, upper]
-```
 
 ## Precise and imprecise outcomes
 

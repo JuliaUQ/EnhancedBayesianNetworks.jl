@@ -9,24 +9,31 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
     else
         rt = nothing
     end
-    new_continuous = ContinuousNode(node.name, discrete_ancestors(net, node), node.discretization, rt)
+    ancestors = discrete_ancestors(net, node)
+    if isempty(ancestors) && node.discretization isa ApproximatedDiscretization
+        disc = ExactDiscretization(node.discretization.intervals)
+    else
+        disc = node.discretization
+    end
+    new_continuous = ContinuousNode(node.name, ancestors, disc, rt)
+
     for i in inputs_vector
         scenario = i[1]
         uqinputs = i[2]
         if !UncertaintyQuantification.isimprecise(uqinputs)
             samples = UncertaintyQuantification.sample(uqinputs, node.simulation[scenario...])
             UncertaintyQuantification.evaluate!(node.models, samples)
-            new_continuous[scenario...] = EmpiricalDistribution(samples[:, node.models[end].name], node.nbins)
+            new_continuous[scenario...] = EmpiricalDistribution(samples[:, node.models[end].name]; nbins=node.nbins)
             if collect
                 new_continuous.results[scenario...] = samples
             end
         else
             samples = UncertaintyQuantification.sample(uqinputs, MonteCarlo(100))
             UncertaintyQuantification.propagate_intervals!(node.models, samples)
-            lbs = map(s -> s.lb, samples[:, node.name])
-            ubs = map(s -> s.ub, samples[:, node.name])
-            lb_pdf = EmpiricalDistribution(lbs, node.nbins)
-            ub_pdf = EmpiricalDistribution(ubs, node.nbins)
+            lbs = map(s -> s.lb, samples[:, node.models[end].name])
+            ubs = map(s -> s.ub, samples[:, node.models[end].name])
+            lb_pdf = EmpiricalDistribution(lbs; nbins=node.nbins)
+            ub_pdf = EmpiricalDistribution(ubs; nbins=node.nbins)
             new_continuous[scenario...] = [:lb => lb_pdf, :ub => ub_pdf]
             if collect
                 new_continuous.results[scenario...] = samples
@@ -51,7 +58,13 @@ function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, co
     for i in inputs_vector
         scenario = i[1]
         uqinputs = i[2]
-        res = probability_of_failure(node.models, node.performance, uqinputs, node.simulation[scenario...])
+        sim = node.simulation[scenario...]
+        if isa(sim, Union{DoubleLoop,RandomSlicing}) && !UncertaintyQuantification.isimprecise(uqinputs)
+            error(
+                "Invalid simulation for functional node $(repr(node.name)): the assigned $(nameof(typeof(sim))) is an imprecise (double-loop) simulation, but every input reaching $(repr(node.name)) is precise. This happens when an imprecise continuous ancestor of $(repr(node.name)) is discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding $(repr(node.name)). Use a single-loop simulation (e.g. MonteCarlo) for $(repr(node.name)); the network stays credal through the discretized node. Alternatively, remove the discretization from the imprecise continuous ancestor so its imprecision reaches $(repr(node.name)) directly."
+            )
+        end
+        res = probability_of_failure(node.models, node.performance, uqinputs, sim)
         if collect
             new_discrete.results[scenario...] = res[2:end]
         end

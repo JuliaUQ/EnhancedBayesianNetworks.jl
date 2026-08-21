@@ -8,11 +8,17 @@ Evidence is given as an `Evidence`, a `Dict{Symbol,Symbol}` mapping node names t
 
 ```@example inference
 using EnhancedBayesianNetworks # hide
-W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
+W = DiscreteNode(:W) 
+W[:W => :sunny] = 0.5 
+W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
-S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
-bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
+S[:W => :sunny,  :S => :on] = 0.9 
+S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2 
+S[:W => :cloudy, :S => :off] = 0.8
+bn = BayesianNetwork([W, S])
+add_child!(bn, :W, :S)
+order!(bn)
 
 infer(bn, :S, Evidence(:W => :sunny))       # posterior P(S | W = sunny)
 ```
@@ -107,11 +113,17 @@ On a [Credal Network](@ref) the local tables are interval-valued, so the network
 These are obtained by running variable elimination over the *extreme* Bayesian networks of the credal sets, and taking the element-wise minimum and maximum over the resulting posteriors.
 
 ```@example inference
-Wc = DiscreteNode(:Wc); Wc[:Wc => :sunny] = 0.5; Wc[:Wc => :cloudy] = 0.5
+Wc = DiscreteNode(:Wc)
+Wc[:Wc => :sunny] = 0.5
+Wc[:Wc => :cloudy] = 0.5
 Sc = DiscreteNode(:Sc, [:Wc])
-Sc[:Wc => :sunny,  :Sc => :on] = Interval(0.8, 0.95); Sc[:Wc => :sunny,  :Sc => :off] = Interval(0.05, 0.2)
-Sc[:Wc => :cloudy, :Sc => :on] = 0.2;                 Sc[:Wc => :cloudy, :Sc => :off] = 0.8
-cn = CredalNetwork([Wc, Sc]); add_child!(cn, :Wc, :Sc); order!(cn)
+Sc[:Wc => :sunny,  :Sc => :on] = Interval(0.8, 0.95)
+Sc[:Wc => :sunny,  :Sc => :off] = Interval(0.05, 0.2)
+Sc[:Wc => :cloudy, :Sc => :on] = 0.2                 
+Sc[:Wc => :cloudy, :Sc => :off] = 0.8
+cn = CredalNetwork([Wc, Sc])
+add_child!(cn, :Wc, :Sc)
+order!(cn)
 
 infer(cn, :Sc, Evidence(:Wc => :sunny))     # CredalPosterior: [lower, upper] bounds
 ```

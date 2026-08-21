@@ -55,32 +55,59 @@ end
     @test issetequal(scs, [Evidence(:A => :a1, :C => :c1), Evidence(:A => :a2, :C => :c1), Evidence(:A => :a1, :C => :c2), Evidence(:A => :a2, :C => :c2)])
 end
 
-@testitem "Evaluate Node - continuous precise" setup=[SetupEvaluateeBN] begin
+@testitem "Evaluate Node - continuous precise" setup=[SetupEvaluateeBN, ExtraDeps] begin
     EnhancedBayesianNetworks._build_simulations!(net, E)
-    evaluated_E = EnhancedBayesianNetworks.evaluate(net, E)
+    evaluated_E = @suppress EnhancedBayesianNetworks.evaluate(net, E)
     @test evaluated_E.name == E.name
     @test all(isa.(evaluated_E.cpt.data.Π, EmpiricalDistribution))
     @test isempty(evaluated_E.discretization)
     @test isa(evaluated_E.results, EnhancedBayesianNetworks.ScenariosTable{Any})
-    evaluated_E = EnhancedBayesianNetworks.evaluate(net, E, false)
+    evaluated_E = @suppress EnhancedBayesianNetworks.evaluate(net, E, false)
     @test evaluated_E.name == E.name
     @test all(isa.(evaluated_E.cpt.data.Π, EmpiricalDistribution))
     @test isempty(evaluated_E.discretization)
     @test isnothing(evaluated_E.results)
 end
 
-@testitem "Evaluate Node - continuous imprecise" setup=[SetupEvaluateeBN] begin
+@testitem "Evaluate Node - continuous imprecise" setup=[SetupEvaluateeBN, ExtraDeps] begin
     EnhancedBayesianNetworks._build_simulations!(net, F)
-    evaluated_F = EnhancedBayesianNetworks.evaluate(net, F)
+    evaluated_F = @suppress EnhancedBayesianNetworks.evaluate(net, F)
     @test evaluated_F.name == F.name
     @test all(isa.(evaluated_F.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
     @test isempty(evaluated_F.discretization)
     @test isa(evaluated_F.results, EnhancedBayesianNetworks.ScenariosTable{Any})
-    evaluated_F = EnhancedBayesianNetworks.evaluate(net, F, false)
+    evaluated_F = @suppress EnhancedBayesianNetworks.evaluate(net, F, false)
     @test evaluated_F.name == F.name
     @test all(isa.(evaluated_F.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
     @test isempty(evaluated_F.discretization)
     @test isnothing(evaluated_F.results)
+end
+
+@testitem "Evaluate Node - mismatched model output name" setup=[ExtraDeps] begin
+    # the imprecise branch must read the result column by the model's output name,
+    # not by the node name; here they differ (node :Y, model output :out)
+    A = DiscreteNode(:A, [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]])
+    A[:A=>:a1] = 0.5
+    A[:A=>:a2] = 0.5
+
+    X = ContinuousNode(:X, [:A])
+    X[:A=>:a1] = Interval(1, 2)
+    X[:A=>:a2] = Interval(2, 3)
+
+    D = ContinuousNode(:D, Normal())
+
+    model = Model(df -> df.A .* df.D .+ df.X, :out)
+    Y = ContinuousFunctionalNode(:Y, [model], MonteCarlo(100))
+
+    net = EnhancedBayesianNetwork([A, X, D, Y])
+    add_child!(net, A, X)
+    add_child!(net, [A, X, D], Y)
+    order!(net)
+
+    EnhancedBayesianNetworks._build_simulations!(net, Y)
+    evaluated_Y = @suppress EnhancedBayesianNetworks.evaluate(net, Y)
+    @test evaluated_Y.name == :Y
+    @test all(isa.(evaluated_Y.cpt.data.Π, Vector{Pair{Symbol,EmpiricalDistribution}}))
 end
 
 @testitem "Evaluate Node - discrete precise" setup=[SetupEvaluateeBN] begin
@@ -109,4 +136,36 @@ end
     @test all(isa.(evaluated_H.cpt.data.Π, Interval))
     @test isempty(evaluated_H.parameters)
     @test isnothing(evaluated_H.results)
+end
+
+@testitem "Evaluate Node - imprecise simulation error" setup=[ExtraDeps] begin
+    A = DiscreteNode(:A, [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]])
+    A[:A=>:a1] = 0.5
+    A[:A=>:a2] = 0.5
+
+    # imprecise continuous child of A, carrying a discretization
+    V = ContinuousNode(:V, [:A], ApproximatedDiscretization([0.0, 1.0, 2.0], 1))
+    V[:A=>:a1] = Interval(0.2, 0.8)
+    V[:A=>:a2] = Interval(1.2, 1.8)
+
+    model = Model(df -> df.A .+ df.V, :Z)
+    performance = df -> 1 .- df.Z
+
+    # discretizing V moves its imprecision into the credal surrogate V_d and leaves a
+    # precise residual feeding E, so an imprecise (double-loop) simulation is invalid
+    E = DiscreteFunctionalNode(:E, [model], performance, DoubleLoop(MonteCarlo(100)))
+    ebn = EnhancedBayesianNetwork([A, V, E])
+    add_child!(ebn, A, V)
+    add_child!(ebn, [A, V], E)
+    order!(ebn)
+
+    @test_throws ErrorException("Invalid simulation for functional node :E: the assigned DoubleLoop is an imprecise (double-loop) simulation, but every input reaching :E is precise. This happens when an imprecise continuous ancestor of :E is discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding :E. Use a single-loop simulation (e.g. MonteCarlo) for :E; the network stays credal through the discretized node. Alternatively, remove the discretization from the imprecise continuous ancestor so its imprecision reaches :E directly.") @suppress reduce(ebn)
+
+    # the same network with a single-loop simulation reduces to a CredalNetwork
+    E = DiscreteFunctionalNode(:E, [model], performance, MonteCarlo(100))
+    ebn = EnhancedBayesianNetwork([A, V, E])
+    add_child!(ebn, A, V)
+    add_child!(ebn, [A, V], E)
+    order!(ebn)
+    @test isa((@suppress reduce(ebn)), CredalNetwork)
 end
