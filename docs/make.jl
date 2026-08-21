@@ -44,7 +44,7 @@ pages = [
             "Fire Protection" => "examples/CredalNetworks/fire_protection_cn.md",
         ],
         "Enhanced Bayesian Networks" => [
-            "One-Bay Frame (discretization)" => "examples/EnhancedBayesianNetworks/one-bay_elastoplastic_frame.md",
+            "One-Bay Frame" => "examples/EnhancedBayesianNetworks/one-bay_elastoplastic_frame.md",
             "Vehicle Suspension" => "examples/EnhancedBayesianNetworks/vehicle-3D-suspension.md",
         ],
         "Imprecisions" => [
