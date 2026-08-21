@@ -39,7 +39,7 @@
 
 end
 
-@testitem "Evaluate Net - precise no discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
+@testitem "Evaluate Net - precise no discrete parents" setup = [ExtraDeps, SetupFrameeBN] begin
     n = 10^6
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
     R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(n))
@@ -63,7 +63,7 @@ end
     @test isa(reduced_ebn.nodes[1], DiscreteNode)
     @test isroot(reduced_ebn.nodes[1])
     @test issetequal(reduced_ebn.nodes[1].cpt.data.E, [:E_failed, :E_safe])
-    @test isapprox(reduced_ebn.nodes[1].cpt.data.Π, [0.025693, 0.974307], atol=0.05)
+    @test isapprox(reduced_ebn.nodes[1].cpt.data.Π, [0.025693, 0.974307], atol = 0.05)
     @test !isnothing(reduced_ebn.nodes[1].results)
 
     ebn = EnhancedBayesianNetwork(nodes)
@@ -76,11 +76,11 @@ end
     @test isa(reduced_ebn.nodes[1], DiscreteNode)
     @test isroot(reduced_ebn.nodes[1])
     @test issetequal(reduced_ebn.nodes[1].cpt.data.E, [:E_failed, :E_safe])
-    @test isapprox(reduced_ebn.nodes[1].cpt.data.Π, [0.025693, 0.974307], atol=0.05)
+    @test isapprox(reduced_ebn.nodes[1].cpt.data.Π, [0.025693, 0.974307], atol = 0.05)
     @test isnothing(reduced_ebn.nodes[1].results)
 end
 
-@testitem "Evaluate Net - imprecise no discrete parents" setup=[ExtraDeps, SetupFrameeBN, CheckSetup] begin
+@testitem "Evaluate Net - imprecise no discrete parents" setup = [ExtraDeps, SetupFrameeBN, CheckSetup] begin
     n = 10^4
     Uᵣ = ContinuousNode(:Uᵣ, Interval(-1, 1))
     R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(n))
@@ -105,10 +105,10 @@ end
     @test isa(ebn1.nodes[1], DiscreteNode)
     @test isroot(ebn1.nodes[1])
     @test issetequal(ebn1.nodes[1].cpt.data.E, [:E_failed, :E_safe])
-    @test isapprox(ebn1.nodes[1].cpt.data.Π[1].lb, 0, atol=0.05)
-    @test isapprox(ebn1.nodes[1].cpt.data.Π[1].ub, 0.057, atol=0.05)
-    @test isapprox(ebn1.nodes[1].cpt.data.Π[2].lb, 0.943, atol=0.05)
-    @test isapprox(ebn1.nodes[1].cpt.data.Π[2].ub, 1, atol=0.05)
+    @test isapprox(ebn1.nodes[1].cpt.data.Π[1].lb, 0, atol = 0.05)
+    @test isapprox(ebn1.nodes[1].cpt.data.Π[1].ub, 0.057, atol = 0.05)
+    @test isapprox(ebn1.nodes[1].cpt.data.Π[2].lb, 0.943, atol = 0.05)
+    @test isapprox(ebn1.nodes[1].cpt.data.Π[2].ub, 1, atol = 0.05)
     @test !isnothing(ebn1.nodes[1].results)
     check_index_coherence(ebn1)
 
@@ -119,29 +119,29 @@ end
     @test isa(ebn2.nodes[1], DiscreteNode)
     @test isroot(ebn2.nodes[1])
     @test issetequal(ebn2.nodes[1].cpt.data.E, [:E_failed, :E_safe])
-    @test isapprox(ebn2.nodes[1].cpt.data.Π[1].lb, 0, atol=0.05)
-    @test isapprox(ebn2.nodes[1].cpt.data.Π[1].ub, 0.057, atol=0.05)
-    @test isapprox(ebn2.nodes[1].cpt.data.Π[2].lb, 0.943, atol=0.05)
-    @test isapprox(ebn2.nodes[1].cpt.data.Π[2].ub, 1, atol=0.05)
+    @test isapprox(ebn2.nodes[1].cpt.data.Π[1].lb, 0, atol = 0.05)
+    @test isapprox(ebn2.nodes[1].cpt.data.Π[1].ub, 0.057, atol = 0.05)
+    @test isapprox(ebn2.nodes[1].cpt.data.Π[2].lb, 0.943, atol = 0.05)
+    @test isapprox(ebn2.nodes[1].cpt.data.Π[2].ub, 1, atol = 0.05)
     @test isnothing(ebn2.nodes[1].results)
     check_index_coherence(ebn2)
 end
 
-@testitem "Evaluate Net - precise discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
+@testitem "Evaluate Net - precise discrete parents" setup = [ExtraDeps, SetupFrameeBN] begin
 
     n = 10^6
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
 
     M = DiscreteNode(:M)
-    M[:M=>:new] = 0.5
-    M[:M=>:old] = 0.5
+    M[:M => :new] = 0.5
+    M[:M => :old] = 0.5
 
     μ_gamma = 60
     cov_gamma = 0.2
     α, θ = distribution_parameters(μ_gamma, μ_gamma * cov_gamma, Gamma)
     V = ContinuousNode(:V, [:M])
-    V[:M=>:new] = Gamma(α, θ)
-    V[:M=>:old] = Gamma(α - 1, 2.4)
+    V[:M => :new] = Gamma(α, θ)
+    V[:M => :old] = Gamma(α - 1, 2.4)
 
     μ_gumbel = 50
     cov_gumbel = 0.4
@@ -159,10 +159,10 @@ end
 
     parameters_L = [:yesL => [Parameter(1, :L)], :noL => [Parameter(2, :L)]]
     L = DiscreteNode(:L, [:M], parameters_L)
-    L[:M=>:new, :L=>:yesL] = 0.2
-    L[:M=>:new, :L=>:noL] = 0.8
-    L[:M=>:old, :L=>:yesL] = 0.5
-    L[:M=>:old, :L=>:noL] = 0.5
+    L[:M => :new, :L => :yesL] = 0.2
+    L[:M => :new, :L => :noL] = 0.8
+    L[:M => :old, :L => :yesL] = 0.5
+    L[:M => :old, :L => :noL] = 0.5
 
     r9 = ContinuousNode(:R9, Normal())
 
@@ -185,19 +185,19 @@ end
     @test !isroot(ebn1.nodes[3])
     @test issetequal(ebn1.nodes[3].cpt.data.E, [:E_failed, :E_safe])
     @test issetequal(ebn1.nodes[3].cpt.data.M, [:new, :old])
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[1], 0.025959, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[2], 0.974041, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[3], 0.022452, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[4], 0.977548, atol=0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[1], 0.025959, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[2], 0.974041, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[3], 0.022452, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[4], 0.977548, atol = 0.05)
     @test !isnothing(ebn1.nodes[3].results)
     @test isa(ebn1.nodes[4], DiscreteNode)
     @test !isroot(ebn1.nodes[4])
     @test issetequal(ebn1.nodes[4].cpt.data.E2, [:E2_failed, :E2_safe])
     @test issetequal(ebn1.nodes[4].cpt.data.L, [:yesL, :noL])
-    @test isapprox(ebn1.nodes[4].cpt.data.Π[1], 0.501359, atol=0.05)
-    @test isapprox(ebn1.nodes[4].cpt.data.Π[2], 0.498641, atol=0.05)
-    @test isapprox(ebn1.nodes[4].cpt.data.Π[3], 0.500866, atol=0.05)
-    @test isapprox(ebn1.nodes[4].cpt.data.Π[4], 0.499134, atol=0.05)
+    @test isapprox(ebn1.nodes[4].cpt.data.Π[1], 0.501359, atol = 0.05)
+    @test isapprox(ebn1.nodes[4].cpt.data.Π[2], 0.498641, atol = 0.05)
+    @test isapprox(ebn1.nodes[4].cpt.data.Π[3], 0.500866, atol = 0.05)
+    @test isapprox(ebn1.nodes[4].cpt.data.Π[4], 0.499134, atol = 0.05)
     @test !isnothing(ebn1.nodes[4].results)
 
     ebn2 = deepcopy(ebn)
@@ -208,36 +208,36 @@ end
     @test !isroot(ebn2.nodes[3])
     @test issetequal(ebn2.nodes[3].cpt.data.E, [:E_failed, :E_safe])
     @test issetequal(ebn2.nodes[3].cpt.data.M, [:new, :old])
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[1], 0.025959, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[2], 0.974041, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[3], 0.022452, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[4], 0.977548, atol=0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[1], 0.025959, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[2], 0.974041, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[3], 0.022452, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[4], 0.977548, atol = 0.05)
     @test isnothing(ebn2.nodes[3].results)
     @test isa(ebn2.nodes[4], DiscreteNode)
     @test !isroot(ebn2.nodes[4])
     @test issetequal(ebn2.nodes[4].cpt.data.E2, [:E2_failed, :E2_safe])
     @test issetequal(ebn2.nodes[4].cpt.data.L, [:yesL, :noL])
-    @test isapprox(ebn2.nodes[4].cpt.data.Π[1], 0.501359, atol=0.05)
-    @test isapprox(ebn2.nodes[4].cpt.data.Π[2], 0.498641, atol=0.05)
-    @test isapprox(ebn2.nodes[4].cpt.data.Π[3], 0.500866, atol=0.05)
-    @test isapprox(ebn2.nodes[4].cpt.data.Π[4], 0.499134, atol=0.05)
+    @test isapprox(ebn2.nodes[4].cpt.data.Π[1], 0.501359, atol = 0.05)
+    @test isapprox(ebn2.nodes[4].cpt.data.Π[2], 0.498641, atol = 0.05)
+    @test isapprox(ebn2.nodes[4].cpt.data.Π[3], 0.500866, atol = 0.05)
+    @test isapprox(ebn2.nodes[4].cpt.data.Π[4], 0.499134, atol = 0.05)
     @test isnothing(ebn2.nodes[4].results)
 end
 
-@testitem "Evaluate Net - imprecise discrete parents" setup=[ExtraDeps, SetupFrameeBN] begin
+@testitem "Evaluate Net - imprecise discrete parents" setup = [ExtraDeps, SetupFrameeBN] begin
     n = 10^4
     Uᵣ = ContinuousNode(:Uᵣ, Normal())
 
     M = DiscreteNode(:M)
-    M[:M=>:new] = 0.5
-    M[:M=>:old] = 0.5
+    M[:M => :new] = 0.5
+    M[:M => :old] = 0.5
 
     μ_gamma = 60
     cov_gamma = 0.2
     α, θ = distribution_parameters(μ_gamma, μ_gamma * cov_gamma, Gamma)
     V = ContinuousNode(:V, [:M])
-    V[:M=>:new] = Gamma(α, θ)
-    V[:M=>:old] = Gamma(α - 1, 2.4)
+    V[:M => :new] = Gamma(α, θ)
+    V[:M => :old] = Gamma(α - 1, 2.4)
 
     μ_gumbel = 50
     cov_gumbel = 0.4
@@ -256,10 +256,10 @@ end
 
     parameters_L = [:yesL => [Parameter(1, :L)], :noL => [Parameter(2, :L)]]
     L = DiscreteNode(:L, [:M], parameters_L)
-    L[:M=>:new, :L=>:yesL] = 0.2
-    L[:M=>:new, :L=>:noL] = 0.8
-    L[:M=>:old, :L=>:yesL] = 0.5
-    L[:M=>:old, :L=>:noL] = 0.5
+    L[:M => :new, :L => :yesL] = 0.2
+    L[:M => :new, :L => :noL] = 0.8
+    L[:M => :old, :L => :yesL] = 0.5
+    L[:M => :old, :L => :noL] = 0.5
 
     r9 = ContinuousNode(:R9, Normal())
 
@@ -282,23 +282,23 @@ end
     @test !isroot(ebn1.nodes[3])
     @test issetequal(ebn1.nodes[3].cpt.data.E, [:E_failed, :E_safe])
     @test issetequal(ebn1.nodes[3].cpt.data.M, [:new, :old])
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[1].lb, 0.0171, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[1].ub, 0.0369, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[2].lb, 0.9631, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[2].ub, 0.9829, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[3].lb, 0.0132, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[3].ub, 0.0333, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[4].lb, 0.9667, atol=0.05)
-    @test isapprox(ebn1.nodes[3].cpt.data.Π[4].ub, 0.9868, atol=0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[1].lb, 0.0171, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[1].ub, 0.0369, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[2].lb, 0.9631, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[2].ub, 0.9829, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[3].lb, 0.0132, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[3].ub, 0.0333, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[4].lb, 0.9667, atol = 0.05)
+    @test isapprox(ebn1.nodes[3].cpt.data.Π[4].ub, 0.9868, atol = 0.05)
     @test !isnothing(ebn1.nodes[3].results)
     @test isa(ebn1.nodes[4], DiscreteNode)
     @test !isroot(ebn1.nodes[4])
     @test issetequal(ebn1.nodes[4].cpt.data.E2, [:E2_failed, :E2_safe])
     @test issetequal(ebn1.nodes[4].cpt.data.L, [:yesL, :noL])
-    @test isapprox(ebn1.nodes[4].cpt.data.Π[1], 0.501359, atol=0.05)
-    @test isapprox(ebn1.nodes[4].cpt.data.Π[2], 0.498641, atol=0.05)
-    @test isapprox(ebn1.nodes[4].cpt.data.Π[3], 0.500866, atol=0.05)
-    @test isapprox(ebn1.nodes[4].cpt.data.Π[4], 0.499134, atol=0.05)
+    @test isapprox(ebn1.nodes[4].cpt.data.Π[1], 0.501359, atol = 0.05)
+    @test isapprox(ebn1.nodes[4].cpt.data.Π[2], 0.498641, atol = 0.05)
+    @test isapprox(ebn1.nodes[4].cpt.data.Π[3], 0.500866, atol = 0.05)
+    @test isapprox(ebn1.nodes[4].cpt.data.Π[4], 0.499134, atol = 0.05)
     @test !isnothing(ebn1.nodes[4].results)
 
     ebn2 = deepcopy(ebn)
@@ -309,39 +309,39 @@ end
     @test !isroot(ebn2.nodes[3])
     @test issetequal(ebn2.nodes[3].cpt.data.E, [:E_failed, :E_safe])
     @test issetequal(ebn2.nodes[3].cpt.data.M, [:new, :old])
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[1].lb, 0.0171, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[1].ub, 0.0369, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[2].lb, 0.9631, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[2].ub, 0.9829, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[3].lb, 0.0132, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[3].ub, 0.0333, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[4].lb, 0.9667, atol=0.05)
-    @test isapprox(ebn2.nodes[3].cpt.data.Π[4].ub, 0.9868, atol=0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[1].lb, 0.0171, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[1].ub, 0.0369, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[2].lb, 0.9631, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[2].ub, 0.9829, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[3].lb, 0.0132, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[3].ub, 0.0333, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[4].lb, 0.9667, atol = 0.05)
+    @test isapprox(ebn2.nodes[3].cpt.data.Π[4].ub, 0.9868, atol = 0.05)
     @test isnothing(ebn2.nodes[3].results)
     @test isa(ebn2.nodes[4], DiscreteNode)
     @test !isroot(ebn2.nodes[4])
     @test issetequal(ebn2.nodes[4].cpt.data.E2, [:E2_failed, :E2_safe])
     @test issetequal(ebn2.nodes[4].cpt.data.L, [:yesL, :noL])
-    @test isapprox(ebn2.nodes[4].cpt.data.Π[1], 0.501359, atol=0.05)
-    @test isapprox(ebn2.nodes[4].cpt.data.Π[2], 0.498641, atol=0.05)
-    @test isapprox(ebn2.nodes[4].cpt.data.Π[3], 0.500866, atol=0.05)
-    @test isapprox(ebn2.nodes[4].cpt.data.Π[4], 0.499134, atol=0.05)
+    @test isapprox(ebn2.nodes[4].cpt.data.Π[1], 0.501359, atol = 0.05)
+    @test isapprox(ebn2.nodes[4].cpt.data.Π[2], 0.498641, atol = 0.05)
+    @test isapprox(ebn2.nodes[4].cpt.data.Π[3], 0.500866, atol = 0.05)
+    @test isapprox(ebn2.nodes[4].cpt.data.Π[4], 0.499134, atol = 0.05)
     @test isnothing(ebn2.nodes[4].results)
 end
 
 @testitem "Evaluate Net - Auxiliary Functions" begin
     A = DiscreteNode(:A)
-    A[:A=>:a1] = 0.5
-    A[:A=>:a2] = 0.5
+    A[:A => :a1] = 0.5
+    A[:A => :a2] = 0.5
 
     parameters_B = [:b1 => [Parameter(1, :B)], :b2 => [Parameter(0, :B)]]
     B = DiscreteNode(:B, parameters_B)
-    B[:B=>:b1] = 0.5
-    B[:B=>:b2] = 0.5
+    B[:B => :b1] = 0.5
+    B[:B => :b2] = 0.5
 
     C = ContinuousNode(:C, [:A])
-    C[:A=>:a1] = Normal(0, 1)
-    C[:A=>:a1] = Normal(0.5, 1)
+    C[:A => :a1] = Normal(0, 1)
+    C[:A => :a1] = Normal(0.5, 1)
 
     model_D = Model(df -> df.B .- df.C, :D)
     simulation = MonteCarlo(1000)
@@ -349,8 +349,8 @@ end
 
     parameters_E = [:e1 => [Parameter(1, :E)], :e2 => [Parameter(0, :E)]]
     E = DiscreteNode(:E, parameters_E)
-    E[:E=>:e1] = 0.5
-    E[:E=>:e2] = 0.5
+    E[:E => :e1] = 0.5
+    E[:E => :e2] = 0.5
 
     model_F = Model(df -> df.D .+ df.E, :F)
     performance = df -> df.F

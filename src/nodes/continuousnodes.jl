@@ -1,5 +1,5 @@
 """
-    ContinuousNode(name, parents=Symbol[], discretization=ExactDiscretization(), results=nothing)
+    ContinuousNode(name, parents = Symbol[], discretization = ExactDiscretization(), results = nothing)
     ContinuousNode(name, dist::ContinuousProbability)
     ContinuousNode(name, dist::ContinuousProbability, discretization::ExactDiscretization)
 
@@ -23,7 +23,7 @@ Td = ContinuousNode(:T, Normal(), ExactDiscretization([-2.0, 0.0, 2.0]))
 
 # child node: one distribution per parent state (discretization is set to Approximated automatically):
 C = ContinuousNode(:C, [:W])
-C[:W => :sunny]  = Normal()
+C[:W => :sunny] = Normal()
 C[:W => :cloudy] = Normal(2, 1)
 
 # imprecise (credal) entries use an Interval instead of a distribution:
@@ -34,14 +34,14 @@ struct ContinuousNode <: AbstractContinuousNode
     name::Symbol
     cpt::EnhancedBayesianNetworks.ScenariosTable{ContinuousProbability}
     discretization::AbstractDiscretization
-    results::Union{ScenariosTable{Any},Nothing}
+    results::Union{ScenariosTable{Any}, Nothing}
 
     function ContinuousNode(
-        name::Symbol,
-        parents::Vector{Symbol}=Symbol[],
-        discretization::AbstractDiscretization=ExactDiscretization(),
-        results::Union{ScenariosTable{Any},Nothing}=nothing
-    )
+            name::Symbol,
+            parents::Vector{Symbol} = Symbol[],
+            discretization::AbstractDiscretization = ExactDiscretization(),
+            results::Union{ScenariosTable{Any}, Nothing} = nothing
+        )
         if name == :Π
             error(":Π is not allowed as node name")
         end
@@ -55,7 +55,7 @@ struct ContinuousNode <: AbstractContinuousNode
         end
 
         cpt = EnhancedBayesianNetworks.ScenariosTable{ContinuousProbability}(parents, :Π)
-        new(name, cpt, discretization, results)
+        return new(name, cpt, discretization, results)
     end
 end
 
@@ -73,13 +73,13 @@ function ContinuousNode(name::Symbol, dist::ContinuousProbability, discretizatio
     return n
 end
 
-function ContinuousNode(name::Symbol, dist::ContinuousProbability, results::Union{ScenariosTable{Any},Nothing})
+function ContinuousNode(name::Symbol, dist::ContinuousProbability, results::Union{ScenariosTable{Any}, Nothing})
     n = ContinuousNode(name, Symbol[], ExactDiscretization(), results)
     n[] = dist
     return n
 end
 
-function ContinuousNode(name::Symbol, dist::ContinuousProbability, discretization::ExactDiscretization, results::Union{ScenariosTable{Any},Nothing})
+function ContinuousNode(name::Symbol, dist::ContinuousProbability, discretization::ExactDiscretization, results::Union{ScenariosTable{Any}, Nothing})
     n = ContinuousNode(name, Symbol[], discretization, results)
     n[] = dist
     return n
@@ -97,7 +97,7 @@ isroot(node::ContinuousNode) = size(node.cpt.data, 2) == 1
 
 parents(node::ContinuousNode) = Symbol.(names(node.cpt.data[:, Not("Π")]))
 
-# Build the UncertaintyQuantification input for this node, selecting the entry that matches the parent states in `evidence`. 
+# Build the UncertaintyQuantification input for this node, selecting the entry that matches the parent states in `evidence`.
 # A distribution or ProbabilityBox becomes a RandomVariable; an Interval becomes an IntervalVariable.
 function _inputs(node::ContinuousNode, evidence::Evidence)
     new_evidence = filter(((k, v),) -> k ∈ Symbol.(names(node.cpt.data)), evidence)
@@ -120,19 +120,19 @@ function _distribution_bounds(dist::UnivariateDistribution)
     return [support(dist).lb, support(dist).ub]
 end
 
-function _distribution_bounds(dist::Union{Interval,ProbabilityBox})
+function _distribution_bounds(dist::Union{Interval, ProbabilityBox})
     return [dist.lb, dist.ub]
 end
 
 # Restrict an entry to `bounds`, preserving its kind: a distribution is truncated, an Interval is replaced by the bounds, a ProbabilityBox is rebuilt with the new bounds.
-function _truncate(dist::UnivariateDistribution, bounds::Tuple{Real,Real})
+function _truncate(dist::UnivariateDistribution, bounds::Tuple{Real, Real})
     return truncated(dist, bounds[1], bounds[2])
 end
 
-function _truncate(_::Interval, bounds::Tuple{Real,Real})
+function _truncate(_::Interval, bounds::Tuple{Real, Real})
     return Interval(bounds[1], bounds[2])
 end
 
-function _truncate(dist::ProbabilityBox, bounds::Tuple{Real,Real})
+function _truncate(dist::ProbabilityBox, bounds::Tuple{Real, Real})
     return ProbabilityBox{typeof(dist).parameters[1]}(dist.parameters, bounds[1], bounds[2])
 end

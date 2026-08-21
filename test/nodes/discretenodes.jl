@@ -5,26 +5,26 @@
     @test isa(node_a, DiscreteNode)
     @test isa(node_a.cpt, EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability})
     @test names(node_a.cpt.data) == ["a", "Π"]
-    @test isa(node_a.parameters, Vector{Pair{Symbol,Vector{Parameter}}})
+    @test isa(node_a.parameters, Vector{Pair{Symbol, Vector{Parameter}}})
     @test isnothing(node_a.results)
     node_c = DiscreteNode(:c, [:a])
     @test isa(node_c, DiscreteNode)
     @test isa(node_c.cpt, EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability})
     @test names(node_c.cpt.data) == ["a", "c", "Π"]
-    @test isa(node_c.parameters, Vector{Pair{Symbol,Vector{Parameter}}})
+    @test isa(node_c.parameters, Vector{Pair{Symbol, Vector{Parameter}}})
     @test isnothing(node_c.results)
 
-    node_a[:a=>:a1] = Interval(0.1, 0.3)
-    node_a[:a=>:a2] = Interval(0.6, 0.8)
-    node_a[:a=>:a3] = 0.2
+    node_a[:a => :a1] = Interval(0.1, 0.3)
+    node_a[:a => :a2] = Interval(0.6, 0.8)
+    node_a[:a => :a3] = 0.2
     @test node_a.cpt.data.a == [:a1, :a2, :a3]
     @test node_a.cpt.data.Π[1] == Interval(0.1, 0.3)
     @test node_a.cpt.data.Π[2] == Interval(0.6, 0.8)
     @test node_a.cpt.data.Π[3] == 0.2
-    node_c[:a=>:a1, :c=>:c1] = 0.3
-    node_c[:a=>:a1, :c=>:c2] = 0.7
-    node_c[:a=>:a2, :c=>:c1] = Interval(0.3, 0.6)
-    node_c[:a=>:a2, :c=>:c2] = Interval(0.3, 0.6)
+    node_c[:a => :a1, :c => :c1] = 0.3
+    node_c[:a => :a1, :c => :c2] = 0.7
+    node_c[:a => :a2, :c => :c1] = Interval(0.3, 0.6)
+    node_c[:a => :a2, :c => :c2] = Interval(0.3, 0.6)
     @test isa(node_c, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node_c, EnhancedBayesianNetworks.AbstractDiscreteNode)
     @test isa(node_c, DiscreteNode)
@@ -35,15 +35,15 @@
     @test node_c.cpt.data.Π[3] == Interval(0.3, 0.6)
     @test node_c.cpt.data.Π[4] == Interval(0.3, 0.6)
 
-    ## tests for parameters    
+    ## tests for parameters
     parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)]]
     node_a = DiscreteNode(:a, parameters)
-    node_a[:a=>:a1] = 0.2
+    node_a[:a => :a1] = 0.2
     @test node_a.cpt.data.a == [:a1]
     @test node_a.cpt.data.Π == [0.2]
     @test node_a.parameters == parameters
     node_c = DiscreteNode(:c, [:a], parameters)
-    node_c[:a=>:a1, :c=>:c1] = 0.2
+    node_c[:a => :a1, :c => :c1] = 0.2
     @test node_c.cpt.data.c == [:c1]
     @test node_c.cpt.data.a == [:a1]
     @test node_c.cpt.data.Π == [0.2]
@@ -51,8 +51,8 @@
 
     ## tests for nodes with a pre-defined CPT
     cpt_a = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}(:a, :Π)
-    cpt_a[:a=>:a1] = 0.2
-    cpt_a[:a=>:a2] = 0.8
+    cpt_a[:a => :a1] = 0.2
+    cpt_a[:a => :a2] = 0.8
     parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)]]
     node_a = DiscreteNode(cpt_a)
     @test node_a.cpt == cpt_a
@@ -61,8 +61,8 @@
     @test node_a.parameters == parameters
 
     cpt_c = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:a, :c], :Π)
-    cpt_c[:a=>:a1, :c=>:c1] = 0.2
-    cpt_c[:a=>:a1, :c=>:c2] = 0.8
+    cpt_c[:a => :a1, :c => :c1] = 0.2
+    cpt_c[:a => :a1, :c => :c2] = 0.8
     parameters = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(0, :C)]]
     node_c = DiscreteNode(cpt_c)
     @test node_c.cpt == cpt_c
@@ -74,19 +74,19 @@ end
 @testitem "DiscreteNode - main functions" begin
     @test_throws ErrorException(":Π is not allowed as node name") DiscreteNode(:Π)
     node_a = DiscreteNode(:a)
-    node_a[:a=>:a1] = Interval(0.1, 0.3)
-    node_a[:a=>:a2] = Interval(0.6, 0.8)
-    node_a[:a=>:a3] = 0.2
+    node_a[:a => :a1] = Interval(0.1, 0.3)
+    node_a[:a => :a2] = Interval(0.6, 0.8)
+    node_a[:a => :a3] = 0.2
     node_c = DiscreteNode(:c, [:a])
-    node_c[:a=>:a1, :c=>:c1] = 0.3
-    node_c[:a=>:a1, :c=>:c2] = 0.7
-    node_c[:a=>:a2, :c=>:c1] = Interval(0.3, 0.6)
-    node_c[:a=>:a2, :c=>:c2] = Interval(0.3, 0.6)
+    node_c[:a => :a1, :c => :c1] = 0.3
+    node_c[:a => :a1, :c => :c2] = 0.7
+    node_c[:a => :a2, :c => :c1] = Interval(0.3, 0.6)
+    node_c[:a => :a2, :c => :c2] = Interval(0.3, 0.6)
     node_b = DiscreteNode(:b, [:a])
-    node_b[:a=>:a1, :b=>:b1] = 0.3
-    node_b[:a=>:a1, :b=>:b2] = 0.7
-    node_b[:a=>:a2, :b=>:b1] = 0.6
-    node_b[:a=>:a2, :b=>:b2] = 0.4
+    node_b[:a => :a1, :b => :b1] = 0.3
+    node_b[:a => :a1, :b => :b2] = 0.7
+    node_b[:a => :a2, :b => :b1] = 0.6
+    node_b[:a => :a2, :b => :b2] = 0.4
 
     @test issetequal(states(node_a), [:a1, :a2, :a3])
     @test issetequal(states(node_c), [:c1, :c2])
@@ -105,14 +105,14 @@ end
     ## inputs function
     parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)], :a3 => [Parameter(-1, :A)]]
     node_a = DiscreteNode(:a, parameters)
-    node_a[:a=>:a1] = Interval(0.1, 0.3)
-    node_a[:a=>:a2] = Interval(0.6, 0.8)
-    node_a[:a=>:a3] = 0.2
+    node_a[:a => :a1] = Interval(0.1, 0.3)
+    node_a[:a => :a2] = Interval(0.6, 0.8)
+    node_a[:a => :a3] = 0.2
 
     node_b = DiscreteNode(:b)
-    node_b[:b=>:b1] = Interval(0.1, 0.3)
-    node_b[:b=>:b2] = Interval(0.6, 0.8)
-    node_b[:b=>:b3] = 0.2
+    node_b[:b => :b1] = Interval(0.1, 0.3)
+    node_b[:b => :b2] = Interval(0.6, 0.8)
+    node_b[:b => :b3] = 0.2
 
     evidence = Evidence(:b => :a1)
     @test_throws ErrorException("Invalid Evidence: evidence [:b => :a1] does not contain the node :a") EnhancedBayesianNetworks._inputs(node_a, evidence)
@@ -128,18 +128,18 @@ end
 
 @testitem "DiscreteNode - Extreme Points" begin
     node_a = DiscreteNode(:a, [:b, :c])
-    node_a[:b=>:b1, :c=>:c1, :a=>:a1] = Interval(0.1, 0.2)
-    node_a[:b=>:b1, :c=>:c1, :a=>:a2] = Interval(0.3, 0.7)
-    node_a[:b=>:b1, :c=>:c1, :a=>:a3] = Interval(0.4, 0.5)
-    node_a[:b=>:b1, :c=>:c2, :a=>:a1] = Interval(0.15, 0.45)
-    node_a[:b=>:b1, :c=>:c2, :a=>:a2] = Interval(0.05, 0.25)
-    node_a[:b=>:b1, :c=>:c2, :a=>:a3] = Interval(0.45, 0.55)
-    node_a[:b=>:b2, :c=>:c1, :a=>:a1] = Interval(0.01, 0.02)
-    node_a[:b=>:b2, :c=>:c1, :a=>:a2] = Interval(0.03, 0.07)
-    node_a[:b=>:b2, :c=>:c1, :a=>:a3] = Interval(0.93, 0.99)
-    node_a[:b=>:b2, :c=>:c2, :a=>:a1] = Interval(0.1112, 0.21123)
-    node_a[:b=>:b2, :c=>:c2, :a=>:a2] = Interval(0.31123, 0.71123)
-    node_a[:b=>:b2, :c=>:c2, :a=>:a3] = Interval(0.41123, 0.511223)
+    node_a[:b => :b1, :c => :c1, :a => :a1] = Interval(0.1, 0.2)
+    node_a[:b => :b1, :c => :c1, :a => :a2] = Interval(0.3, 0.7)
+    node_a[:b => :b1, :c => :c1, :a => :a3] = Interval(0.4, 0.5)
+    node_a[:b => :b1, :c => :c2, :a => :a1] = Interval(0.15, 0.45)
+    node_a[:b => :b1, :c => :c2, :a => :a2] = Interval(0.05, 0.25)
+    node_a[:b => :b1, :c => :c2, :a => :a3] = Interval(0.45, 0.55)
+    node_a[:b => :b2, :c => :c1, :a => :a1] = Interval(0.01, 0.02)
+    node_a[:b => :b2, :c => :c1, :a => :a2] = Interval(0.03, 0.07)
+    node_a[:b => :b2, :c => :c1, :a => :a3] = Interval(0.93, 0.99)
+    node_a[:b => :b2, :c => :c2, :a => :a1] = Interval(0.1112, 0.21123)
+    node_a[:b => :b2, :c => :c2, :a => :a2] = Interval(0.31123, 0.71123)
+    node_a[:b => :b2, :c => :c2, :a => :a3] = Interval(0.41123, 0.511223)
 
     int1 = Interval(0.2, 0.5)
     int2 = Interval(0.5, 0.6)
@@ -150,9 +150,9 @@ end
     @test all(isapprox.(extreme_probs[3], [0.2, 0.5, 0.3]))
 
     node_x = DiscreteNode(:a)
-    node_x[:a=>:a1] = Interval(0.4, 0.5)
-    node_x[:a=>:a2] = Interval(0.3, 0.4)
-    node_x[:a=>:a3] = Interval(0.1, 0.2)
+    node_x[:a => :a1] = Interval(0.4, 0.5)
+    node_x[:a => :a2] = Interval(0.3, 0.4)
+    node_x[:a => :a3] = Interval(0.1, 0.2)
     nodes = EnhancedBayesianNetworks._extreme_nodes(node_x)
     @test all([i.name == node_x.name for i in nodes])
     @test all([i.parameters == node_x.parameters for i in nodes])
@@ -164,38 +164,38 @@ end
     nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
     @test length(nodes) == 400
 
-    node_a[:b=>:b1, :c=>:c1, :a=>:a2] = 0.5
+    node_a[:b => :b1, :c => :c1, :a => :a2] = 0.5
     nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
     @test length(nodes) == 100
 
     node_b = DiscreteNode(:b)
-    node_b[:b=>:b1] = 0.4
-    node_b[:b=>:b2] = 0.3
-    node_b[:b=>:b3] = 0.3
+    node_b[:b => :b1] = 0.4
+    node_b[:b => :b2] = 0.3
+    node_b[:b => :b3] = 0.3
     @test EnhancedBayesianNetworks._extreme_nodes(node_b) == [node_b]
 end
 
 @testitem "DiscreteNode - Sampling" begin
     # --- root node, deterministic marginal ---
     node_v = DiscreteNode(:v)
-    node_v[:v=>:yes] = 1.0
-    node_v[:v=>:no] = 0.0
+    node_v[:v => :yes] = 1.0
+    node_v[:v => :no] = 0.0
     @test all(sample(node_v, Evidence()) == :yes for _ in 1:100)
     # clamping: node's own state in evidence is returned directly, bypassing the CPT
     @test sample(node_v, Evidence(:v => :no)) == :no
 
     # --- root node, random 50/50: result must be a valid state ---
     node_r = DiscreteNode(:r)
-    node_r[:r=>:r1] = 0.5
-    node_r[:r=>:r2] = 0.5
+    node_r[:r => :r1] = 0.5
+    node_r[:r => :r2] = 0.5
     @test all(sample(node_r, Evidence()) ∈ [:r1, :r2] for _ in 1:100)
 
     # --- child node, deterministic conditional ---
     node_c = DiscreteNode(:c, [:v])
-    node_c[:v=>:yes, :c=>:c1] = 1.0
-    node_c[:v=>:yes, :c=>:c2] = 0.0
-    node_c[:v=>:no, :c=>:c1] = 0.0
-    node_c[:v=>:no, :c=>:c2] = 1.0
+    node_c[:v => :yes, :c => :c1] = 1.0
+    node_c[:v => :yes, :c => :c2] = 0.0
+    node_c[:v => :no, :c => :c1] = 0.0
+    node_c[:v => :no, :c => :c2] = 1.0
     @test sample(node_c, Evidence(:v => :yes)) == :c1
     @test sample(node_c, Evidence(:v => :no)) == :c2
 
@@ -208,8 +208,8 @@ end
     # --- errors ---
     # imprecise node cannot be sampled
     node_i = DiscreteNode(:i)
-    node_i[:i=>:i1] = Interval(0.2, 0.4)
-    node_i[:i=>:i2] = Interval(0.6, 0.8)
+    node_i[:i => :i1] = Interval(0.2, 0.4)
+    node_i[:i => :i2] = Interval(0.6, 0.8)
     @test_throws ErrorException("Sampling Error: cannot sample from imprecise node :i") sample(node_i, Evidence())
     # ...but an imprecise node can still be clamped (clamp precedes the precision check)
     @test sample(node_i, Evidence(:i => :i1)) == :i1

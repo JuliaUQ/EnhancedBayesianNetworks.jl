@@ -30,12 +30,12 @@ m = 0.8158           # kg/cm/s²  (unsprung mass)
 g = 981              # cm/s²     (gravity)
 
 A = DiscreteNode(:A, [:road => [Parameter(0.15915, :A)], :offroad => [Parameter(0.8, :A)]])  # A in rad·cm²/m
-A[:A=>:road] = 0.7
-A[:A=>:offroad] = 0.3
+A[:A => :road] = 0.7
+A[:A => :offroad] = 0.3
 
 b₀ = DiscreteNode(:b₀, [:normal_load => [Parameter(0.27, :b₀)], :over_load => [Parameter(0.5, :b₀)]])
-b₀[:b₀=>:normal_load] = 0.7
-b₀[:b₀=>:over_load] = 0.3
+b₀[:b₀ => :normal_load] = 0.7
+b₀[:b₀ => :over_load] = 0.3
 
 C = ContinuousNode(:C, Normal(431.7221, 10))     # kg/cm    (suspension stiffness)
 Cₖ = ContinuousNode(:Cₖ, Normal(1475.5503, 10))   # kg/cm    (tire stiffness)
@@ -68,8 +68,8 @@ v_offroad = Interval(6, 8)     # m/s
 # upper failure probability per scenario.
 
 V = ContinuousNode(:V, [:A])
-V[:A=>:road] = v_road
-V[:A=>:offroad] = v_offroad
+V[:A => :road] = v_road
+V[:A => :offroad] = v_offroad
 
 E = DiscreteFunctionalNode(:E, [model], performance, DoubleLoop(MonteCarlo(10^3)))
 
@@ -78,12 +78,12 @@ add_child!(ebn, A, V)
 add_child!(ebn, [A, b₀, V, C, Cₖ, K], E)
 order!(ebn)
 
-gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
+gplot(ebn, background_color = "white", legend = true, label_size = 10, legend_x = 15, legend_y = 14)
 
 #-
 
 elapsed = @elapsed cn = reduce(ebn)
-println("network reduced in ", round(elapsed; digits=3), " s")
+println("network reduced in ", round(elapsed; digits = 3), " s")
 
 # The failure node's table now carries intervals — the bounds on the collapse
 # probability for each road/load scenario:
@@ -92,7 +92,7 @@ cn.nodes[findfirst(n -> n.name == :E, cn.nodes)].cpt.data
 
 #-
 
-gplot(cn, background_color="white", node_scale=1.1, title="Reduced Credal Network", label_size=12)
+gplot(cn, background_color = "white", node_scale = 1.1, title = "Reduced Credal Network", label_size = 12)
 
 
 # ## Case 2 — imprecise `V`, discretized, feeding a discrete functional node: single-loop
@@ -106,8 +106,8 @@ gplot(cn, background_color="white", node_scale=1.1, title="Reduced Credal Networ
 discretization_v = ApproximatedDiscretization([6.0, 8.0, 10.0, 13.0], 2)  # edges in m/s
 
 V = ContinuousNode(:V, [:A], discretization_v)
-V[:A=>:road] = v_road
-V[:A=>:offroad] = v_offroad
+V[:A => :road] = v_road
+V[:A => :offroad] = v_offroad
 
 E = DiscreteFunctionalNode(:E, [model], performance, DoubleLoop(MonteCarlo(10^6)))
 
@@ -116,7 +116,7 @@ add_child!(ebn, A, V)
 add_child!(ebn, [A, b₀, V, C, Cₖ, K], E)
 order!(ebn)
 
-gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
+gplot(ebn, background_color = "white", legend = true, label_size = 10, legend_x = 15, legend_y = 14)
 
 #-
 
@@ -141,8 +141,8 @@ end
 # `CredalNetwork`:
 
 V = ContinuousNode(:V, [:A], discretization_v)
-V[:A=>:road] = v_road
-V[:A=>:offroad] = v_offroad
+V[:A => :road] = v_road
+V[:A => :offroad] = v_offroad
 
 E = DiscreteFunctionalNode(:E, [model], performance, MonteCarlo(10^6))
 
@@ -152,11 +152,11 @@ add_child!(ebn, [A, b₀, V, C, Cₖ, K], E)
 order!(ebn)
 
 elapsed = @elapsed cn = reduce(ebn)
-println("network reduced in ", round(elapsed; digits=3), " s")
+println("network reduced in ", round(elapsed; digits = 3), " s")
 
 #-
 
-gplot(cn, background_color="white", node_scale=1.1, title="Reduced Credal Network", label_size=12)
+gplot(cn, background_color = "white", node_scale = 1.1, title = "Reduced Credal Network", label_size = 12)
 
 # ## Case 3 — imprecise `V`, no discretization, feeding a continuous functional node: MonteCarlo
 #
@@ -169,8 +169,8 @@ gplot(cn, background_color="white", node_scale=1.1, title="Reduced Credal Networ
 # continuous counterpart of Case 1.
 
 V = ContinuousNode(:V, [:A])
-V[:A=>:road] = v_road
-V[:A=>:offroad] = v_offroad
+V[:A => :road] = v_road
+V[:A => :offroad] = v_offroad
 
 E = ContinuousFunctionalNode(:E, [model], MonteCarlo(10^6))
 
@@ -179,16 +179,16 @@ add_child!(ebn, A, V)
 add_child!(ebn, [A, b₀, V, C, Cₖ, K], E)
 order!(ebn)
 
-gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
+gplot(ebn, background_color = "white", legend = true, label_size = 10, legend_x = 15, legend_y = 14)
 
 #-
 
 elapsed = @elapsed cn = reduce(ebn)
-println("network reduced in ", round(elapsed; digits=3), " s")
+println("network reduced in ", round(elapsed; digits = 3), " s")
 
 #-
 
-gplot(cn, background_color="white", node_scale=1.1, title="Reduced Credal Network", label_size=12)
+gplot(cn, background_color = "white", node_scale = 1.1, title = "Reduced Credal Network", label_size = 12)
 
 # The failure node is now a continuous node whose entries are `:lb`/`:ub`
 # `EmpiricalDistribution` pairs — the reconstructed p-box:
@@ -205,8 +205,8 @@ cn.nodes[findfirst(n -> n.name == :E, cn.nodes)].cpt.data
 # needed, and the imprecision survives in `V_d`.
 
 V = ContinuousNode(:V, [:A], discretization_v)
-V[:A=>:road] = v_road
-V[:A=>:offroad] = v_offroad
+V[:A => :road] = v_road
+V[:A => :offroad] = v_offroad
 
 E = ContinuousFunctionalNode(:E, [model], MonteCarlo(500))
 
@@ -215,16 +215,16 @@ add_child!(ebn, A, V)
 add_child!(ebn, [A, b₀, V, C, Cₖ, K], E)
 order!(ebn)
 
-gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
+gplot(ebn, background_color = "white", legend = true, label_size = 10, legend_x = 15, legend_y = 14)
 
 #-
 
 elapsed = @elapsed cn = reduce(ebn)
-println("network reduced in ", round(elapsed; digits=3), " s")
+println("network reduced in ", round(elapsed; digits = 3), " s")
 
 #-
 
-gplot(cn, background_color="white", node_scale=1.1, title="Reduced Credal Network", label_size=12)
+gplot(cn, background_color = "white", node_scale = 1.1, title = "Reduced Credal Network", label_size = 12)
 
 # Unlike Case 3, `E` is now a single precise distribution; the imprecision instead
 # lives in the discretized node `V_d`, whose bin probabilities are intervals:

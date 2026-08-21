@@ -15,7 +15,7 @@ end
 
 @testitem "Gplot - Build edges" setup = [ExtraDeps, SetupPlotNet] begin
     lines, arrows = _build_edges(
-        Tuple{Int,Int}[],
+        Tuple{Int, Int}[],
         Float64[],
         Float64[],
         AbstractNode[],

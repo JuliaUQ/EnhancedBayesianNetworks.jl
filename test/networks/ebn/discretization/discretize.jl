@@ -1,4 +1,3 @@
-
 @testitem "Format Intervals" begin
     discretization = ExactDiscretization([-10, 0, 10])
     root = ContinuousNode(:z1, discretization)
@@ -40,7 +39,7 @@
         exp1,
         Uniform(-1, 0),
         Uniform(0.0, 1.0),
-        exp2
+        exp2,
     ]
     @test approx == EnhancedBayesianNetworks._approximate.(intervals, λ)
 end
@@ -50,7 +49,7 @@ end
     dist = Normal()
     probs = map(i -> EnhancedBayesianNetworks._discretize(dist, i), intervals)
     check = [0.15865525393145702, 0.341344746068543, 0.34134474606854304, 0.15865525393145696]
-    @test all(isapprox.(probs, check, atol=0.001))
+    @test all(isapprox.(probs, check, atol = 0.001))
 
     dist = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
     probs = map(i -> EnhancedBayesianNetworks._discretize(dist, i), intervals)
@@ -98,16 +97,16 @@ end
     @test isnothing(discretized_node.results)
     @test Symbol.(names(discretized_node.cpt.data)) == [:x_d, :Π]
     @test discretized_node.cpt.data.x_d == discretized_states
-    @test isapprox([discretized_node[discretized_node.name.=>i] for i in discretized_states], [0.15865525393145702, 0.341344746068543, 0.34134474606854304, 0.15865525393145696], atol=0.001)
+    @test isapprox([discretized_node[discretized_node.name .=> i] for i in discretized_states], [0.15865525393145702, 0.341344746068543, 0.34134474606854304, 0.15865525393145696], atol = 0.001)
     @test new_continuous.name == node.name
     @test isempty(new_continuous.discretization)
     @test Symbol.(names(new_continuous.cpt.data)) == [:x_d, :Π]
     @test new_continuous.cpt.data.x_d == discretized_states
     @test new_continuous.cpt.data.Π == [
-        truncated(Normal(); lower=-Inf, upper=-1.0),
-        truncated(Normal(); lower=-1.0, upper=0.0),
-        truncated(Normal(); lower=0.0, upper=1.0),
-        truncated(Normal(); lower=1.0, upper=Inf)
+        truncated(Normal(); lower = -Inf, upper = -1.0),
+        truncated(Normal(); lower = -1.0, upper = 0.0),
+        truncated(Normal(); lower = 0.0, upper = 1.0),
+        truncated(Normal(); lower = 1.0, upper = Inf),
     ]
 
     node = ContinuousNode(:x, discretization)
@@ -119,11 +118,11 @@ end
     @test isnothing(discretized_node.results)
     @test Symbol.(names(discretized_node.cpt.data)) == [:x_d, :Π]
     @test discretized_node.cpt.data.x_d == discretized_states
-    @test [discretized_node[discretized_node.name.=>i] for i in discretized_states] == [
+    @test [discretized_node[discretized_node.name .=> i] for i in discretized_states] == [
         Interval(0.022750131948179205, 0.15865525393145702),
         Interval(0.1359051219832778, 0.341344746068543),
         Interval(0.341344746068543, 0.34134474606854304),
-        Interval(0.15865525393145696, 0.5)
+        Interval(0.15865525393145696, 0.5),
     ]
     @test new_continuous.name == node.name
     @test isempty(new_continuous.discretization)
@@ -133,7 +132,7 @@ end
         Dict(:μ => Interval(0, 1), :σ => 1),
         Dict(:μ => Interval(0, 1), :σ => 1),
         Dict(:μ => Interval(0, 1), :σ => 1),
-        Dict(:μ => Interval(0, 1), :σ => 1)
+        Dict(:μ => Interval(0, 1), :σ => 1),
     ]
     @test [new_continuous.cpt.data.Π[i].lb for i in range(1, 4)] == [-Inf, -1.0, 0.0, 1.0]
     @test [new_continuous.cpt.data.Π[i].ub for i in range(1, 4)] == [-1.0, 0.0, 1.0, Inf]
@@ -141,10 +140,10 @@ end
     ## Child Nodes
     discretization = ApproximatedDiscretization([-1, 0, 1], 2)
     node = ContinuousNode(:x, [:y, :z], discretization)
-    node[:y=>:y1, :z=>:z1] = Normal()
-    node[:y=>:y1, :z=>:z2] = Normal(2, 2)
-    node[:y=>:y2, :z=>:z1] = Interval(0, 3)
-    node[:y=>:y2, :z=>:z2] = Normal(4, 4)
+    node[:y => :y1, :z => :z1] = Normal()
+    node[:y => :y1, :z => :z2] = Normal(2, 2)
+    node[:y => :y2, :z => :z1] = Interval(0, 3)
+    node[:y => :y2, :z => :z2] = Normal(4, 4)
     discretized_states = [Symbol("[-Inf, -1.0]"), Symbol("[-1.0, 0.0]"), Symbol("[0.0, 1.0]"), Symbol("[1.0, Inf]")]
     discretized_node, new_continuous = @suppress EnhancedBayesianNetworks._discretize(node)
     @test discretized_node.name == Symbol(string(node.name) * "_d")
@@ -168,7 +167,7 @@ end
         0.15865525393145696,
         0.6914624612740131,
         Interval(0, 1),
-        0.7733726476231318
+        0.7733726476231318,
     ]
 
     @test new_continuous.name == node.name

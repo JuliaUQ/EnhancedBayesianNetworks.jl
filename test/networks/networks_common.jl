@@ -6,78 +6,78 @@
     grass2 = DiscreteFunctionalNode(:G2, model, performance, simulation)
 
     grass_incomplete = DiscreteNode(:G, [:S, :R])
-    grass_incomplete[:R=>:yes, :S=>:on, :G=>:dry] = 0
-    grass_incomplete[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass_incomplete[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass_incomplete[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass_incomplete[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass_incomplete[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass_incomplete[:R=>:no, :S=>:off, :G=>:wet] = 0
+    grass_incomplete[:R => :yes, :S => :on, :G => :dry] = 0
+    grass_incomplete[:R => :yes, :S => :off, :G => :dry] = 0.05
+    grass_incomplete[:R => :yes, :S => :off, :G => :wet] = 0.95
+    grass_incomplete[:R => :no, :S => :on, :G => :dry] = 0.05
+    grass_incomplete[:R => :no, :S => :on, :G => :wet] = 0.95
+    grass_incomplete[:R => :no, :S => :off, :G => :dry] = 1
+    grass_incomplete[:R => :no, :S => :off, :G => :wet] = 0
 
     grass_not_mutually_exclusive = DiscreteNode(:G, [:S, :R])
-    grass_not_mutually_exclusive[:R=>:yes, :S=>:on, :G=>:dry] = 0.3
-    grass_not_mutually_exclusive[:R=>:yes, :S=>:on, :G=>:wet] = 0.999
-    grass_not_mutually_exclusive[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass_not_mutually_exclusive[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass_not_mutually_exclusive[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass_not_mutually_exclusive[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass_not_mutually_exclusive[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass_not_mutually_exclusive[:R=>:no, :S=>:off, :G=>:wet] = 0
+    grass_not_mutually_exclusive[:R => :yes, :S => :on, :G => :dry] = 0.3
+    grass_not_mutually_exclusive[:R => :yes, :S => :on, :G => :wet] = 0.999
+    grass_not_mutually_exclusive[:R => :yes, :S => :off, :G => :dry] = 0.05
+    grass_not_mutually_exclusive[:R => :yes, :S => :off, :G => :wet] = 0.95
+    grass_not_mutually_exclusive[:R => :no, :S => :on, :G => :dry] = 0.05
+    grass_not_mutually_exclusive[:R => :no, :S => :on, :G => :wet] = 0.95
+    grass_not_mutually_exclusive[:R => :no, :S => :off, :G => :dry] = 1
+    grass_not_mutually_exclusive[:R => :no, :S => :off, :G => :wet] = 0
 
     grass_ub = DiscreteNode(:G, [:S, :R])
-    grass_ub[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
-    grass_ub[:R=>:yes, :S=>:on, :G=>:wet] = Interval(0.2, 0.3)
-    grass_ub[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass_ub[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass_ub[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass_ub[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass_ub[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass_ub[:R=>:no, :S=>:off, :G=>:wet] = 0
+    grass_ub[:R => :yes, :S => :on, :G => :dry] = Interval(0.3, 0.4)
+    grass_ub[:R => :yes, :S => :on, :G => :wet] = Interval(0.2, 0.3)
+    grass_ub[:R => :yes, :S => :off, :G => :dry] = 0.05
+    grass_ub[:R => :yes, :S => :off, :G => :wet] = 0.95
+    grass_ub[:R => :no, :S => :on, :G => :dry] = 0.05
+    grass_ub[:R => :no, :S => :on, :G => :wet] = 0.95
+    grass_ub[:R => :no, :S => :off, :G => :dry] = 1
+    grass_ub[:R => :no, :S => :off, :G => :wet] = 0
 
     grass_ub2 = DiscreteNode(:G, [:S, :R])
-    grass_ub2[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
-    grass_ub2[:R=>:yes, :S=>:on, :G=>:wet] = 0.2
-    grass_ub2[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass_ub2[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass_ub2[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass_ub2[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass_ub2[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass_ub2[:R=>:no, :S=>:off, :G=>:wet] = 0
+    grass_ub2[:R => :yes, :S => :on, :G => :dry] = Interval(0.3, 0.4)
+    grass_ub2[:R => :yes, :S => :on, :G => :wet] = 0.2
+    grass_ub2[:R => :yes, :S => :off, :G => :dry] = 0.05
+    grass_ub2[:R => :yes, :S => :off, :G => :wet] = 0.95
+    grass_ub2[:R => :no, :S => :on, :G => :dry] = 0.05
+    grass_ub2[:R => :no, :S => :on, :G => :wet] = 0.95
+    grass_ub2[:R => :no, :S => :off, :G => :dry] = 1
+    grass_ub2[:R => :no, :S => :off, :G => :wet] = 0
 
     grass_lb = DiscreteNode(:G, [:S, :R])
-    grass_lb[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
-    grass_lb[:R=>:yes, :S=>:on, :G=>:wet] = Interval(0.8, 0.9)
-    grass_lb[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass_lb[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass_lb[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass_lb[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass_lb[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass_lb[:R=>:no, :S=>:off, :G=>:wet] = 0
+    grass_lb[:R => :yes, :S => :on, :G => :dry] = Interval(0.3, 0.4)
+    grass_lb[:R => :yes, :S => :on, :G => :wet] = Interval(0.8, 0.9)
+    grass_lb[:R => :yes, :S => :off, :G => :dry] = 0.05
+    grass_lb[:R => :yes, :S => :off, :G => :wet] = 0.95
+    grass_lb[:R => :no, :S => :on, :G => :dry] = 0.05
+    grass_lb[:R => :no, :S => :on, :G => :wet] = 0.95
+    grass_lb[:R => :no, :S => :off, :G => :dry] = 1
+    grass_lb[:R => :no, :S => :off, :G => :wet] = 0
 
     grass_lb2 = DiscreteNode(:G, [:S, :R])
-    grass_lb2[:R=>:yes, :S=>:on, :G=>:dry] = Interval(0.3, 0.4)
-    grass_lb2[:R=>:yes, :S=>:on, :G=>:wet] = 0.8
-    grass_lb2[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass_lb2[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass_lb2[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass_lb2[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass_lb2[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass_lb2[:R=>:no, :S=>:off, :G=>:wet] = 0
+    grass_lb2[:R => :yes, :S => :on, :G => :dry] = Interval(0.3, 0.4)
+    grass_lb2[:R => :yes, :S => :on, :G => :wet] = 0.8
+    grass_lb2[:R => :yes, :S => :off, :G => :dry] = 0.05
+    grass_lb2[:R => :yes, :S => :off, :G => :wet] = 0.95
+    grass_lb2[:R => :no, :S => :on, :G => :dry] = 0.05
+    grass_lb2[:R => :no, :S => :on, :G => :wet] = 0.95
+    grass_lb2[:R => :no, :S => :off, :G => :dry] = 1
+    grass_lb2[:R => :no, :S => :off, :G => :wet] = 0
 
 end
 
-@testitem "Networks Common - cyclicality & connection" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+@testitem "Networks Common - cyclicality & connection" setup = [SetupSprinklereBN, SetupCommonNetTest] begin
     ## BN
     A = DiscreteNode(:A, [:B])
-    A[:B=>:b1, :A=>:a1] = 0.05
-    A[:B=>:b1, :A=>:a2] = 0.95
-    A[:B=>:b2, :A=>:a1] = 0.7
-    A[:B=>:b2, :A=>:a2] = 0.3
+    A[:B => :b1, :A => :a1] = 0.05
+    A[:B => :b1, :A => :a2] = 0.95
+    A[:B => :b2, :A => :a1] = 0.7
+    A[:B => :b2, :A => :a2] = 0.3
     B = DiscreteNode(:B, [:A])
-    B[:B=>:b1, :A=>:a1] = 0.05
-    B[:B=>:b1, :A=>:a2] = 0.95
-    B[:B=>:b2, :A=>:a1] = 0.7
-    B[:B=>:b2, :A=>:a2] = 0.3
+    B[:B => :b1, :A => :a1] = 0.05
+    B[:B => :b1, :A => :a2] = 0.95
+    B[:B => :b2, :A => :a1] = 0.7
+    B[:B => :b2, :A => :a2] = 0.3
     net = BayesianNetwork([A, B, weather])
     add_child!(net, A, B)
     add_child!(net, B, A)
@@ -93,10 +93,10 @@ end
 
     ## CN
     B = DiscreteNode(:B, [:A])
-    B[:B=>:b1, :A=>:a1] = Interval(0.05, 0.1)
-    B[:B=>:b1, :A=>:a2] = Interval(0.6, 0.95)
-    B[:B=>:b2, :A=>:a1] = 0.7
-    B[:B=>:b2, :A=>:a2] = 0.3
+    B[:B => :b1, :A => :a1] = Interval(0.05, 0.1)
+    B[:B => :b1, :A => :a2] = Interval(0.6, 0.95)
+    B[:B => :b2, :A => :a1] = 0.7
+    B[:B => :b2, :A => :a2] = 0.3
     net = CredalNetwork([A, B, weather])
     add_child!(net, A, B)
     add_child!(net, B, A)
@@ -104,7 +104,7 @@ end
     @test !EnhancedBayesianNetworks._isconnected(net)
 end
 
-@testitem "Networks Common - parents, children and ancestors" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+@testitem "Networks Common - parents, children and ancestors" setup = [SetupSprinklereBN, SetupCommonNetTest] begin
     ## BN
     nodes = [weather, grass, rain, sprinkler]
     net = BayesianNetwork(nodes)
@@ -121,8 +121,8 @@ end
 
     ## CN
     weather = DiscreteNode(:W)
-    weather[:W=>:sunny] = Interval(0.4, 0.6)
-    weather[:W=>:cloudy] = Interval(0.4, 0.6)
+    weather[:W => :sunny] = Interval(0.4, 0.6)
+    weather[:W => :cloudy] = Interval(0.4, 0.6)
 
     nodes = [weather, grass, rain, sprinkler]
     net = CredalNetwork(nodes)
@@ -155,8 +155,8 @@ end
     @test issetequal(discrete_ancestors(net, :G), [:R, :S])
 
     rain2 = ContinuousNode(:Rc, [:W])
-    rain2[:W=>:sunny] = Normal()
-    rain2[:W=>:cloudy] = Normal()
+    rain2[:W => :sunny] = Normal()
+    rain2[:W => :cloudy] = Normal()
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain, rain2])
@@ -166,7 +166,7 @@ end
     @test issetequal(discrete_ancestors(net, :G2), [:W, :S])
 end
 
-@testitem "Networks Common - verify BN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+@testitem "Networks Common - verify BN" setup = [SetupSprinklereBN, SetupCommonNetTest] begin
     nodes = [weather, grass, rain, sprinkler]
     net = BayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -193,16 +193,16 @@ end
     @test_throws ErrorException("Invalid CPT: node :G has CPT values [0.3, 0.999] not exhaustive and mutually exclusive for the scenario [:R => :yes, :S => :on]") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_not_mutually_exclusive)
 
     bad_root = DiscreteNode(:W)
-    bad_root[:W=>:sunny] = 0.5
-    bad_root[:W=>:cloudy] = 0.6
+    bad_root[:W => :sunny] = 0.5
+    bad_root[:W => :cloudy] = 0.6
     net = BayesianNetwork([bad_root])
     @test_throws ErrorException("Invalid CPT: node :W has CPT values [0.5, 0.6] not exhaustive and mutually exclusive for the scenario Any[]") EnhancedBayesianNetworks._verify_exhaustiveness(net, bad_root)
 end
 
-@testitem "Networks Common - verify CN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+@testitem "Networks Common - verify CN" setup = [SetupSprinklereBN, SetupCommonNetTest] begin
     weather = DiscreteNode(:W)
-    weather[:W=>:sunny] = Interval(0.4, 0.6)
-    weather[:W=>:cloudy] = Interval(0.4, 0.6)
+    weather[:W => :sunny] = Interval(0.4, 0.6)
+    weather[:W => :cloudy] = Interval(0.4, 0.6)
     nodes = [weather, grass, rain, sprinkler]
     net = CredalNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -253,7 +253,7 @@ end
     @test_throws ErrorException("Invalid CPT: node :G has CPT values [[0.3, 0.4], 0.8] for the scenario [:R => :yes, :S => :on], the sum of lower bound values must be less than 1") EnhancedBayesianNetworks._verify_exhaustiveness(net, grass_lb2)
 end
 
-@testitem "Networks Common - verify eBN" setup=[SetupSprinklereBN, SetupCommonNetTest] begin
+@testitem "Networks Common - verify eBN" setup = [SetupSprinklereBN, SetupCommonNetTest] begin
     nodes = [weather, grass, rain, sprinkler, rain2, grass2]
     net = EnhancedBayesianNetwork(nodes)
     add_child!(net, weather, [sprinkler, rain])
@@ -310,86 +310,86 @@ end
 
 @testitem "Networks Common - Markov Blanket" begin
     x1 = DiscreteNode(:x1)
-    x1[:x1=>:x1y] = 0.5
-    x1[:x1=>:x1n] = 0.5
+    x1[:x1 => :x1y] = 0.5
+    x1[:x1 => :x1n] = 0.5
 
     x2 = DiscreteNode(:x2)
-    x2[:x2=>:x2y] = 0.5
-    x2[:x2=>:x2n] = 0.5
+    x2[:x2 => :x2y] = 0.5
+    x2[:x2 => :x2n] = 0.5
 
     x4 = DiscreteNode(:x4)
-    x4[:x4=>:x4y] = 0.5
-    x4[:x4=>:x4n] = 0.5
+    x4[:x4 => :x4y] = 0.5
+    x4[:x4 => :x4n] = 0.5
 
     x8 = DiscreteNode(:x8)
-    x8[:x8=>:x8y] = 0.5
-    x8[:x8=>:x8n] = 0.5
+    x8[:x8 => :x8y] = 0.5
+    x8[:x8 => :x8n] = 0.5
 
     x3 = DiscreteNode(:x3, [:x1])
-    x3[:x1=>:x1y, :x3=>:x3y] = 0.5
-    x3[:x1=>:x1y, :x3=>:x3n] = 0.5
-    x3[:x1=>:x1n, :x3=>:x3y] = 0.5
-    x3[:x1=>:x1n, :x3=>:x3n] = 0.5
+    x3[:x1 => :x1y, :x3 => :x3y] = 0.5
+    x3[:x1 => :x1y, :x3 => :x3n] = 0.5
+    x3[:x1 => :x1n, :x3 => :x3y] = 0.5
+    x3[:x1 => :x1n, :x3 => :x3n] = 0.5
 
     x5 = DiscreteNode(:x5, [:x2])
-    x5[:x2=>:x2y, :x5=>:x5y] = 0.5
-    x5[:x2=>:x2y, :x5=>:x5n] = 0.5
-    x5[:x2=>:x2n, :x5=>:x5y] = 0.5
-    x5[:x2=>:x2n, :x5=>:x5n] = 0.5
+    x5[:x2 => :x2y, :x5 => :x5y] = 0.5
+    x5[:x2 => :x2y, :x5 => :x5n] = 0.5
+    x5[:x2 => :x2n, :x5 => :x5y] = 0.5
+    x5[:x2 => :x2n, :x5 => :x5n] = 0.5
 
     x7 = DiscreteNode(:x7, [:x4])
-    x7[:x4=>:x4y, :x7=>:x7y] = 0.5
-    x7[:x4=>:x4y, :x7=>:x7n] = 0.5
-    x7[:x4=>:x4n, :x7=>:x7y] = 0.5
-    x7[:x4=>:x4n, :x7=>:x7n] = 0.5
+    x7[:x4 => :x4y, :x7 => :x7y] = 0.5
+    x7[:x4 => :x4y, :x7 => :x7n] = 0.5
+    x7[:x4 => :x4n, :x7 => :x7y] = 0.5
+    x7[:x4 => :x4n, :x7 => :x7n] = 0.5
 
     x11 = DiscreteNode(:x11, [:x8])
-    x11[:x8=>:x8y, :x11=>:x11y] = 0.5
-    x11[:x8=>:x8y, :x11=>:x11n] = 0.5
-    x11[:x8=>:x8n, :x11=>:x11y] = 0.5
-    x11[:x8=>:x8n, :x11=>:x11n] = 0.5
+    x11[:x8 => :x8y, :x11 => :x11y] = 0.5
+    x11[:x8 => :x8y, :x11 => :x11n] = 0.5
+    x11[:x8 => :x8n, :x11 => :x11y] = 0.5
+    x11[:x8 => :x8n, :x11 => :x11n] = 0.5
 
     x6 = DiscreteNode(:x6, [:x3, :x4])
-    x6[:x3=>:x3y, :x4=>:x4y, :x6=>:x6y] = 0.5
-    x6[:x3=>:x3y, :x4=>:x4y, :x6=>:x6n] = 0.5
-    x6[:x3=>:x3y, :x4=>:x4n, :x6=>:x6y] = 0.5
-    x6[:x3=>:x3y, :x4=>:x4n, :x6=>:x6n] = 0.5
-    x6[:x3=>:x3n, :x4=>:x4y, :x6=>:x6y] = 0.5
-    x6[:x3=>:x3n, :x4=>:x4y, :x6=>:x6n] = 0.5
-    x6[:x3=>:x3n, :x4=>:x4n, :x6=>:x6y] = 0.5
-    x6[:x3=>:x3n, :x4=>:x4n, :x6=>:x6n] = 0.5
+    x6[:x3 => :x3y, :x4 => :x4y, :x6 => :x6y] = 0.5
+    x6[:x3 => :x3y, :x4 => :x4y, :x6 => :x6n] = 0.5
+    x6[:x3 => :x3y, :x4 => :x4n, :x6 => :x6y] = 0.5
+    x6[:x3 => :x3y, :x4 => :x4n, :x6 => :x6n] = 0.5
+    x6[:x3 => :x3n, :x4 => :x4y, :x6 => :x6y] = 0.5
+    x6[:x3 => :x3n, :x4 => :x4y, :x6 => :x6n] = 0.5
+    x6[:x3 => :x3n, :x4 => :x4n, :x6 => :x6y] = 0.5
+    x6[:x3 => :x3n, :x4 => :x4n, :x6 => :x6n] = 0.5
 
     x9 = DiscreteNode(:x9, [:x5, :x6])
-    x9[:x5=>:x5y, :x6=>:x6y, :x9=>:x9y] = 0.5
-    x9[:x5=>:x5y, :x6=>:x6y, :x9=>:x9n] = 0.5
-    x9[:x5=>:x5y, :x6=>:x6n, :x9=>:x9y] = 0.5
-    x9[:x5=>:x5y, :x6=>:x6n, :x9=>:x9n] = 0.5
-    x9[:x5=>:x5n, :x6=>:x6y, :x9=>:x9y] = 0.5
-    x9[:x5=>:x5n, :x6=>:x6y, :x9=>:x9n] = 0.5
-    x9[:x5=>:x5n, :x6=>:x6n, :x9=>:x9y] = 0.5
-    x9[:x5=>:x5n, :x6=>:x6n, :x9=>:x9n] = 0.5
+    x9[:x5 => :x5y, :x6 => :x6y, :x9 => :x9y] = 0.5
+    x9[:x5 => :x5y, :x6 => :x6y, :x9 => :x9n] = 0.5
+    x9[:x5 => :x5y, :x6 => :x6n, :x9 => :x9y] = 0.5
+    x9[:x5 => :x5y, :x6 => :x6n, :x9 => :x9n] = 0.5
+    x9[:x5 => :x5n, :x6 => :x6y, :x9 => :x9y] = 0.5
+    x9[:x5 => :x5n, :x6 => :x6y, :x9 => :x9n] = 0.5
+    x9[:x5 => :x5n, :x6 => :x6n, :x9 => :x9y] = 0.5
+    x9[:x5 => :x5n, :x6 => :x6n, :x9 => :x9n] = 0.5
 
     x10 = DiscreteNode(:x10, [:x8, :x6])
-    x10[:x8=>:x8y, :x6=>:x6y, :x10=>:x10y] = 0.5
-    x10[:x8=>:x8y, :x6=>:x6y, :x10=>:x10n] = 0.5
-    x10[:x8=>:x8y, :x6=>:x6n, :x10=>:x10y] = 0.5
-    x10[:x8=>:x8y, :x6=>:x6n, :x10=>:x10n] = 0.5
-    x10[:x8=>:x8n, :x6=>:x6y, :x10=>:x10y] = 0.5
-    x10[:x8=>:x8n, :x6=>:x6y, :x10=>:x10n] = 0.5
-    x10[:x8=>:x8n, :x6=>:x6n, :x10=>:x10y] = 0.5
-    x10[:x8=>:x8n, :x6=>:x6n, :x10=>:x10n] = 0.5
+    x10[:x8 => :x8y, :x6 => :x6y, :x10 => :x10y] = 0.5
+    x10[:x8 => :x8y, :x6 => :x6y, :x10 => :x10n] = 0.5
+    x10[:x8 => :x8y, :x6 => :x6n, :x10 => :x10y] = 0.5
+    x10[:x8 => :x8y, :x6 => :x6n, :x10 => :x10n] = 0.5
+    x10[:x8 => :x8n, :x6 => :x6y, :x10 => :x10y] = 0.5
+    x10[:x8 => :x8n, :x6 => :x6y, :x10 => :x10n] = 0.5
+    x10[:x8 => :x8n, :x6 => :x6n, :x10 => :x10y] = 0.5
+    x10[:x8 => :x8n, :x6 => :x6n, :x10 => :x10n] = 0.5
 
     x12 = DiscreteNode(:x12, [:x9])
-    x12[:x9=>:x9y, :x12=>:x12y] = 0.5
-    x12[:x9=>:x9y, :x12=>:x12n] = 0.5
-    x12[:x9=>:x9n, :x12=>:x12y] = 0.5
-    x12[:x9=>:x9n, :x12=>:x12n] = 0.5
+    x12[:x9 => :x9y, :x12 => :x12y] = 0.5
+    x12[:x9 => :x9y, :x12 => :x12n] = 0.5
+    x12[:x9 => :x9n, :x12 => :x12y] = 0.5
+    x12[:x9 => :x9n, :x12 => :x12n] = 0.5
 
     x13 = DiscreteNode(:x13, [:x10])
-    x13[:x10=>:x10y, :x13=>:x13y] = 0.5
-    x13[:x10=>:x10y, :x13=>:x13n] = 0.5
-    x13[:x10=>:x10n, :x13=>:x13y] = 0.5
-    x13[:x10=>:x10n, :x13=>:x13n] = 0.5
+    x13[:x10 => :x10y, :x13 => :x13y] = 0.5
+    x13[:x10 => :x10y, :x13 => :x13n] = 0.5
+    x13[:x10 => :x10n, :x13 => :x13y] = 0.5
+    x13[:x10 => :x10n, :x13 => :x13n] = 0.5
 
     ## BN
     nodes = [x1, x2, x4, x8, x5, x7, x11, x3, x6, x9, x10, x12, x13]
@@ -412,8 +412,8 @@ end
 
     ## CN
     x1 = DiscreteNode(:x1)
-    x1[:x1=>:x1y] = Interval(0.4, 0.6)
-    x1[:x1=>:x1n] = Interval(0.4, 0.6)
+    x1[:x1 => :x1y] = Interval(0.4, 0.6)
+    x1[:x1 => :x1n] = Interval(0.4, 0.6)
     nodes = [x1, x2, x4, x8, x5, x7, x11, x3, x6, x9, x10, x12, x13]
     net = CredalNetwork(nodes)
     add_child!(net, :x1, :x3)
@@ -451,7 +451,7 @@ end
     @test issetequal(markov_blanket(net, x6), [:x3, :x4, :x5, :x8, :x9, :x10])
 end
 
-@testitem "Networks Common - add/remove node" setup=[ExtraDeps, SetupSprinklereBN, SetupCommonNetTest] begin
+@testitem "Networks Common - add/remove node" setup = [ExtraDeps, SetupSprinklereBN, SetupCommonNetTest] begin
     ## BN
     nodes = [weather, sprinkler, rain, grass]
     net = BayesianNetwork(nodes)
@@ -489,8 +489,8 @@ end
 
     ## CN
     weather = DiscreteNode(:W)
-    weather[:W=>:sunny] = Interval(0.4, 0.6)
-    weather[:W=>:cloudy] = Interval(0.4, 0.6)
+    weather[:W => :sunny] = Interval(0.4, 0.6)
+    weather[:W => :cloudy] = Interval(0.4, 0.6)
     nodes = [weather, sprinkler, rain, grass]
     net = CredalNetwork(nodes)
     add_child!(net, :W, :S)
@@ -555,29 +555,29 @@ end
     @test net4.topology == Dict(:W => 1, :R => 3, :S => 2, :G => 4)
 end
 
-@testitem "Networks Common - sorting functions" setup=[ExtraDeps] begin
+@testitem "Networks Common - sorting functions" setup = [ExtraDeps] begin
     A = DiscreteNode(:A, [:B])
-    A[:B=>:b1, :A=>:a1] = 0.05
-    A[:B=>:b1, :A=>:a2] = 0.95
-    A[:B=>:b2, :A=>:a1] = 0.7
-    A[:B=>:b2, :A=>:a2] = 0.3
+    A[:B => :b1, :A => :a1] = 0.05
+    A[:B => :b1, :A => :a2] = 0.95
+    A[:B => :b2, :A => :a1] = 0.7
+    A[:B => :b2, :A => :a2] = 0.3
     B = DiscreteNode(:B, [:A])
-    B[:B=>:b1, :A=>:a1] = 0.05
-    B[:B=>:b1, :A=>:a2] = 0.95
-    B[:B=>:b2, :A=>:a1] = 0.7
-    B[:B=>:b2, :A=>:a2] = 0.3
+    B[:B => :b1, :A => :a1] = 0.05
+    B[:B => :b1, :A => :a2] = 0.95
+    B[:B => :b2, :A => :a1] = 0.7
+    B[:B => :b2, :A => :a2] = 0.3
 
     C = DiscreteNode(:C)
-    C[:C=>:C1] = 0.1
-    C[:C=>:C2] = 0.9
+    C[:C => :C1] = 0.1
+    C[:C => :C2] = 0.9
     D = DiscreteNode(:D)
-    D[:D=>:D1] = 0.1
-    D[:D=>:D2] = 0.9
+    D[:D => :D1] = 0.1
+    D[:D => :D2] = 0.9
     E = DiscreteNode(:E, [:D])
-    E[:E=>:E1, :D=>:D1] = 0.05
-    E[:E=>:E1, :D=>:D2] = 0.95
-    E[:E=>:E2, :D=>:D1] = 0.7
-    E[:E=>:E2, :D=>:D2] = 0.3
+    E[:E => :E1, :D => :D1] = 0.05
+    E[:E => :E1, :D => :D2] = 0.95
+    E[:E => :E2, :D => :D1] = 0.7
+    E[:E => :E2, :D => :D2] = 0.3
 
     net = BayesianNetwork([A, B])
     add_child!(net, A, B)
@@ -589,14 +589,14 @@ end
 
     ## CN
     A = DiscreteNode(:A, [:B])
-    A[:B=>:b1, :A=>:a1] = Interval(0.05, 0.1)
-    A[:B=>:b1, :A=>:a2] = Interval(0.6, 0.95)
-    A[:B=>:b2, :A=>:a1] = 0.7
-    A[:B=>:b2, :A=>:a2] = 0.3
+    A[:B => :b1, :A => :a1] = Interval(0.05, 0.1)
+    A[:B => :b1, :A => :a2] = Interval(0.6, 0.95)
+    A[:B => :b2, :A => :a1] = 0.7
+    A[:B => :b2, :A => :a2] = 0.3
 
     C = DiscreteNode(:C)
-    C[:C=>:C1] = Interval(0.4, 0.6)
-    C[:C=>:C2] = Interval(0.4, 0.6)
+    C[:C => :C1] = Interval(0.4, 0.6)
+    C[:C => :C2] = Interval(0.4, 0.6)
 
     net = CredalNetwork([A, B])
     add_child!(net, A, B)
@@ -616,22 +616,22 @@ end
     @test_throws ErrorException("Invalid Network: network is not connected") order!(net)
 
     A = DiscreteNode(:A)
-    A[:A=>:a1] = 0.3
-    A[:A=>:a2] = 0.7
+    A[:A => :a1] = 0.3
+    A[:A => :a2] = 0.7
     B = DiscreteNode(:B)
-    B[:B=>:b1] = 0.3
-    B[:B=>:b2] = 0.7
+    B[:B => :b1] = 0.3
+    B[:B => :b2] = 0.7
     C = ContinuousNode(:C)
     C[] = Normal()
     D = DiscreteNode(:D, [:A, :B])
-    D[:A=>:a1, :B=>:b1, :D=>:d1] = 0.2
-    D[:A=>:a1, :B=>:b1, :D=>:d2] = 0.8
-    D[:A=>:a1, :B=>:b2, :D=>:d1] = 0.2
-    D[:A=>:a1, :B=>:b2, :D=>:d2] = 0.8
-    D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.2
-    D[:A=>:a2, :B=>:b1, :D=>:d2] = 0.8
-    D[:A=>:a2, :B=>:b2, :D=>:d1] = 0.2
-    D[:A=>:a2, :B=>:b2, :D=>:d2] = 0.8
+    D[:A => :a1, :B => :b1, :D => :d1] = 0.2
+    D[:A => :a1, :B => :b1, :D => :d2] = 0.8
+    D[:A => :a1, :B => :b2, :D => :d1] = 0.2
+    D[:A => :a1, :B => :b2, :D => :d2] = 0.8
+    D[:A => :a2, :B => :b1, :D => :d1] = 0.2
+    D[:A => :a2, :B => :b1, :D => :d2] = 0.8
+    D[:A => :a2, :B => :b2, :D => :d1] = 0.2
+    D[:A => :a2, :B => :b2, :D => :d2] = 0.8
     model = Model(df -> df.C .+ df.D, :E)
     performance = df -> df.E
     sim = MonteCarlo(100)
@@ -672,20 +672,20 @@ end
     add_child!(net, [A, D, C], E)
     @test_throws ErrorException("Invalid CPT: node :D has nodes [:A] defined in the CPT only, but they have not been added via add_child!") order!(net)
 
-    D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.1
+    D[:A => :a2, :B => :b1, :D => :d1] = 0.1
     net = EnhancedBayesianNetwork([E, A, C, D, B])
     add_child!(net, [A, B], D)
     add_child!(net, [D, C], E)
     @test_throws ErrorException("Invalid CPT: node :D has CPT values [0.1, 0.8] not exhaustive and mutually exclusive for the scenario [:A => :a2, :B => :b1]") order!(net)
 
     D = DiscreteNode(:D, [:A, :B])
-    D[:A=>:a1, :B=>:b1, :D=>:d1] = 0.2
-    D[:A=>:a1, :B=>:b1, :D=>:d2] = 0.8
-    D[:A=>:a1, :B=>:b2, :D=>:d1] = 0.2
-    D[:A=>:a2, :B=>:b1, :D=>:d1] = 0.2
-    D[:A=>:a2, :B=>:b1, :D=>:d2] = 0.8
-    D[:A=>:a2, :B=>:b2, :D=>:d1] = 0.2
-    D[:A=>:a2, :B=>:b2, :D=>:d2] = 0.8
+    D[:A => :a1, :B => :b1, :D => :d1] = 0.2
+    D[:A => :a1, :B => :b1, :D => :d2] = 0.8
+    D[:A => :a1, :B => :b2, :D => :d1] = 0.2
+    D[:A => :a2, :B => :b1, :D => :d1] = 0.2
+    D[:A => :a2, :B => :b1, :D => :d2] = 0.8
+    D[:A => :a2, :B => :b2, :D => :d1] = 0.2
+    D[:A => :a2, :B => :b2, :D => :d2] = 0.8
     net = EnhancedBayesianNetwork([E, A, C, D, B])
     add_child!(net, [A, B], D)
     add_child!(net, [D, C], E)
@@ -693,16 +693,16 @@ end
 end
 
 
-@testitem "Networks Common - topology and adjacency" setup=[ExtraDeps] begin
-    a = DiscreteNode(:A);
-    a[:A=>:a1] = 0.5;
-    a[:A=>:a2] = 0.5
-    b = DiscreteNode(:B);
-    b[:B=>:b1] = 0.5;
-    b[:B=>:b2] = 0.5
-    c = DiscreteNode(:C);
-    c[:C=>:c1] = 0.5;
-    c[:C=>:c2] = 0.5
+@testitem "Networks Common - topology and adjacency" setup = [ExtraDeps] begin
+    a = DiscreteNode(:A)
+    a[:A => :a1] = 0.5
+    a[:A => :a2] = 0.5
+    b = DiscreteNode(:B)
+    b[:B => :b1] = 0.5
+    b[:B => :b2] = 0.5
+    c = DiscreteNode(:C)
+    c[:C => :c1] = 0.5
+    c[:C => :c2] = 0.5
     nodes = [a, b, c]
 
     topology, A = EnhancedBayesianNetworks._topology_and_adjacency(nodes)
@@ -721,35 +721,35 @@ end
 
 @testitem "Networks Common - verify add_child!" begin
     weather = DiscreteNode(:W)
-    weather[:W=>:sunny] = 0.5
-    weather[:W=>:cloudy] = 0.5
+    weather[:W => :sunny] = 0.5
+    weather[:W => :cloudy] = 0.5
 
     sprinkler_parameters = [:on => [Parameter(1, :S)], :off => [Parameter(0, :S)]]
     sprinkler = DiscreteNode(:S, [:W], sprinkler_parameters)
-    sprinkler[:W=>:sunny, :S=>:on] = 0.7
-    sprinkler[:W=>:sunny, :S=>:off] = 0.3
-    sprinkler[:W=>:cloudy, :S=>:on] = 0.05
-    sprinkler[:W=>:cloudy, :S=>:off] = 0.95
+    sprinkler[:W => :sunny, :S => :on] = 0.7
+    sprinkler[:W => :sunny, :S => :off] = 0.3
+    sprinkler[:W => :cloudy, :S => :on] = 0.05
+    sprinkler[:W => :cloudy, :S => :off] = 0.95
 
     rain = DiscreteNode(:R, [:W])
-    rain[:W=>:sunny, :R=>:yes] = 0.05
-    rain[:W=>:sunny, :R=>:no] = 0.95
-    rain[:W=>:cloudy, :R=>:yes] = 0.7
-    rain[:W=>:cloudy, :R=>:no] = 0.3
+    rain[:W => :sunny, :R => :yes] = 0.05
+    rain[:W => :sunny, :R => :no] = 0.95
+    rain[:W => :cloudy, :R => :yes] = 0.7
+    rain[:W => :cloudy, :R => :no] = 0.3
 
     storm = ContinuousNode(:St, [:W])
-    storm[:W=>:sunny] = Normal()
-    storm[:W=>:cloudy] = Normal(2, 1)
+    storm[:W => :sunny] = Normal()
+    storm[:W => :cloudy] = Normal(2, 1)
 
     grass = DiscreteNode(:G, [:S, :R])
-    grass[:R=>:yes, :S=>:on, :G=>:dry] = 0
-    grass[:R=>:yes, :S=>:on, :G=>:wet] = Interval(0.1, 0.2)
-    grass[:R=>:yes, :S=>:off, :G=>:dry] = 0.05
-    grass[:R=>:yes, :S=>:off, :G=>:wet] = 0.95
-    grass[:R=>:no, :S=>:on, :G=>:dry] = 0.05
-    grass[:R=>:no, :S=>:on, :G=>:wet] = 0.95
-    grass[:R=>:no, :S=>:off, :G=>:dry] = 1
-    grass[:R=>:no, :S=>:off, :G=>:wet] = 0
+    grass[:R => :yes, :S => :on, :G => :dry] = 0
+    grass[:R => :yes, :S => :on, :G => :wet] = Interval(0.1, 0.2)
+    grass[:R => :yes, :S => :off, :G => :dry] = 0.05
+    grass[:R => :yes, :S => :off, :G => :wet] = 0.95
+    grass[:R => :no, :S => :on, :G => :dry] = 0.05
+    grass[:R => :no, :S => :on, :G => :wet] = 0.95
+    grass[:R => :no, :S => :off, :G => :dry] = 1
+    grass[:R => :no, :S => :off, :G => :wet] = 0
 
     simulation = MonteCarlo(100)
     model_t = Model(df -> df.S .+ df.St, :T)

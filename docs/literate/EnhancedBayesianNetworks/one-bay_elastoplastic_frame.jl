@@ -48,7 +48,7 @@ function plastic_moment_capacities(uᵣ)
     λ, ζ = distribution_parameters(μ, μ * cov, LogNormal)
     normal_μ = λ + ρ * ζ * uᵣ
     normal_std = sqrt((1 - ρ^2) * ζ^2)
-    exp(rand(Normal(normal_μ, normal_std)))
+    return exp(rand(Normal(normal_μ, normal_std)))
 end
 
 model1 = Model(df -> plastic_moment_capacities.(df.Uᵣ), :r1)
@@ -100,7 +100,7 @@ add_child!(ebn, Uᵣ, [R1, R2, R3, R4, R5])
 add_child!(ebn, [R1, R2, R3, R4, R5, V, H], frame)
 order!(ebn)
 
-gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
+gplot(ebn, background_color = "white", legend = true, label_size = 10, legend_x = 15, legend_y = 14)
 
 # ## Reducing to a Bayesian Network
 #
@@ -114,7 +114,7 @@ bn = reduce(ebn)
 
 #-
 
-gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Network", label_size=12)
+gplot(bn, background_color = "white", node_scale = 1.1, title = "Reduced Bayesian Network", label_size = 12)
 
 #-
 
@@ -160,7 +160,7 @@ add_child!(ebn, Uᵣ, [R1, R2, R3, R4, R5])
 add_child!(ebn, [R1, R2, R3, R4, R5, V, H], frame)
 order!(ebn)
 
-gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
+gplot(ebn, background_color = "white", legend = true, label_size = 10, legend_x = 15, legend_y = 14)
 
 # Reducing this network keeps `R4` and `R5` as discrete nodes — each split into a
 # discrete surrogate and a residual continuous node — so the result is a hybrid
@@ -168,11 +168,11 @@ gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, le
 # reduction, as a rough indication measured on the machine building these docs:
 
 elapsed = @elapsed bn = reduce(ebn)
-println("network reduced in ", round(elapsed; digits=3), " s")
+println("network reduced in ", round(elapsed; digits = 3), " s")
 
 #-
 
-gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Network", label_size=12)
+gplot(bn, background_color = "white", node_scale = 1.1, title = "Reduced Bayesian Network", label_size = 12)
 
 # ## Updating the failure probability on measured capacities
 #

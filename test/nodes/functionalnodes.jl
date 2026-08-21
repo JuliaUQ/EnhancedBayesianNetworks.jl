@@ -2,8 +2,8 @@
     x1 = ContinuousNode(:x1)
     x1[] = Normal()
     x2 = DiscreteNode(:x2)
-    x2[:x2=>:yx2] = 0.5
-    x2[:x2=>:nx2] = 0.5
+    x2[:x2 => :yx2] = 0.5
+    x2[:x2 => :nx2] = 0.5
 
     name = :functional
     models = Model(df -> sqrt.(df.z .^ 2 + df.z .^ 2), :value1)
@@ -15,7 +15,7 @@
 end
 
 
-@testitem "FunctionalNode - Continuous" setup=[SetupFunctionalNodes] begin
+@testitem "FunctionalNode - Continuous" setup = [SetupFunctionalNodes] begin
     node = ContinuousFunctionalNode(name, models, simulation)
     @test isa(node, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node, EnhancedBayesianNetworks.AbstractContinuousNode)
@@ -54,23 +54,23 @@ end
     @test node.nbins == nbins
 
     node = ContinuousFunctionalNode(name, ancestors, models)
-    node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(100)
-    node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(100)
-    node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] = MonteCarlo(10)
-    node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1n] = MonteCarlo(10)
-    node[:x1=>:x1n, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(20)
-    node[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(20)
-    node[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] = MonteCarlo(200)
-    node[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] = MonteCarlo(200)
+    node[:x1 => :x1y, :x2 => :x2y, :y1 => :y1y] = MonteCarlo(100)
+    node[:x1 => :x1y, :x2 => :x2y, :y1 => :y1n] = MonteCarlo(100)
+    node[:x1 => :x1y, :x2 => :x2n, :y1 => :y1y] = MonteCarlo(10)
+    node[:x1 => :x1y, :x2 => :x2n, :y1 => :y1n] = MonteCarlo(10)
+    node[:x1 => :x1n, :x2 => :x2y, :y1 => :y1y] = MonteCarlo(20)
+    node[:x1 => :x1n, :x2 => :x2y, :y1 => :y1n] = MonteCarlo(20)
+    node[:x1 => :x1n, :x2 => :x2n, :y1 => :y1y] = MonteCarlo(200)
+    node[:x1 => :x1n, :x2 => :x2n, :y1 => :y1n] = MonteCarlo(200)
     @test eltype(node.simulation.data.sim) == AbstractMonteCarlo
-    @test node.simulation[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] == MonteCarlo(100)
-    @test node.simulation[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] == MonteCarlo(100)
-    @test node.simulation[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] == MonteCarlo(10)
-    @test node.simulation[:x1=>:x1y, :x2=>:x2n, :y1=>:y1n] == MonteCarlo(10)
-    @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1y] == MonteCarlo(20)
-    @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] == MonteCarlo(20)
-    @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] == MonteCarlo(200)
-    @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] == MonteCarlo(200)
+    @test node.simulation[:x1 => :x1y, :x2 => :x2y, :y1 => :y1y] == MonteCarlo(100)
+    @test node.simulation[:x1 => :x1y, :x2 => :x2y, :y1 => :y1n] == MonteCarlo(100)
+    @test node.simulation[:x1 => :x1y, :x2 => :x2n, :y1 => :y1y] == MonteCarlo(10)
+    @test node.simulation[:x1 => :x1y, :x2 => :x2n, :y1 => :y1n] == MonteCarlo(10)
+    @test node.simulation[:x1 => :x1n, :x2 => :x2y, :y1 => :y1y] == MonteCarlo(20)
+    @test node.simulation[:x1 => :x1n, :x2 => :x2y, :y1 => :y1n] == MonteCarlo(20)
+    @test node.simulation[:x1 => :x1n, :x2 => :x2n, :y1 => :y1y] == MonteCarlo(200)
+    @test node.simulation[:x1 => :x1n, :x2 => :x2n, :y1 => :y1n] == MonteCarlo(200)
     @test node.nbins == 0
 
     node = ContinuousFunctionalNode(name, ancestors, models, discretization)
@@ -88,7 +88,7 @@ end
     @test !isroot(node)
 end
 
-@testitem "FunctionalNode - Discrete" setup=[SetupFunctionalNodes] begin
+@testitem "FunctionalNode - Discrete" setup = [SetupFunctionalNodes] begin
     node = DiscreteFunctionalNode(name, models, performance, simulation)
     @test isa(node, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node, EnhancedBayesianNetworks.AbstractDiscreteNode)
@@ -98,7 +98,7 @@ end
     @test node.models == [models]
     @test node.simulation == simulation
     @test node.performance == performance
-    @test node.parameters == Vector{Pair{Symbol,Vector{Parameter}}}()
+    @test node.parameters == Vector{Pair{Symbol, Vector{Parameter}}}()
     parameters = [:fail => [Parameter(1, :a), Parameter(2, :b)], :safe => [Parameter(0, :a), Parameter(0, :b)]]
     node = DiscreteFunctionalNode(name, models, performance, simulation, parameters)
     @test node.parameters == parameters
@@ -106,23 +106,23 @@ end
     @test_throws ErrorException(":sim is not allowed as node name") DiscreteFunctionalNode(:sim, models, performance, simulation)
 
     node = DiscreteFunctionalNode(name, ancestors, models, performance)
-    node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] = MonteCarlo(100)
-    node[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] = MonteCarlo(100)
-    node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] = SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
-    node[:x1=>:x1y, :x2=>:x2n, :y1=>:y1n] = SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
-    node[:x1=>:x1n, :x2=>:x2y, :y1=>:y1y] = DoubleLoop(MonteCarlo(10))
-    node[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] = DoubleLoop(MonteCarlo(10))
-    node[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] = RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
-    node[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] = RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+    node[:x1 => :x1y, :x2 => :x2y, :y1 => :y1y] = MonteCarlo(100)
+    node[:x1 => :x1y, :x2 => :x2y, :y1 => :y1n] = MonteCarlo(100)
+    node[:x1 => :x1y, :x2 => :x2n, :y1 => :y1y] = SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+    node[:x1 => :x1y, :x2 => :x2n, :y1 => :y1n] = SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+    node[:x1 => :x1n, :x2 => :x2y, :y1 => :y1y] = DoubleLoop(MonteCarlo(10))
+    node[:x1 => :x1n, :x2 => :x2y, :y1 => :y1n] = DoubleLoop(MonteCarlo(10))
+    node[:x1 => :x1n, :x2 => :x2n, :y1 => :y1y] = RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+    node[:x1 => :x1n, :x2 => :x2n, :y1 => :y1n] = RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
     @test eltype(node.simulation.data.sim) == EnhancedBayesianNetworks.DiscreteSimulation
-    @test node.simulation[:x1=>:x1y, :x2=>:x2y, :y1=>:y1y] == MonteCarlo(100)
-    @test node.simulation[:x1=>:x1y, :x2=>:x2y, :y1=>:y1n] == MonteCarlo(100)
-    @test node.simulation[:x1=>:x1y, :x2=>:x2n, :y1=>:y1y] == SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
-    @test node.simulation[:x1=>:x1y, :x2=>:x2n, :y1=>:y1n] == SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
-    @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1y] == DoubleLoop(MonteCarlo(10))
-    @test node.simulation[:x1=>:x1n, :x2=>:x2y, :y1=>:y1n] == DoubleLoop(MonteCarlo(10))
-    @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1y] == RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
-    @test node.simulation[:x1=>:x1n, :x2=>:x2n, :y1=>:y1n] == RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+    @test node.simulation[:x1 => :x1y, :x2 => :x2y, :y1 => :y1y] == MonteCarlo(100)
+    @test node.simulation[:x1 => :x1y, :x2 => :x2y, :y1 => :y1n] == MonteCarlo(100)
+    @test node.simulation[:x1 => :x1y, :x2 => :x2n, :y1 => :y1y] == SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+    @test node.simulation[:x1 => :x1y, :x2 => :x2n, :y1 => :y1n] == SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2))
+    @test node.simulation[:x1 => :x1n, :x2 => :x2y, :y1 => :y1y] == DoubleLoop(MonteCarlo(10))
+    @test node.simulation[:x1 => :x1n, :x2 => :x2y, :y1 => :y1n] == DoubleLoop(MonteCarlo(10))
+    @test node.simulation[:x1 => :x1n, :x2 => :x2n, :y1 => :y1y] == RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+    @test node.simulation[:x1 => :x1n, :x2 => :x2n, :y1 => :y1n] == RandomSlicing(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
 
     node = DiscreteFunctionalNode(name, ancestors, models, performance, parameters)
     @test node.parameters == parameters

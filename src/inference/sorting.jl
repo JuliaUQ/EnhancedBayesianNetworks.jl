@@ -9,7 +9,7 @@ are eliminated earlier. Pass as the `scorefun` argument to [`infer`](@ref).
 ```julia
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
 
@@ -36,7 +36,7 @@ Lower scores are eliminated earlier. Pass as the `scorefun` argument to [`infer`
 ```julia
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
 
@@ -45,7 +45,7 @@ infer(bn, :S, Evidence(:W => :sunny), factor_score)
 """
 function factor_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
     score = length(ns.idx_to_state[node])
-    for neigh ∈ ig.neighbors[node]
+    for neigh in ig.neighbors[node]
         score *= length(ns.idx_to_state[neigh])
     end
     return score
@@ -62,7 +62,7 @@ compared lexicographically — break [`fill_score`](@ref) ties by the smaller re
 ```julia
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
 
@@ -74,7 +74,7 @@ function fill_factor_score(ig::InteractionGraph, ns::NetworkSchema, node::Int)
     return (
         fill_score(ig, ns, node),
         factor_score(ig, ns, node),
-        node
+        node,
     )
 end
 
@@ -96,7 +96,7 @@ end
 function _best_node(ig::InteractionGraph, ns::NetworkSchema, remaining::Set{Int}, scorefun)
     best = minimum(remaining)
     best_score = scorefun(ig, ns, best)
-    for node ∈ remaining
+    for node in remaining
         if node == best
             continue
         end
@@ -114,8 +114,8 @@ end
 function _eliminate!(ig::InteractionGraph, node::Int)
     neigh = collect(ig.neighbors[node])
     # add fill-in edges
-    for i ∈ eachindex(neigh)
-        for j ∈ (i+1):length(neigh)
+    for i in eachindex(neigh)
+        for j in (i + 1):length(neigh)
             n1 = neigh[i]
             n2 = neigh[j]
             push!(ig.neighbors[n1], n2)
@@ -123,7 +123,7 @@ function _eliminate!(ig::InteractionGraph, node::Int)
         end
     end
     # remove node from its neighbors
-    for n ∈ neigh
+    for n in neigh
         delete!(ig.neighbors[n], node)
     end
     empty!(ig.neighbors[node])
@@ -134,8 +134,8 @@ end
 function _added_edges(ig::InteractionGraph, node::Int)
     neigh = collect(ig.neighbors[node])
     missing = 0
-    for i ∈ eachindex(neigh)
-        for j ∈ (i+1):length(neigh)
+    for i in eachindex(neigh)
+        for j in (i + 1):length(neigh)
             if !(neigh[j] ∈ ig.neighbors[neigh[i]])
                 missing += 1
             end
@@ -146,4 +146,3 @@ end
 
 # Edges removed by eliminating `node` = its current neighbour count.
 @inline _deleted_edges(ig::InteractionGraph, node::Int) = length(ig.neighbors[node])
-

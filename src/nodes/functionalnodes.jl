@@ -1,6 +1,6 @@
 """
-    ContinuousFunctionalNode(name, models, simulation, discretization=ApproximatedDiscretization(), nbins=0)
-    ContinuousFunctionalNode(name, ancestors::Vector{Symbol}, models, discretization=ApproximatedDiscretization(), nbins=0)
+    ContinuousFunctionalNode(name, models, simulation, discretization = ApproximatedDiscretization(), nbins = 0)
+    ContinuousFunctionalNode(name, ancestors::Vector{Symbol}, models, discretization = ApproximatedDiscretization(), nbins = 0)
 
 A continuous node whose value is **computed** from its ancestors by one or more UncertaintyQuantification
 `models`, instead of being stored as a table. When the node is evaluated, `simulation` (e.g.
@@ -28,60 +28,60 @@ CFb = ContinuousFunctionalNode(:CF, [model], MonteCarlo(1000), 10)
 mutable struct ContinuousFunctionalNode <: AbstractContinuousNode
     name::Symbol
     models::AbstractVector{<:UQModel}
-    simulation::Union{AbstractMonteCarlo,ScenariosTable{ContinuousSimulation}}
+    simulation::Union{AbstractMonteCarlo, ScenariosTable{ContinuousSimulation}}
     discretization::ApproximatedDiscretization
     nbins::Int
 
     function ContinuousFunctionalNode(
-        name::Symbol,
-        models::Union{Vector{<:UQModel},<:UQModel},
-        simulation::Union{AbstractMonteCarlo,ScenariosTable{ContinuousSimulation}},
-        discretization::ApproximatedDiscretization=ApproximatedDiscretization(),
-        nbins::Int=0,
-    )
+            name::Symbol,
+            models::Union{Vector{<:UQModel}, <:UQModel},
+            simulation::Union{AbstractMonteCarlo, ScenariosTable{ContinuousSimulation}},
+            discretization::ApproximatedDiscretization = ApproximatedDiscretization(),
+            nbins::Int = 0,
+        )
         if name == :Π
             error(":Π is not allowed as node name")
         end
         if name == :sim
             error(":sim is not allowed as node name")
         end
-        new(name, _wrap(models), simulation, discretization, nbins)
+        return new(name, _wrap(models), simulation, discretization, nbins)
     end
 end
 
 function ContinuousFunctionalNode(
-    name::Symbol,
-    ancestors::Vector{Symbol},
-    models::Union{Vector{<:UQModel},<:UQModel},
-    discretization::ApproximatedDiscretization=ApproximatedDiscretization(),
-    nbins::Int=0,
-)
-    ContinuousFunctionalNode(name, models, ScenariosTable{ContinuousSimulation}(ancestors, :sim), discretization, nbins)
+        name::Symbol,
+        ancestors::Vector{Symbol},
+        models::Union{Vector{<:UQModel}, <:UQModel},
+        discretization::ApproximatedDiscretization = ApproximatedDiscretization(),
+        nbins::Int = 0,
+    )
+    return ContinuousFunctionalNode(name, models, ScenariosTable{ContinuousSimulation}(ancestors, :sim), discretization, nbins)
 end
 
 function ContinuousFunctionalNode(
-    name::Symbol,
-    models::Union{Vector{<:UQModel},<:UQModel},
-    simulation::Union{AbstractMonteCarlo,ScenariosTable{ContinuousSimulation}},
-    nbins::Int
-)
-    ContinuousFunctionalNode(name, models, simulation, ApproximatedDiscretization(), nbins)
+        name::Symbol,
+        models::Union{Vector{<:UQModel}, <:UQModel},
+        simulation::Union{AbstractMonteCarlo, ScenariosTable{ContinuousSimulation}},
+        nbins::Int
+    )
+    return ContinuousFunctionalNode(name, models, simulation, ApproximatedDiscretization(), nbins)
 end
 
 function ContinuousFunctionalNode(
-    name::Symbol,
-    ancestors::Vector{Symbol},
-    models::Union{Vector{<:UQModel},<:UQModel},
-    nbins::Int
-)
-    ContinuousFunctionalNode(name, ancestors, models, ApproximatedDiscretization(), nbins)
+        name::Symbol,
+        ancestors::Vector{Symbol},
+        models::Union{Vector{<:UQModel}, <:UQModel},
+        nbins::Int
+    )
+    return ContinuousFunctionalNode(name, ancestors, models, ApproximatedDiscretization(), nbins)
 end
 
 Base.setindex!(node::ContinuousFunctionalNode, value, key...) = Base.setindex!(node.simulation, value, key...)
 
 """
-    DiscreteFunctionalNode(name, models, performance, simulation, parameters=[])
-    DiscreteFunctionalNode(name, ancestors::Vector{Symbol}, models, performance, parameters=[])
+    DiscreteFunctionalNode(name, models, performance, simulation, parameters = [])
+    DiscreteFunctionalNode(name, ancestors::Vector{Symbol}, models, performance, parameters = [])
 
 A discrete node whose two states — `:<name>_safe` and `:<name>_failed` — come from a reliability
 analysis rather than a table. When the node is evaluated, `simulation` (e.g. `MonteCarlo`) propagates
@@ -103,49 +103,51 @@ DF = DiscreteFunctionalNode(:DF, [model], performance, MonteCarlo(1000))
 states(DF)                                         # [:DF_safe, :DF_failed]
 
 # optional per-state parameters, keyed by the two derived states:
-DFp = DiscreteFunctionalNode(:DF, [model], performance, MonteCarlo(1000),
-    [:DF_safe => [Parameter(1.0, :DF)], :DF_failed => [Parameter(0.0, :DF)]])
+DFp = DiscreteFunctionalNode(
+    :DF, [model], performance, MonteCarlo(1000),
+    [:DF_safe => [Parameter(1.0, :DF)], :DF_failed => [Parameter(0.0, :DF)]]
+)
 ```
 """
 mutable struct DiscreteFunctionalNode <: AbstractDiscreteNode
     name::Symbol
     models::AbstractVector{<:UQModel}
     performance::Function
-    simulation::Union{DiscreteSimulation,ScenariosTable{DiscreteSimulation}}
-    parameters::Vector{Pair{Symbol,Vector{Parameter}}}
+    simulation::Union{DiscreteSimulation, ScenariosTable{DiscreteSimulation}}
+    parameters::Vector{Pair{Symbol, Vector{Parameter}}}
 
     function DiscreteFunctionalNode(
-        name::Symbol,
-        models::Union{Vector{<:UQModel},<:UQModel},
-        performance::Function,
-        simulation::Union{DiscreteSimulation,ScenariosTable{DiscreteSimulation}},
-        parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}()
-    )
+            name::Symbol,
+            models::Union{Vector{<:UQModel}, <:UQModel},
+            performance::Function,
+            simulation::Union{DiscreteSimulation, ScenariosTable{DiscreteSimulation}},
+            parameters::Vector{Pair{Symbol, Vector{Parameter}}} = Vector{Pair{Symbol, Vector{Parameter}}}()
+        )
         if name == :Π
             error(":Π is not allowed as node name")
         end
         if name == :sim
             error(":sim is not allowed as node name")
         end
-        new(name, _wrap(models), performance, simulation, parameters)
+        return new(name, _wrap(models), performance, simulation, parameters)
     end
 end
 
 function DiscreteFunctionalNode(
-    name::Symbol,
-    ancestors::Vector{Symbol},
-    models::Union{Vector{<:UQModel},<:UQModel},
-    performance::Function,
-    parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}()
-)
+        name::Symbol,
+        ancestors::Vector{Symbol},
+        models::Union{Vector{<:UQModel}, <:UQModel},
+        performance::Function,
+        parameters::Vector{Pair{Symbol, Vector{Parameter}}} = Vector{Pair{Symbol, Vector{Parameter}}}()
+    )
     st = ScenariosTable{DiscreteSimulation}(ancestors, :sim)
-    DiscreteFunctionalNode(name, models, performance, st, parameters)
+    return DiscreteFunctionalNode(name, models, performance, st, parameters)
 end
 
 Base.setindex!(node::DiscreteFunctionalNode, value, key...) = Base.setindex!(node.simulation, value, key...)
 
 states(node::DiscreteFunctionalNode) = Symbol.([string(node.name) * "_safe", string(node.name) * "_failed"])
 
-const global FunctionalNode = Union{DiscreteFunctionalNode,ContinuousFunctionalNode}
+const global FunctionalNode = Union{DiscreteFunctionalNode, ContinuousFunctionalNode}
 
 isroot(node::FunctionalNode) = false

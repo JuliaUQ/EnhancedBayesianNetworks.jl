@@ -1,4 +1,3 @@
-
 # Internal base values.
 const _BASE_TITLESIZE = 18pt   # title font size
 const _BORDER_PAD = 0.12       # fraction of canvas kept free at each edge
@@ -31,45 +30,46 @@ points) sets its text size — the icons and spacing scale with it. Returns a
 # Examples
 ```julia
 W = DiscreteNode(:W)
-W[:W=>:sunny] = 0.7
-W[:W=>:rainy] = 0.3
+W[:W => :sunny] = 0.7
+W[:W => :rainy] = 0.3
 U = ContinuousNode(:U, [:W])
-U[:W=>:sunny] = Normal()
-U[:W=>:rainy] = Normal(2, 1)
+U[:W => :sunny] = Normal()
+U[:W => :rainy] = Normal(2, 1)
 
 net = EnhancedBayesianNetwork([W, U])
 add_child!(net, W, U)
 order!(net)
 
 p = gplot(
-        net;
-        node_scale        = 1.0,           # scale every node shape
-        label_size        = 8,             # node-label font size, in points
-        title             = "",            # title text above the graph
-        title_scale       = 1.0,           # title font scale
-        figsize           = (20, 20),      # canvas (width, height), in cm
-        legend            = false,         # draw the shape/colour key
-        legend_fontsize   = 9,             # legend text size in points; icons scale with it
-        legend_x          = 13.0,          # legend top-left corner x, in cm from the left
-        legend_y          = 12.0,          # legend top-left corner y, in cm from the top
-        background_color  = "transparent", # canvas background colour
+    net;
+    node_scale = 1.0,           # scale every node shape
+    label_size = 8,             # node-label font size, in points
+    title = "",            # title text above the graph
+    title_scale = 1.0,           # title font scale
+    figsize = (20, 20),      # canvas (width, height), in cm
+    legend = false,         # draw the shape/colour key
+    legend_fontsize = 9,             # legend text size in points; icons scale with it
+    legend_x = 13.0,          # legend top-left corner x, in cm from the left
+    legend_y = 12.0,          # legend top-left corner y, in cm from the top
+    background_color = "transparent", # canvas background colour
 )
 
 saveplot(p, "weather.svg")
 ```
 """
-function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
-    node_scale::Float64=1.0,
-    label_size::Real=8,
-    title::String="",
-    title_scale::Float64=1.0,
-    figsize::Tuple{Real,Real}=(20, 20),
-    legend::Bool=false,
-    legend_fontsize::Real=9,
-    legend_x::Real=13.0,
-    legend_y::Real=12.0,
-    background_color::String="transparent"
-)
+function gplot(
+        net::Union{AbstractNetwork, DirectAcyclicGraph};
+        node_scale::Float64 = 1.0,
+        label_size::Real = 8,
+        title::String = "",
+        title_scale::Float64 = 1.0,
+        figsize::Tuple{Real, Real} = (20, 20),
+        legend::Bool = false,
+        legend_fontsize::Real = 9,
+        legend_x::Real = 13.0,
+        legend_y::Real = 12.0,
+        background_color::String = "transparent"
+    )
     node_list = net.nodes
     n = length(node_list)
 
@@ -127,24 +127,25 @@ function gplot(net::Union{AbstractNetwork,DirectAcyclicGraph};
 
     # ── optional title ───────────────────────────────────────────────────────
     title_ctx = isempty(title) ? context() : compose(
-        context(),
-        Compose.text(0.5 * ar, _BORDER_PAD / 2, title, hcenter, vcenter),
-        fill("black"),
-        fontsize(ts),
-        Compose.font("Helvetica")
-    )
+            context(),
+            Compose.text(0.5 * ar, _BORDER_PAD / 2, title, hcenter, vcenter),
+            fill("black"),
+            fontsize(ts),
+            Compose.font("Helvetica")
+        )
 
     # ── assemble (painter's order: back → front) ─────────────────────────────
     Compose.set_default_graphic_size(figsize[1] * cm, figsize[2] * cm)
 
     legend_ctx = legend ? _build_legend(
-        legend_x / figsize[2],   # cm → canvas units (1 unit == figsize[2] cm)
-        legend_y / figsize[2],
-        legend_fontsize,
-        pt_to_units
-    ) : context()
+            legend_x / figsize[2],   # cm → canvas units (1 unit == figsize[2] cm)
+            legend_y / figsize[2],
+            legend_fontsize,
+            pt_to_units
+        ) : context()
 
-    compose(context(units=UnitBox(0, 0, ar, 1)),
+    return compose(
+        context(units = UnitBox(0, 0, ar, 1)),
         title_ctx,
         label_ctxs...,                                                                  # labels (front)
         node_ctxs...,                                                                   # node shapes
@@ -161,5 +162,5 @@ end
 Save a gplot result to an SVG file.
 """
 function saveplot(p, filename::String)
-    draw(SVG(filename), p)
+    return draw(SVG(filename), p)
 end

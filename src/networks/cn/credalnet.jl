@@ -13,8 +13,8 @@ precise, since a [`BayesianNetwork`](@ref) is the better fit in that case.
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
 # imprecise (interval-valued) entries make this a credal, not a Bayesian, network:
-S[:W => :sunny,  :S => :on]  = Interval(0.8, 0.95); S[:W => :sunny,  :S => :off] = Interval(0.05, 0.2)
-S[:W => :cloudy, :S => :on]  = 0.2;                 S[:W => :cloudy, :S => :off] = 0.8
+S[:W => :sunny, :S => :on] = Interval(0.8, 0.95); S[:W => :sunny, :S => :off] = Interval(0.05, 0.2)
+S[:W => :cloudy, :S => :on] = 0.2;                 S[:W => :cloudy, :S => :off] = 0.8
 
 cn = CredalNetwork([W, S])
 add_child!(cn, :W, :S); order!(cn)
@@ -33,7 +33,7 @@ mutable struct CredalNetwork <: AbstractNetwork
             error("Invalid CN: duplicate node names $dups")
         end
         # states must be globally unique across nodes (init=Symbol[] handles the empty-network case)
-        states_list = reduce(vcat, states.(nodes); init=Symbol[])
+        states_list = reduce(vcat, states.(nodes); init = Symbol[])
         dups = _not_unique_elements(states_list)
         if !isempty(dups)
             error("Invalid CN: duplicate node states $dups")
@@ -43,7 +43,7 @@ mutable struct CredalNetwork <: AbstractNetwork
         if isempty(imprecise_nodes)
             @warn "All the nodes are precise; BayesianNetwork structure should be used instead"
         end
-        new(nodes, topology, A)
+        return new(nodes, topology, A)
     end
 end
 

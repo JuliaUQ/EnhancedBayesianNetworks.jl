@@ -2,9 +2,9 @@
 # indexed factors: node_to_idx/idx_to_node map node names ↔ ids; state_to_idx/idx_to_state map each
 # node's state symbols ↔ their 1-based positions.
 struct NetworkSchema
-    node_to_idx::Dict{Symbol,Int}
+    node_to_idx::Dict{Symbol, Int}
     idx_to_node::Vector{Symbol}
-    state_to_idx::Vector{Dict{Symbol,Int}}
+    state_to_idx::Vector{Dict{Symbol, Int}}
     idx_to_state::Vector{Vector{Symbol}}
 end
 
@@ -26,7 +26,7 @@ function NetworkSchema(bn::BayesianNetwork)
 
     state_to_idx = [Dict(state => i for (i, state) in enumerate(sts)) for sts in idx_to_state]
 
-    NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
+    return NetworkSchema(node_to_idx, idx_to_node, state_to_idx, idx_to_state)
 end
 
 # The moral graph of a network as adjacency sets: each node linked to its parents and children, and each
@@ -49,7 +49,7 @@ function InteractionGraph(bn::BayesianNetwork)
         end
         # moral edges
         for i in eachindex(pars)
-            for j in (i+1):length(pars)
+            for j in (i + 1):length(pars)
                 p1 = pars[i]
                 p2 = pars[j]
                 push!(neighbors[p1], p2)
@@ -57,7 +57,7 @@ function InteractionGraph(bn::BayesianNetwork)
             end
         end
     end
-    InteractionGraph(neighbors)
+    return InteractionGraph(neighbors)
 end
 
 include("utils.jl")

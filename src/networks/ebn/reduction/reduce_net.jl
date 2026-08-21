@@ -1,5 +1,5 @@
 """
-    reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
+    reduce(net::EnhancedBayesianNetwork, collect::Bool = true)
 
 Transform an enhanced Bayesian network into a purely discrete one ready for inference, returning a
 [`BayesianNetwork`](@ref) (all nodes precise) or a [`CredalNetwork`](@ref) (some imprecise). The
@@ -21,7 +21,7 @@ add_child!(ebn, :W, :F); add_child!(ebn, :X, :F); order!(ebn)
 reduce(ebn)                                 # -> BayesianNetwork
 ```
 """
-function reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
+function reduce(net::EnhancedBayesianNetwork, collect::Bool = true)
     order!(net)
     discretize!(net)
     continuous_functional_node = filter(x -> isa(x, ContinuousFunctionalNode), net.nodes)
@@ -32,7 +32,7 @@ function reduce(net::EnhancedBayesianNetwork, collect::Bool=true)
         # evaluate a functional node whose parents are all non-functional (its inputs are ready)
         mapping = map(n -> _has_functional_parents(net, n), functional_nodes)
         node2eval = first(functional_nodes[.!mapping])
-        # build/verify the simulation table now, 
+        # build/verify the simulation table now,
         _verify_functional_parents(net, node2eval)
         _build_simulations!(net, node2eval)
         _verify_ancestors(net, node2eval)
@@ -70,7 +70,7 @@ end
 
 # True if any parent of this functional node is itself a functional node (so it can't be evaluated yet).
 function _has_functional_parents(net::EnhancedBayesianNetwork, node::FunctionalNode)
-    any(isa.(filter(n -> n.name ∈ parents(net, node), net.nodes), FunctionalNode))
+    return any(isa.(filter(n -> n.name ∈ parents(net, node), net.nodes), FunctionalNode))
 end
 
 # Remove a continuous node and reconnect its parents directly to its children; errors if that creates a cycle.
@@ -79,7 +79,7 @@ function _eliminate_node!(net::EnhancedBayesianNetwork, node::ContinuousNode)
     chs = children(net, node)
     _remove_node!(net, node)
     add_child!(net, par, chs)
-    if _iscyclic(net)
+    return if _iscyclic(net)
         error("Error during node elimination: elimination of node $(repr(node.name)) leads to a cyclic network")
     end
 end

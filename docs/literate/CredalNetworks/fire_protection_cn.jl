@@ -4,7 +4,7 @@
 # off an alarm; the alarm can also be triggered by tampering. Smoke prompts the
 # occupants to leave, and neighbours may report the accident. Every conditional
 # probability is known only up to an **interval** rather than a single number, so
-# the model is a [`CredalNetwork`](@ref) (CN) and inference returns *probability bounds* 
+# the model is a [`CredalNetwork`](@ref) (CN) and inference returns *probability bounds*
 # instead of point values.
 #
 # The network and the probability intervals below are the benchmark of
@@ -19,26 +19,26 @@ using EnhancedBayesianNetworks
 # Both roots are imprecise: a recent tampering event, and an actual fire.
 
 T = DiscreteNode(:Tampering)
-T[:Tampering=>:YesT] = Interval(0.00889, 0.01001)
-T[:Tampering=>:NoT] = Interval(0.98999, 0.99111)
+T[:Tampering => :YesT] = Interval(0.00889, 0.01001)
+T[:Tampering => :NoT] = Interval(0.98999, 0.99111)
 
 F = DiscreteNode(:Fire)
-F[:Fire=>:YesF] = Interval(0.040011, 0.041022)
-F[:Fire=>:NoF] = Interval(0.958978, 0.959989)
+F[:Fire => :YesF] = Interval(0.040011, 0.041022)
+F[:Fire => :NoF] = Interval(0.958978, 0.959989)
 
 # ## Alarm
 #
 # The alarm depends on both `Tampering` and `Fire`.
 
 A = DiscreteNode(:Alarm, [:Tampering, :Fire])
-A[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.564106, 0.600000)
-A[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.400000, 0.435894)
-A[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.880001, 0.900000)
-A[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.100000, 0.119999)
-A[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.987342, 0.990000)
-A[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.010000, 0.012658)
-A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.000003, 0.000200)
-A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.999800, 0.999997)
+A[:Tampering => :YesT, :Fire => :YesF, :Alarm => :YesA] = Interval(0.564106, 0.6)
+A[:Tampering => :YesT, :Fire => :YesF, :Alarm => :NoA] = Interval(0.4, 0.435894)
+A[:Tampering => :YesT, :Fire => :NoF, :Alarm => :YesA] = Interval(0.880001, 0.9)
+A[:Tampering => :YesT, :Fire => :NoF, :Alarm => :NoA] = Interval(0.1, 0.119999)
+A[:Tampering => :NoT, :Fire => :YesF, :Alarm => :YesA] = Interval(0.987342, 0.99)
+A[:Tampering => :NoT, :Fire => :YesF, :Alarm => :NoA] = Interval(0.01, 0.012658)
+A[:Tampering => :NoT, :Fire => :NoF, :Alarm => :YesA] = Interval(0.000003, 0.0002)
+A[:Tampering => :NoT, :Fire => :NoF, :Alarm => :NoA] = Interval(0.9998, 0.999997)
 
 # ## Smoke, Leaving and Report
 #
@@ -46,22 +46,22 @@ A[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.999800, 0.999997)
 # `Report`.
 
 S = DiscreteNode(:Smoke, [:Fire])
-S[:Fire=>:YesF, :Smoke=>:YesS] = Interval(0.890000, 0.910000)
-S[:Fire=>:YesF, :Smoke=>:NoS] = Interval(0.090000, 0.110000)
-S[:Fire=>:NoF, :Smoke=>:YesS] = Interval(0.010000, 0.102469)
-S[:Fire=>:NoF, :Smoke=>:NoS] = Interval(0.897531, 0.915557)
+S[:Fire => :YesF, :Smoke => :YesS] = Interval(0.89, 0.91)
+S[:Fire => :YesF, :Smoke => :NoS] = Interval(0.09, 0.11)
+S[:Fire => :NoF, :Smoke => :YesS] = Interval(0.01, 0.102469)
+S[:Fire => :NoF, :Smoke => :NoS] = Interval(0.897531, 0.915557)
 
 L = DiscreteNode(:Leaving, [:Alarm])
-L[:Alarm=>:YesA, :Leaving=>:YesL] = Interval(0.870001, 0.900000)
-L[:Alarm=>:YesA, :Leaving=>:NoL] = Interval(0.100000, 0.129999)
-L[:Alarm=>:NoA, :Leaving=>:YesL] = Interval(0.400001, 0.414423)
-L[:Alarm=>:NoA, :Leaving=>:NoL] = Interval(0.585577, 0.599999)
+L[:Alarm => :YesA, :Leaving => :YesL] = Interval(0.870001, 0.9)
+L[:Alarm => :YesA, :Leaving => :NoL] = Interval(0.1, 0.129999)
+L[:Alarm => :NoA, :Leaving => :YesL] = Interval(0.400001, 0.414423)
+L[:Alarm => :NoA, :Leaving => :NoL] = Interval(0.585577, 0.599999)
 
 R = DiscreteNode(:Report, [:Leaving])
-R[:Leaving=>:YesL, :Report=>:YesR] = Interval(0.750000, 0.759989)
-R[:Leaving=>:YesL, :Report=>:NoR] = Interval(0.240011, 0.250000)
-R[:Leaving=>:NoL, :Report=>:YesR] = Interval(0.171101, 0.190012)
-R[:Leaving=>:NoL, :Report=>:NoR] = Interval(0.809988, 0.828899)
+R[:Leaving => :YesL, :Report => :YesR] = Interval(0.75, 0.759989)
+R[:Leaving => :YesL, :Report => :NoR] = Interval(0.240011, 0.25)
+R[:Leaving => :NoL, :Report => :YesR] = Interval(0.171101, 0.190012)
+R[:Leaving => :NoL, :Report => :NoR] = Interval(0.809988, 0.828899)
 
 # ## Assembling the Credal Network
 #
@@ -76,7 +76,7 @@ add_child!(cn, :Alarm, :Leaving)
 add_child!(cn, :Leaving, :Report)
 order!(cn)
 
-gplot(cn, background_color="white", legend=true, label_size=10, legend_x=14.5, legend_y=13.5)
+gplot(cn, background_color = "white", legend = true, label_size = 10, legend_x = 14.5, legend_y = 13.5)
 
 # ## Inference without evidence
 #
@@ -131,4 +131,4 @@ infer(cn, [:Fire], Evidence(:Leaving => :YesL))
 
 infer(cn, [:Fire], Evidence(:Leaving => :YesL))   # warm up (trigger compilation)
 elapsed = @elapsed infer(cn, [:Fire], Evidence(:Leaving => :YesL))
-println("query solved in ", round(elapsed * 1e3; digits=3), " ms")
+println("query solved in ", round(elapsed * 1.0e3; digits = 3), " ms")

@@ -1,6 +1,6 @@
 """
-    DiscreteNode(name, parents=Symbol[], parameters=[], results=nothing)
-    DiscreteNode(cpt::ScenariosTable, parameters=[], results=nothing)
+    DiscreteNode(name, parents = Symbol[], parameters = [], results = nothing)
+    DiscreteNode(cpt::ScenariosTable, parameters = [], results = nothing)
 
 A discrete-state node. Holds a conditional probability table (`cpt`) over its parents' state
 combinations and its own states. Optional per-state `parameters` (used when it feeds a
@@ -11,15 +11,15 @@ Build by name and fill with `node[parent1 => sₚ1, ..., name => sₙ] = p`.
 # Examples
 ```julia
 W = DiscreteNode(:W)                     # root node
-W[:W => :sunny]  = 0.5
+W[:W => :sunny] = 0.5
 W[:W => :cloudy] = 0.5
 
 # a node can carry per-state `parameters` (consumed when it feeds a functional node);
 # each of its own states maps to a vector of `Parameter`s and is set at construction:
 S = DiscreteNode(:S, [:W], [:on => [Parameter(0.5, :S)], :off => [Parameter(0.0, :S)]])
-S[:W => :sunny,  :S => :on]  = 0.9
-S[:W => :sunny,  :S => :off] = 0.1
-S[:W => :cloudy, :S => :on]  = 0.2
+S[:W => :sunny, :S => :on] = 0.9
+S[:W => :sunny, :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2
 S[:W => :cloudy, :S => :off] = 0.8
 
 # credal (imprecise) entries use an Interval instead of a Real:
@@ -29,33 +29,33 @@ S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)
 struct DiscreteNode <: AbstractDiscreteNode
     name::Symbol
     cpt::ScenariosTable{DiscreteProbability}
-    parameters::Vector{Pair{Symbol,Vector{Parameter}}}
-    results::Union{ScenariosTable{Any},Nothing}
+    parameters::Vector{Pair{Symbol, Vector{Parameter}}}
+    results::Union{ScenariosTable{Any}, Nothing}
     ## DiscreteNode without CPT
     function DiscreteNode(
-        name::Symbol,
-        parents::Vector{Symbol}=Symbol[],
-        parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}(),
-        results::Union{ScenariosTable{Any},Nothing}=nothing
-    )
+            name::Symbol,
+            parents::Vector{Symbol} = Symbol[],
+            parameters::Vector{Pair{Symbol, Vector{Parameter}}} = Vector{Pair{Symbol, Vector{Parameter}}}(),
+            results::Union{ScenariosTable{Any}, Nothing} = nothing
+        )
         if name == :Π
             error(":Π is not allowed as node name")
         end
         cpt = ScenariosTable{DiscreteProbability}([parents..., name], :Π)
-        new(name, cpt, parameters, results)
+        return new(name, cpt, parameters, results)
     end
     ## DiscreteNode with CPT
     function DiscreteNode(
-        cpt::ScenariosTable{DiscreteProbability},
-        parameters::Vector{Pair{Symbol,Vector{Parameter}}}=Vector{Pair{Symbol,Vector{Parameter}}}(),
-        results::Union{ScenariosTable{Any},Nothing}=nothing
-    )
-        name = Symbol(names(cpt.data)[end-1])
-        new(name, cpt, parameters, results)
+            cpt::ScenariosTable{DiscreteProbability},
+            parameters::Vector{Pair{Symbol, Vector{Parameter}}} = Vector{Pair{Symbol, Vector{Parameter}}}(),
+            results::Union{ScenariosTable{Any}, Nothing} = nothing
+        )
+        name = Symbol(names(cpt.data)[end - 1])
+        return new(name, cpt, parameters, results)
     end
 end
 
-DiscreteNode(name::Symbol, parameters::Vector{Pair{Symbol,Vector{Parameter}}}) = DiscreteNode(name, Symbol[], parameters, nothing)
+DiscreteNode(name::Symbol, parameters::Vector{Pair{Symbol, Vector{Parameter}}}) = DiscreteNode(name, Symbol[], parameters, nothing)
 
 Base.setindex!(node::DiscreteNode, value, key...) = setindex!(node.cpt, value, key...)
 
@@ -92,8 +92,8 @@ yields a single empty scenario. Not defined for functional nodes.
 # Examples
 ```julia
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on]  = 0.9; S[:W => :sunny,  :S => :off] = 0.1
-S[:W => :cloudy, :S => :on]  = 0.2; S[:W => :cloudy, :S => :off] = 0.8
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
+S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 scenarios(S)   # [[:W=>:sunny,:S=>:on], [:W=>:sunny,:S=>:off], [:W=>:cloudy,:S=>:on], [:W=>:cloudy,:S=>:off]]
 
 C = ContinuousNode(:C, [:W]); C[:W => :sunny] = Normal(); C[:W => :cloudy] = Normal(2, 1)
@@ -113,7 +113,7 @@ For a `DiscreteNode` precise means every probability is a `Real` (imprecise entr
 # Examples
 ```julia
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 isprecise(S)                                # true
 
@@ -174,7 +174,7 @@ Draw discrete samples. Given a `DiscreteNode` and an `Evidence` fixing its paren
 ```julia
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 
 sample(S, Evidence(:W => :sunny))           # e.g. :on
@@ -197,7 +197,7 @@ function sample(node::DiscreteNode, evidence::Evidence)
 end
 
 function _inputs(node::DiscreteNode, evidence::Evidence)
-    # Given evidence that fixes this node to one of its states, return the `Parameter`s attached to that state. 
+    # Given evidence that fixes this node to one of its states, return the `Parameter`s attached to that state.
     # Used to inject a discrete node's per-state parameters into a functional node's model.
     evstr = join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ")
     # The node itself must be observed, its observed state must be valid, and it must carry parameters.
@@ -215,7 +215,7 @@ function _inputs(node::DiscreteNode, evidence::Evidence)
 end
 
 function _extreme_nodes(node::DiscreteNode)
-    # Expand a credal (imprecise) node into the finite set of precise DiscreteNodes sitting at the vertices of its credal set. 
+    # Expand a credal (imprecise) node into the finite set of precise DiscreteNodes sitting at the vertices of its credal set.
     # A precise node is its own single vertex.
     function _extreme_points(cpt)
         # Vertices of one conditional distribution's credal set: for each extreme probability vector, copy the sub-CPT and overwrite its :Π column with that vector, giving a precise sub-CPT.
@@ -249,7 +249,7 @@ function _extreme_nodes(node::DiscreteNode)
             vars = vcat(par, node.name)
             n = DiscreteNode(node.name, par, node.parameters, node.results)
             for row in eachrow(df)
-                n[map(v->v=>row[v], vars)...] = row[:Π]
+                n[map(v -> v => row[v], vars)...] = row[:Π]
             end
             push!(extreme_nodes, n)
         end
@@ -260,18 +260,18 @@ end
 # TODO: Try to implement without PolyHedra
 # Enumerate the vertices of the probability polytope for one conditional distribution:
 # each pᵢ ∈ [lbᵢ, ubᵢ] and Σ pᵢ = 1. Returns the extreme probability vectors.
-function _extreme_probabilities(intervals::Vararg{Union{Real,Interval}})
+function _extreme_probabilities(intervals::Vararg{Union{Real, Interval}})
     n = length(intervals)
     # Box constraints as A x ≤ b: odd rows (-I) encode pᵢ ≥ lbᵢ, even rows (I) encode pᵢ ≤ ubᵢ.
     A = zeros(2 * n, n)
-    A[collect(1:2:(2*n)), :] = Matrix(-1.0I, n, n)
-    A[collect(2:2:(2*n)), :] = Matrix(1.0I, n, n)
+    A[collect(1:2:(2 * n)), :] = Matrix(-1.0I, n, n)
+    A[collect(2:2:(2 * n)), :] = Matrix(1.0I, n, n)
     # Two extra rows encode the equality Σ pᵢ = 1 as the pair Σ pᵢ ≤ 1 and -Σ pᵢ ≤ -1.
     A = vcat(A, [-ones(n)'; ones(n)'])
 
     # Right-hand side: [lbᵢ, ubᵢ] per entry (a point [x, x] for a precise Real); negate the lb rows to match the -I rows, then append the sum bounds.
     b = mapreduce(x -> _flat(x), vcat, intervals)
-    b[collect(1:2:(2*n))] = -b[collect(1:2:(2*n))]
+    b[collect(1:2:(2 * n))] = -b[collect(1:2:(2 * n))]
     b = vcat(b, [-1 1]')
 
     # Build the H-representation (intersection of half-spaces) and enumerate its vertices.

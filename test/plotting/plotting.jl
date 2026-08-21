@@ -9,18 +9,18 @@
     # A net holding every shape: discrete, imprecise discrete, discretized
     # continuous, plain continuous, and both flavours of functional node.
     W = DiscreteNode(:W)
-    W[:W=>:sunny] = 0.7
-    W[:W=>:rainy] = 0.3
+    W[:W => :sunny] = 0.7
+    W[:W => :rainy] = 0.3
 
     S = DiscreteNode(:S, [:W])
-    S[:W=>:sunny, :S=>:on] = Interval(0.1, 0.3)
-    S[:W=>:sunny, :S=>:off] = Interval(0.7, 0.9)
-    S[:W=>:rainy, :S=>:on] = Interval(0.4, 0.6)
-    S[:W=>:rainy, :S=>:off] = Interval(0.4, 0.6)
+    S[:W => :sunny, :S => :on] = Interval(0.1, 0.3)
+    S[:W => :sunny, :S => :off] = Interval(0.7, 0.9)
+    S[:W => :rainy, :S => :on] = Interval(0.4, 0.6)
+    S[:W => :rainy, :S => :off] = Interval(0.4, 0.6)
 
     U = ContinuousNode(:U, [:W], ApproximatedDiscretization([-1.0, 1.0], 2))
-    U[:W=>:sunny] = Normal()
-    U[:W=>:rainy] = Normal(2, 1)
+    U[:W => :sunny] = Normal()
+    U[:W => :rainy] = Normal(2, 1)
 
     D = ContinuousNode(:D)
     D[] = Normal(1, 2)
@@ -42,7 +42,7 @@
     function segment_distance(p, a, b)
         ex, ey = b[1] - a[1], b[2] - a[2]
         L2 = ex^2 + ey^2
-        t = L2 < 1e-24 ? 0.0 : clamp(((p[1] - a[1]) * ex + (p[2] - a[2]) * ey) / L2, 0.0, 1.0)
+        t = L2 < 1.0e-24 ? 0.0 : clamp(((p[1] - a[1]) * ex + (p[2] - a[2]) * ey) / L2, 0.0, 1.0)
         return hypot(p[1] - (a[1] + t * ex), p[2] - (a[2] + t * ey))
     end
 
@@ -52,7 +52,7 @@
     function inside_polygon(p, verts)
         n = length(verts)
         crosses = [(verts[mod1(k + 1, n)][1] - verts[k][1]) * (p[2] - verts[k][2]) - (verts[mod1(k + 1, n)][2] - verts[k][2]) * (p[1] - verts[k][1]) for k in 1:n]
-        return all(>=(-1e-12), crosses) || all(<=(1e-12), crosses)
+        return all(>=(-1.0e-12), crosses) || all(<=(1.0e-12), crosses)
     end
 
     npoints(form) = length(form.primitives[1].points)
@@ -60,22 +60,22 @@ end
 
 @testitem "Gplot - Plot" setup = [ExtraDeps, SetupPlotNet] begin
     @test gplot(plotnet) isa Compose.Context
-    @test gplot(plotnet; legend=true) isa Compose.Context
-    @test gplot(plotnet; title="a title") isa Compose.Context
-    @test gplot(plotnet; node_scale=1.5, label_size=16, title_scale=0.5) isa Compose.Context
-    @test gplot(plotnet; legend=true, legend_fontsize=7, legend_x=2.0, legend_y=2.0) isa Compose.Context
-    @test gplot(plotnet; figsize=(10, 30)) isa Compose.Context
+    @test gplot(plotnet; legend = true) isa Compose.Context
+    @test gplot(plotnet; title = "a title") isa Compose.Context
+    @test gplot(plotnet; node_scale = 1.5, label_size = 16, title_scale = 0.5) isa Compose.Context
+    @test gplot(plotnet; legend = true, legend_fontsize = 7, legend_x = 2.0, legend_y = 2.0) isa Compose.Context
+    @test gplot(plotnet; figsize = (10, 30)) isa Compose.Context
 
     dag = DirectAcyclicGraph()
     add_node!(dag, :A)
-    add_node!(dag, :B; parents=[:A])
+    add_node!(dag, :B; parents = [:A])
     @test gplot(dag) isa Compose.Context
 end
 
 @testitem "Gplot - Saveplot" setup = [ExtraDeps, SetupPlotNet] begin
     mktempdir() do dir
         f = joinpath(dir, "net.svg")
-        saveplot(gplot(plotnet; legend=true, title="net"), f)
+        saveplot(gplot(plotnet; legend = true, title = "net"), f)
         @test isfile(f)
         @test filesize(f) > 0
         @test occursin("<svg", read(f, String))

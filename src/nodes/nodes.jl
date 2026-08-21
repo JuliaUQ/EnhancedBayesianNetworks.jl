@@ -7,7 +7,7 @@ abstract type AbstractDiscreteNode <: AbstractNode end
 abstract type AbstractDiscretization end
 
 """
-    ExactDiscretization(intervals=Real[])
+    ExactDiscretization(intervals = Real[])
 
 Discretization strategy for a continuous **root** node, allowing evidence to be observed on it.
 The node's distribution support is partitioned exactly at the sorted `intervals` edges, turning the
@@ -30,14 +30,14 @@ struct ExactDiscretization <: AbstractDiscretization
         if !issorted(intervals)
             error("Invalid ExactDiscretization: interval values $intervals are not sorted")
         end
-        new(intervals)
+        return new(intervals)
     end
 end
 
 ExactDiscretization() = ExactDiscretization(Vector{Real}())
 
 """
-    ApproximatedDiscretization(intervals=Real[], sigma=0)
+    ApproximatedDiscretization(intervals = Real[], sigma = 0)
 
 Discretization strategy for a continuous **non-root (child)** node, allowing evidence to be observed
 on it. The sorted `intervals` edges partition the support into discrete bins, while `sigma` is the
@@ -64,7 +64,7 @@ struct ApproximatedDiscretization <: AbstractDiscretization
         elseif sigma > 2
             @warn "Selected variance values $sigma could be too large for a realistic tails approximation"
         end
-        new(intervals, sigma)
+        return new(intervals, sigma)
     end
 end
 

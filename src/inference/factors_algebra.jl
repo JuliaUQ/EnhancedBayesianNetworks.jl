@@ -6,7 +6,7 @@ function _restrict(f::Factor, node::Int, state::Int)
     end
     newtable = selectdim(f.table, pos, state)
     newvars = deleteat!(copy(f.vars), pos)
-    Factor(newvars, newtable)
+    return Factor(newvars, newtable)
 end
 
 # Marginalise `node` out: sum the table over its dimension and drop the variable from the factor.
@@ -15,10 +15,10 @@ function sumout(f::Factor, node::Int)
     if isnothing(pos)
         return f
     end
-    newtable = sum(f.table, dims=pos)
-    newtable = dropdims(newtable; dims=pos)
+    newtable = sum(f.table, dims = pos)
+    newtable = dropdims(newtable; dims = pos)
     newvars = deleteat!(copy(f.vars), pos)
-    Factor(newvars, newtable)
+    return Factor(newvars, newtable)
 end
 
 # Factor product: broadcast-multiply two factors over the union of their variables (each expanded to the
@@ -46,7 +46,7 @@ end
 # Rescale a factor so its entries sum to 1 (turns an unnormalised marginal into a distribution).
 function normalize(f::Factor)
     invZ = inv(sum(f.table))
-    Factor(
+    return Factor(
         f.vars,
         map(x -> x * invZ, f.table)
     )
@@ -54,7 +54,7 @@ end
 
 # Reshape a factor's table into the shared `allvars` layout — its dimensions placed at their target
 # positions, singleton dimensions elsewhere — so two factors can be broadcast together.
-function _expand(f::Factor, allvars::Vector{Int}, allpos::Dict{Int,Int})
+function _expand(f::Factor, allvars::Vector{Int}, allpos::Dict{Int, Int})
     # Factor positions
     positions = [allpos[v] for v in f.vars]
     # Reorder factor dimensions according to allvars

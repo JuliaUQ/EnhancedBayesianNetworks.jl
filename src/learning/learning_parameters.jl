@@ -28,15 +28,15 @@ mutable struct DirectAcyclicGraph
     nodes::AbstractVector{DiscreteNode}
     topology::Dict
     A::SparseMatrixCSC
-    states::Dict{Symbol,Vector{Symbol}}   # declared domain per node name
+    states::Dict{Symbol, Vector{Symbol}}   # declared domain per node name
 end
 
 DirectAcyclicGraph() = DirectAcyclicGraph(
-    DiscreteNode[], Dict{Symbol,Int}(), spzeros(Bool, 0, 0), Dict{Symbol,Vector{Symbol}}()
+    DiscreteNode[], Dict{Symbol, Int}(), spzeros(Bool, 0, 0), Dict{Symbol, Vector{Symbol}}()
 )
 
 """
-    add_node!(dag::DirectAcyclicGraph, name::Symbol, states=Symbol[]; parents=Symbol[])
+    add_node!(dag::DirectAcyclicGraph, name::Symbol, states = Symbol[]; parents = Symbol[])
 
 Declare a node in a [`DirectAcyclicGraph`](@ref) by `name`, recording `parents` as its CPT columns
 and wiring an edge from each parent (which must already be in the DAG — add nodes top-down, parents
@@ -53,11 +53,11 @@ add_node!(dag, :G; parents = [:R])
 ```
 """
 function add_node!(
-    dag::DirectAcyclicGraph,
-    name::Symbol,
-    node_states::Vector{Symbol}=Symbol[];
-    parents::Vector{Symbol}=Symbol[]
-)
+        dag::DirectAcyclicGraph,
+        name::Symbol,
+        node_states::Vector{Symbol} = Symbol[];
+        parents::Vector{Symbol} = Symbol[]
+    )
     if haskey(dag.topology, name)
         error("Invalid DAG: node $(repr(name)) is already present")
     end
@@ -86,7 +86,7 @@ parents(dag::DirectAcyclicGraph, name::Symbol) = Symbol[dag.nodes[i].name for i 
 children(dag::DirectAcyclicGraph, name::Symbol) = Symbol[dag.nodes[i].name for i in findnz(dag.A[dag.topology[name], :])[1]]
 
 """
-    learn(dag::DirectAcyclicGraph, df::DataFrame; alpha=0, max_iter=100, tol=1e-4)
+    learn(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4)
 
 Learn the CPTs of `dag` from `df`, choosing the algorithm from the data: with no missing entries it
 uses [`learn_parameters_mle`](@ref) (closed-form, exact); with any missing entries it uses
@@ -100,20 +100,20 @@ call [`order!`](@ref) before inference or sampling. To force a specific algorith
 learn(dag, df)                              # complete data -> MLE
 learn(dag, df_with_missing)                 # has missing   -> EM
 learn(dag, df; alpha = 1)                   # smoothing (either algorithm)
-learn(dag, df_with_missing; tol = 1e-6, max_iter = 500)
+learn(dag, df_with_missing; tol = 1.0e-6, max_iter = 500)
 ```
 """
-function learn(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real=0, max_iter::Int=100, tol::Real=1e-4)
+function learn(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4)
     incomplete = any(n -> any(ismissing, df[!, n.name]), dag.nodes)
     if incomplete
-        return learn_parameters_em(dag, df; alpha=alpha, max_iter=max_iter, tol=tol)
+        return learn_parameters_em(dag, df; alpha = alpha, max_iter = max_iter, tol = tol)
     else
-        return learn_parameters_mle(dag, df; alpha=alpha)
+        return learn_parameters_mle(dag, df; alpha = alpha)
     end
 end
 
 """
-    learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha=0)
+    learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0)
 
 Estimate the CPTs of `dag` from complete data `df` by maximum likelihood, returning a fully-specified
 [`BayesianNetwork`](@ref) (call [`order!`](@ref) on it before inference or sampling).
@@ -135,7 +135,7 @@ learned = learn_parameters_mle(dag, df)
 order!(learned)
 ```
 """
-function learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real=0)
+function learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0)
     # domain of a node = states seen in the data ∪ extra states declared on the DAG
     statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
     nodes = deepcopy(dag.nodes)
@@ -156,7 +156,7 @@ function learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha::Rea
             for s in node_states
                 cnt = count(mask .& (df[!, n] .== s))
                 prob = total == 0 ? 1 / k : (cnt + alpha) / (total + alpha * k)
-                node[pkeys..., n=>s] = prob
+                node[pkeys..., n => s] = prob
             end
         end
     end
@@ -164,7 +164,7 @@ function learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha::Rea
 end
 
 """
-    learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha=0, max_iter=100, tol=1e-4)
+    learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4)
 
 Estimate the CPTs of `dag` from data `df` that may contain `missing` entries, by
 Expectation-Maximization, returning a fully-specified [`BayesianNetwork`](@ref) (call [`order!`](@ref)
@@ -192,7 +192,7 @@ learned = learn_parameters_em(dag, df)   # df may contain `missing` entries
 order!(learned)
 ```
 """
-function learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real=0, max_iter::Int=100, tol::Real=1e-4)
+function learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4)
     domains = Dict(n.name => sort(unique(vcat(get(dag.states, n.name, Symbol[]), collect(skipmissing(df[!, n.name]))))) for n in dag.nodes)
     bn = _em_uniform(dag, domains)
     for _ in 1:max_iter
@@ -217,7 +217,7 @@ function _em_uniform(dag::DirectAcyclicGraph, domains)
         for config in Iterators.product((domains[p] for p in par)...)
             pkeys = [par[i] => config[i] for i in eachindex(par)]
             for s in node_states
-                node[pkeys..., n=>s] = 1 / k
+                node[pkeys..., n => s] = 1 / k
             end
         end
     end
@@ -286,7 +286,7 @@ function _em_mstep(dag::DirectAcyclicGraph, completed::DataFrame, domains, alpha
                 # clamp absorbs floating-point drift from summing fractional weights (cnt/total can
                 # exceed 1 by an ulp, which the CPT's [0,1] check would reject)
                 prob = total == 0 ? 1 / k : clamp((cnt + alpha) / (total + alpha * k), 0.0, 1.0)
-                node[pkeys..., n=>s] = prob
+                node[pkeys..., n => s] = prob
             end
         end
     end
