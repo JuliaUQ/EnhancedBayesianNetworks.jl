@@ -18,7 +18,14 @@
 
 using EnhancedBayesianNetworks
 
-# ## Fixed parameters
+# ## V precise and discretizable
+#
+# In the standard benchmark the vehicle speed `V` is a *precise* root node with an
+# [`ExactDiscretization`](@ref): it is discretized exactly from its own distribution
+# and, since everything else is precise, the network reduces to a plain Bayesian
+# Network.
+
+# ### Fixed parameters
 #
 # The sprung and unsprung masses and the gravitational acceleration are constants
 # of the model.
@@ -27,7 +34,7 @@ M = 3.2633           # kg/cm/s²  (sprung mass)
 m = 0.8158           # kg/cm/s²  (unsprung mass)
 g = 981              # cm/s²     (gravity)
 
-# ## Scenario nodes: road and load coefficients
+# ### Scenario nodes: road and load coefficients
 #
 # The road coefficient (`A`, in rad·cm²/m) and the load coefficient (`b₀`,
 # dimensionless) are discrete nodes. Each state carries a `Parameter` — the
@@ -44,7 +51,7 @@ b₀ = DiscreteNode(:b₀, [:normal_load => [Parameter(0.27, :b₀)], :over_load
 b₀[:b₀=>:normal_load] = 0.7
 b₀[:b₀=>:over_load] = 0.3
 
-# ## Vehicle speed
+# ### Vehicle speed
 #
 # The speed `V` is a continuous root node, uniform between 7 and 12. Attaching an
 # [`ExactDiscretization`](@ref) with explicit interval edges makes `V` survive the
@@ -56,7 +63,7 @@ b₀[:b₀=>:over_load] = 0.3
 discretization_v = ExactDiscretization([7.0, 8.5, 9.5, 10.5, 11.5, 12.0])  # edges in m/s
 V = ContinuousNode(:V, Uniform(7, 12), discretization_v)                   # V in m/s
 
-# ## Continuous suspension coefficients
+# ### Continuous suspension coefficients
 #
 # The suspension stiffness `C`, the tire stiffness `Cₖ` and the damping
 # coefficient `K` are continuous root nodes with normal distributions. They carry
@@ -67,7 +74,7 @@ C = ContinuousNode(:C, Normal(431.7221, 10))     # kg/cm    (suspension stiffnes
 Cₖ = ContinuousNode(:Cₖ, Normal(1475.5503, 10))   # kg/cm    (tire stiffness)
 K = ContinuousNode(:K, Normal(55.0406, 10))       # kg/cm/s  (damping coefficient)
 
-# ## The composite limit state
+# ### The composite limit state
 #
 # The four failure modes are, in order, exceedance of the road-holding ability
 # (`g1`), exceedance of the rolling angle (`g2`), bumper hitting (`g3`) and
@@ -87,7 +94,7 @@ end
 model = Model(df -> composite_model.(df.A, df.b₀, df.V, M, m, g, df.C, df.Cₖ, df.K), :y)
 performance = df -> df.y
 
-# ## Building the enhanced Bayesian Network
+# ### Building the enhanced Bayesian Network
 #
 # The failure event `E` is a [`DiscreteFunctionalNode`](@ref) built from the
 # limit-state model and its performance function; the six inputs (`A`, `b₀`, `V`,
@@ -104,7 +111,7 @@ order!(ebn)
 
 gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
 
-# ## Reducing to a Bayesian Network
+# ### Reducing to a Bayesian Network
 #
 # [`reduce`](@ref) evaluates the functional node: the continuous coefficients
 # `C`, `Cₖ`, `K` are folded into the failure model and eliminated, while `V` —
@@ -120,7 +127,7 @@ println("network reduced in ", round(elapsed; digits=3), " s")
 
 gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Network", label_size=12)
 
-# ## Inferring the failure probability for a scenario
+# ### Inferring the failure probability for a scenario
 #
 # With the network reduced, we can read off the probability of failure for a
 # concrete scenario: driving on a normal-load `road` at a speed in the
@@ -131,7 +138,7 @@ elapsed = @elapsed ϕ = infer(bn, :E, evidence)
 println("inference completed in ", round(elapsed; digits=3), " s")
 ϕ
 
-# ## Cross-check against a direct reliability analysis
+# ### Cross-check against a direct reliability analysis
 #
 # To confirm the network is faithful, we solve the *same* scenario directly with
 # UncertaintyQuantification — fixing the road, load and speed to the scenario's
@@ -162,3 +169,91 @@ pf, cov, _ = probability_of_failure(model, performance, inputs, MonteCarlo(10^6)
 # `pF ≈ 5.2 × 10⁻⁴` that Gerasimov & Vořechovský [gerasimov_failure_2023](@cite)
 # report for this configuration (from 10⁶ importance-sampling evaluations),
 # confirming the enhanced Bayesian Network reproduces their result.
+
+# ## V imprecise and discretized
+#
+# We now make `V` an *imprecise* root node — a p-box / interval — while keeping its
+# discretization. Because `V` is a **root**, the discretization leaves the residual
+# imprecise (unlike a child, whose residual is approximated to a precise
+# distribution), so the imprecise speed still reaches the failure node `E`. The
+# reliability analysis at `E` therefore stays a **double-loop** simulation, and the
+# reduced network is a Credal Network.
+#
+# The model, loads and coefficients are exactly those of the precise case; only `V`
+# changes from a `Uniform(7, 12)` to an `Interval(7, 12)`, and the failure node's
+# simulation from a single-loop `MonteCarlo` to a `DoubleLoop`. (Everything is
+# redefined here because the cross-check above rebound some of the node names to
+# plain UncertaintyQuantification inputs.)
+
+M = 3.2633           # kg/cm/s²  (sprung mass)
+m = 0.8158           # kg/cm/s²  (unsprung mass)
+g = 981              # cm/s²     (gravity)
+
+A = DiscreteNode(:A, [:road => [Parameter(0.15915, :A)], :offroad => [Parameter(0.8, :A)]])  # A in rad·cm²/m
+A[:A=>:road] = 0.7
+A[:A=>:offroad] = 0.3
+
+b₀ = DiscreteNode(:b₀, [:normal_load => [Parameter(0.27, :b₀)], :over_load => [Parameter(0.5, :b₀)]])
+b₀[:b₀=>:normal_load] = 0.7
+b₀[:b₀=>:over_load] = 0.3
+
+discretization_v = ExactDiscretization([7.0, 9.5, 10.5, 12.0])  # edges in m/s (coarser bins)
+V = ContinuousNode(:V, Interval(7, 12), discretization_v)       # V in m/s, imprecise
+
+C = ContinuousNode(:C, Normal(431.7221, 10))     # kg/cm    (suspension stiffness)
+Cₖ = ContinuousNode(:Cₖ, Normal(1475.5503, 10))   # kg/cm    (tire stiffness)
+K = ContinuousNode(:K, Normal(55.0406, 10))       # kg/cm/s  (damping coefficient)
+
+function composite_model(A, b₀, V, M, m, g, C, Cₖ, K)
+    g1 = 1 .- (π .* m .* V .* A) ./ (b₀ .* K .* g .^ 2) .* [(Cₖ ./ (m .+ M) .- (C ./ M)) .^ 2 .+ C .^ 2 ./ (m .* M) .+ Cₖ .* K .^ 2 ./ (m .* M .^ 2)]
+    g2 = 4000 .* C .* (M .* g) .^ (-1.5) .- 8.6394
+    g3 = 2 .* .√(M .* g .* (K .^ 2 .* Cₖ ./ (C .* (m .+ M)) .+ C)) .- 1
+    g4 = Cₖ .- [g .* (M .+ m)] .^ 0.877
+    return minimum([g1[1], g2, g3, g4[1]])
+end
+
+model = Model(df -> composite_model.(df.A, df.b₀, df.V, M, m, g, df.C, df.Cₖ, df.K), :y)
+performance = df -> df.y
+
+# ### Building the enhanced Bayesian Network
+#
+# Same wiring as before; only the failure node's simulation changes to a
+# [`DoubleLoop`](@extref `UncertaintyQuantification.DoubleLoop`), which propagates the
+# imprecise speed with an outer loop over its interval and an inner reliability
+# analysis. Because collapse is a rare event, the inner loop uses a
+# [`SubSetSimulation`](@extref `UncertaintyQuantification.SubSetSimulation`) rather
+# than plain Monte Carlo, and the discretization above is kept coarse — a double loop
+# is far more expensive than the single loop of the precise case.
+
+sim = DoubleLoop(SubSetSimulation(100, 0.1, 10, Uniform(-0.2, 0.2)))
+E = DiscreteFunctionalNode(:E, [model], performance, sim)
+
+nodes = [A, b₀, V, C, Cₖ, K, E]
+ebn = EnhancedBayesianNetwork(nodes)
+add_child!(ebn, [A, b₀, V, C, Cₖ, K], E)
+order!(ebn)
+
+gplot(ebn, background_color="white", legend=true, label_size=10, legend_x=15, legend_y=14)
+
+# ### Reducing to a Credal Network
+#
+# The discretized imprecise `V` is kept as `V_d`; its imprecise residual feeds `E`,
+# whose double-loop analysis yields interval failure probabilities, so [`reduce`](@ref)
+# returns a Credal Network. We time the reduction, as before:
+
+elapsed = @elapsed cn = reduce(ebn)
+println("network reduced in ", round(elapsed; digits=3), " s")
+
+#-
+
+gplot(cn, background_color="white", node_scale=1.1, title="Reduced Credal Network", label_size=12)
+
+# ### Inferring the failure probability for a scenario
+#
+# The same scenario — a normal-load `road` at a speed in the `[9.5, 10.5]` band — now
+# returns lower and upper bounds on the collapse probability:
+
+evidence = Evidence(:V_d => Symbol("[9.5, 10.5]"), :A => :road, :b₀ => :normal_load)
+elapsed = @elapsed ϕ = infer(cn, :E, evidence)
+println("inference completed in ", round(elapsed; digits=3), " s")
+ϕ
