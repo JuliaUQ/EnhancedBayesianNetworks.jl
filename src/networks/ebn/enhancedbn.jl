@@ -25,7 +25,7 @@ add_child!(ebn, :W, :F); add_child!(ebn, :X, :F); order!(ebn)
 ```
 """
 mutable struct EnhancedBayesianNetwork <: AbstractNetwork
-    nodes::AbstractVector{<:AbstractNode}
+    nodes::Vector{AbstractNode}
     topology::Dict
     A::SparseMatrixCSC
 

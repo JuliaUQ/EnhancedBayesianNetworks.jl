@@ -58,6 +58,21 @@ end
     @test size(ebn.A) == (0, 0)
 end
 
+@testitem "EnhancedBayesianNetwork - node vector type" setup=[ExtraDeps] begin
+    # a network with no discrete node must still store a widened vector, so
+    # discretization can push a DiscreteNode during reduce
+    X = ContinuousNode(:X, Normal())
+    Yf = ContinuousFunctionalNode(:Y, [Model(df -> df.X .* 2, :Y)], MonteCarlo(100),
+        ApproximatedDiscretization([-3.0, -1.0, 1.0, 3.0], 1.0))
+    net = EnhancedBayesianNetwork([X, Yf])
+    add_child!(net, X, Yf)
+    order!(net)
+
+    @test net.nodes isa Vector{EnhancedBayesianNetworks.AbstractNode}
+    reduced = @suppress reduce(net)
+    @test any(n -> isa(n, DiscreteNode), reduced.nodes)   # the surrogate was pushed
+end
+
 @testitem "EnhancedBayesianNetwork - add_child!" setup=[ExtraDeps, SetupSprinklereBN] begin
     model = Model(df -> df.Rc .+ df.S, :G2)
     performance = df -> df.G2
