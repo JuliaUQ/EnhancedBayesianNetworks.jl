@@ -51,6 +51,9 @@ pages = [
             "Continuous Nodes" => "examples/Imprecisions/Imprecise_continuous_nodes.md",
             "Discrete Nodes" => "examples/Imprecisions/Imprecise_discrete_nodes.md",
         ],
+        "Parameters Learning" => [
+            "Precise Parameters" => "examples/ParametersLearning/precise_parameters_learning.md",
+        ],
         "Utility Functions" => "examples/UtilityFunctions/utility_functions.md",
     ],
     "API" => [
