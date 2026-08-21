@@ -117,9 +117,13 @@ The strategy is attached to the node and depends on its position:
 - a **root** carries an [`ExactDiscretization`](@ref): the discrete probabilities follow *exactly* from the node's distribution, because the marginal is known;
 - a **child** carries an [`ApproximatedDiscretization`](@ref): the marginal is not generally available, so the tails are approximated (a uniform assumption over each bounded interval and an exponential assumption, with rate/spread `sigma`, over an unbounded tail).
 
-Writing ``x_{ik}^-`` and ``x_{ik}^+`` for the lower and upper edges of the ``k``-th discretization interval, the conditional CDF of the continuous remainder ``X_i'`` given the discrete state ``k`` follows one of three forms.
- 
-A discretization on a **root** truncates the node's own CDF ``F_{X_i}`` to the interval, exactly [straub_bayesian_2010](@cite):
+Throughout, ``x_{ik}^-`` and ``x_{ik}^+`` denote the lower and upper edges of the ``k``-th discretization interval.
+
+##### Precise node
+
+The scheme follows [straub_bayesian_2010](@cite). The conditional CDF of the continuous remainder ``X_i'`` given the discrete state ``k`` takes one of three forms.
+
+A discretization on a **root** truncates the node's own CDF ``F_{X_i}`` to the interval, exactly:
 
 ```math
 F_{X_i'}(x_i \mid k) =
@@ -160,6 +164,24 @@ Tr = ContinuousNode(:Tr, Normal(), ExactDiscretization([-2.0, 0.0, 2.0]))   # ro
 # child: interval edges plus the exponential tail rate (here 1.5)
 Cd = ContinuousNode(:Cd, [:W], ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5))
 ```
+
+##### Imprecise node
+
+When the node is **imprecise** the same partition is used, but both the surrogate's interval probabilities and the residual are chosen to preserve the imprecision.
+
+The probability mass of interval ``k`` is ``p_{ik} = F_{X_i}(x_{ik}^+) - F_{X_i}(x_{ik}^-)``. For a **probability box** the CDF is bounded by a lower ``\underline{F}`` and an upper ``\overline{F}``, so this mass is itself an interval,
+
+```math
+p_{ik} = \big[\, \min(d^-, d^+),\; \max(d^-, d^+) \,\big], \qquad
+d^- = \underline{F}(x_{ik}^+) - \underline{F}(x_{ik}^-), \quad
+d^+ = \overline{F}(x_{ik}^+) - \overline{F}(x_{ik}^-),
+```
+
+while for a bare **interval** entry no CDF is available — only the support — so every interval receives the vacuous mass ``p_{ik} = [0, 1]``. Either way the surrogate node becomes imprecise (credal), and that is what carries the imprecision into inference.
+
+The residual then differs by position. On a **root** it keeps the imprecision: a probability box is restricted to ``[x_{ik}^-, x_{ik}^+]`` (a narrower box) and an interval entry becomes the sub-interval ``[x_{ik}^-, x_{ik}^+]``. On a **child** the residual is the same precise uniform (or exponential-tail) approximation as in the precise case, regardless of the entry's imprecision.
+
+The asymmetry is deliberate: on a root the imprecision lives in both the surrogate probabilities and the residual; on a child it is pushed entirely into the surrogate's interval probabilities, leaving a precise residual.
 
 ## Nodes with an a-priori-unknown CPT (functional nodes)
 
