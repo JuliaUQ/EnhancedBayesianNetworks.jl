@@ -128,15 +128,15 @@ bn.nodes[1].cpt.data
 # reduction, while `R1`, `R2` and `R3` are still folded away as before.
 #
 # Because EnhancedBayesianNetworks requires state names to be unique across the
-# whole network, the two discretizations use edges offset by a small amount, so
+# whole network, the two discretizations use edges offset, so
 # `R4` and `R5` do not end up with identical interval labels. The edges are also
 # chosen so that the capacities queried later (50 and 150 kNm for `R4`, 100 and
 # 200 kNm for `R5`) fall at interval **midpoints** — keeping those intervals in
 # the interior of the grid, away from the outermost bins whose edges depend on
 # the simulated support.
 
-discretizationr4 = ApproximatedDiscretization(collect(range(45, 255, 22)), 1.5)      # edges in kN·m
-discretizationr5 = ApproximatedDiscretization(collect(range(45.1, 255.1, 22)), 1.5)  # edges in kN·m
+discretizationr4 = ApproximatedDiscretization([20, 49, 51, 149, 151, 220], 1.5)      # edges in kN·m
+discretizationr5 = ApproximatedDiscretization([20, 99, 101, 199, 201, 220], 1.5)  # edges in kN·m
 
 Uᵣ = ContinuousNode(:Uᵣ, Normal())
 R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(1000))
@@ -185,17 +185,17 @@ gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Netw
 #
 # First, a low capacity at section 4 (`R4 ≈ 50`) together with `R5 ≈ 100`:
 
-e1 = Evidence(:R4_d => Symbol("[45.0, 55.0]"), :R5_d => Symbol("[95.1, 105.1]"))
+e1 = Evidence(:R4_d => Symbol("[49.0, 51.0]"), :R5_d => Symbol("[99.0, 101.0]"))
 infer(bn, :E, e1)
 
 # A higher capacity at section 4 (`R4 ≈ 150`), same `R5 ≈ 100`:
 
-e2 = Evidence(:R4_d => Symbol("[145.0, 155.0]"), :R5_d => Symbol("[95.1, 105.1]"))
+e2 = Evidence(:R4_d => Symbol("[149.0, 151.0]"), :R5_d => Symbol("[99.0, 101.0]"))
 infer(bn, :E, e2)
 
 # And high capacities at both sections (`R4 ≈ 150`, `R5 ≈ 200`):
 
-e3 = Evidence(:R4_d => Symbol("[145.0, 155.0]"), :R5_d => Symbol("[195.1, 205.1]"))
+e3 = Evidence(:R4_d => Symbol("[149.0, 151.0]"), :R5_d => Symbol("[199.0, 201.0]"))
 infer(bn, :E, e3)
 
 # The three updated collapse probabilities — roughly `0.2`, `0.03` and `0.008` —
