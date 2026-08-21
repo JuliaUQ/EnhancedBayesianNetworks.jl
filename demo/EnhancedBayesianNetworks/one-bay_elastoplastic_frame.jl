@@ -63,8 +63,8 @@ gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Netw
 
 bn.nodes[1].cpt.data
 
-discretizationr4 = ApproximatedDiscretization(collect(range(45, 255, 22)), 1.5)      # edges in kN·m
-discretizationr5 = ApproximatedDiscretization(collect(range(45.1, 255.1, 22)), 1.5)  # edges in kN·m
+discretizationr4 = ApproximatedDiscretization([20, 49, 51, 149, 151, 220], 1.5)      # edges in kN·m
+discretizationr5 = ApproximatedDiscretization([20, 99, 101, 199, 201, 220], 1.5)  # edges in kN·m
 
 Uᵣ = ContinuousNode(:Uᵣ, Normal())
 R1 = ContinuousFunctionalNode(:R1, [model1], MonteCarlo(1000))
@@ -91,13 +91,13 @@ println("network reduced in ", round(elapsed; digits=3), " s")
 
 gplot(bn, background_color="white", node_scale=1.1, title="Reduced Bayesian Network", label_size=12)
 
-e1 = Evidence(:R4_d => Symbol("[45.0, 55.0]"), :R5_d => Symbol("[95.1, 105.1]"))
+e1 = Evidence(:R4_d => Symbol("[49.0, 51.0]"), :R5_d => Symbol("[99.0, 101.0]"))
 infer(bn, :E, e1)
 
-e2 = Evidence(:R4_d => Symbol("[145.0, 155.0]"), :R5_d => Symbol("[95.1, 105.1]"))
+e2 = Evidence(:R4_d => Symbol("[149.0, 151.0]"), :R5_d => Symbol("[99.0, 101.0]"))
 infer(bn, :E, e2)
 
-e3 = Evidence(:R4_d => Symbol("[145.0, 155.0]"), :R5_d => Symbol("[195.1, 205.1]"))
+e3 = Evidence(:R4_d => Symbol("[149.0, 151.0]"), :R5_d => Symbol("[199.0, 201.0]"))
 infer(bn, :E, e3)
 
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
