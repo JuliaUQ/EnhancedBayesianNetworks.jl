@@ -36,6 +36,7 @@ order!(bn)
 gplot(bn, background_color="white")
 
 df = sample(bn, 1000)
+first(df, 10)
 
 dag = DirectAcyclicGraph()
 add_node!(dag, :W)
