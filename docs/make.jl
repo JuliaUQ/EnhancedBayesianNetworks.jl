@@ -51,6 +51,7 @@ pages = [
             "Continuous Nodes" => "examples/Imprecisions/Imprecise_continuous_nodes.md",
             "Discrete Nodes" => "examples/Imprecisions/Imprecise_discrete_nodes.md",
         ],
+        "Utility Functions" => "examples/UtilityFunctions/utility_functions.md",
     ],
     "API" => [
         "Nodes" => "api/nodes.md",
