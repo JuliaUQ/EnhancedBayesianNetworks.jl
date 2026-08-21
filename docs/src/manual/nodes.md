@@ -230,6 +230,14 @@ model = Model(df -> df.x .^ 2, :y)
 CF = ContinuousFunctionalNode(:CF, [model], MonteCarlo(1000))
 ```
 
+!!! note "Imprecise parents give a distribution-free p-box"
+    When a continuous functional node is fed by an *imprecise* continuous parent, its
+    fitted CPT is a **distribution-free (non-parametric) probability box** rather than an
+    ordinary `EmpiricalDistribution`. That representation is not yet available as a
+    dedicated type — it is planned for
+    [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) —
+    so for now **such a node cannot be discretized**.
+
 #### One simulation, or one per scenario
 
 Passing a single simulation, e.g `MonteCarlo(1000)` above, reuses it for every scenario of the node's discrete ancestors. 
