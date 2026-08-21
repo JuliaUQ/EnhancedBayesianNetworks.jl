@@ -129,8 +129,8 @@ catch e
     showerror(stdout, e)
 end
 
-# !!! note "Single-loop after discretizing an imprecise node"
-#     When the only imprecision feeding a functional node comes from imprecise
+# !!! note "Single-loop after discretizing an imprecise child node"
+#     When the only imprecision feeding a functional node comes from a non-root imprecise
 #     continuous ancestors that are **discretized**, use a **single-loop** simulation
 #     (e.g. `MonteCarlo`). Discretization has already carried the imprecision
 #     into the credal discrete surrogate; the residual reaching the functional node is
