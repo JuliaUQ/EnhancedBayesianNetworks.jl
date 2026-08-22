@@ -1,29 +1,29 @@
 @testsnippet SetupSprinklerBN begin
     weather = DiscreteNode(:W)
-    weather[:W=>:Cloudy] = 0.5
-    weather[:W=>:Sunny] = 0.5
+    weather[:W => :Cloudy] = 0.5
+    weather[:W => :Sunny] = 0.5
 
     rain = DiscreteNode(:R, [:W])
-    rain[:W=>:Cloudy, :R=>:Yes] = 0.8
-    rain[:W=>:Cloudy, :R=>:No] = 0.2
-    rain[:W=>:Sunny, :R=>:Yes] = 0.1
-    rain[:W=>:Sunny, :R=>:No] = 0.9
+    rain[:W => :Cloudy, :R => :Yes] = 0.8
+    rain[:W => :Cloudy, :R => :No] = 0.2
+    rain[:W => :Sunny, :R => :Yes] = 0.1
+    rain[:W => :Sunny, :R => :No] = 0.9
 
     sprinkler = DiscreteNode(:S, [:W])
-    sprinkler[:W=>:Cloudy, :S=>:On] = 0.4
-    sprinkler[:W=>:Cloudy, :S=>:Off] = 0.6
-    sprinkler[:W=>:Sunny, :S=>:On] = 0.7
-    sprinkler[:W=>:Sunny, :S=>:Off] = 0.3
+    sprinkler[:W => :Cloudy, :S => :On] = 0.4
+    sprinkler[:W => :Cloudy, :S => :Off] = 0.6
+    sprinkler[:W => :Sunny, :S => :On] = 0.7
+    sprinkler[:W => :Sunny, :S => :Off] = 0.3
 
     grass = DiscreteNode(:G, [:S, :R])
-    grass[:R=>:Yes, :S=>:On, :G=>:Wet] = 0.99
-    grass[:R=>:Yes, :S=>:On, :G=>:Dry] = 0.01
-    grass[:R=>:Yes, :S=>:Off, :G=>:Wet] = 0.9
-    grass[:R=>:Yes, :S=>:Off, :G=>:Dry] = 0.1
-    grass[:R=>:No, :S=>:On, :G=>:Wet] = 0.9
-    grass[:R=>:No, :S=>:On, :G=>:Dry] = 0.1
-    grass[:R=>:No, :S=>:Off, :G=>:Wet] = 0.1
-    grass[:R=>:No, :S=>:Off, :G=>:Dry] = 0.9
+    grass[:R => :Yes, :S => :On, :G => :Wet] = 0.99
+    grass[:R => :Yes, :S => :On, :G => :Dry] = 0.01
+    grass[:R => :Yes, :S => :Off, :G => :Wet] = 0.9
+    grass[:R => :Yes, :S => :Off, :G => :Dry] = 0.1
+    grass[:R => :No, :S => :On, :G => :Wet] = 0.9
+    grass[:R => :No, :S => :On, :G => :Dry] = 0.1
+    grass[:R => :No, :S => :Off, :G => :Wet] = 0.1
+    grass[:R => :No, :S => :Off, :G => :Dry] = 0.9
 
     bn_sprinkler = BayesianNetwork([weather, rain, sprinkler, grass])
     add_child!(bn_sprinkler, :W, :R)
@@ -33,32 +33,32 @@
     order!(bn_sprinkler)
 end
 
-@testitem "Bayesian Network - Struct" setup=[ExtraDeps, SetupSprinklerBN] begin
+@testitem "Bayesian Network - Struct" setup = [ExtraDeps, SetupSprinklerBN] begin
     r = ContinuousNode(:R, Normal())
     v = DiscreteNode(:V)
-    v[:V=>:yesV] = 0.01
-    v[:V=>:noV] = 0.99
+    v[:V => :yesV] = 0.01
+    v[:V => :noV] = 0.99
     s = DiscreteNode(:S)
-    s[:S=>:yesS] = 0.5
-    s[:S=>:noS] = 0.5
+    s[:S => :yesS] = 0.5
+    s[:S => :noS] = 0.5
     t = DiscreteNode(:T, [:V])
-    t[:V=>:yesV, :T=>:yesT] = 0.05
-    t[:V=>:yesV, :T=>:noT] = 0.95
-    t[:V=>:noV, :T=>:yesT] = 0.01
-    t[:V=>:noV, :T=>:noT] = 0.99
+    t[:V => :yesV, :T => :yesT] = 0.05
+    t[:V => :yesV, :T => :noT] = 0.95
+    t[:V => :noV, :T => :yesT] = 0.01
+    t[:V => :noV, :T => :noT] = 0.99
     l = DiscreteNode(:L, [:S])
-    l[:S=>:yesS, :L=>:yesL] = 0.1
-    l[:S=>:yesS, :L=>:noL] = 0.9
-    l[:S=>:noS, :L=>:yesL] = 0.01
-    l[:S=>:noS, :L=>:noL] = 0.99
+    l[:S => :yesS, :L => :yesL] = 0.1
+    l[:S => :yesS, :L => :noL] = 0.9
+    l[:S => :noS, :L => :yesL] = 0.01
+    l[:S => :noS, :L => :noL] = 0.99
     f1 = DiscreteFunctionalNode(
         :F1, [Model(df -> df.v1 .+ df.R, :f1)], df -> 0.8 .- df.f1, MonteCarlo(200)
     )
     g = DiscreteNode(:G)
-    g[:G=>:g1] = Interval(0.1, 0.2)
-    g[:G=>:g2] = Interval(0.15, 0.25)
-    g[:G=>:g3] = 0.2
-    g[:G=>:g4] = Interval(0.3, 0.5)
+    g[:G => :g1] = Interval(0.1, 0.2)
+    g[:G => :g2] = Interval(0.15, 0.25)
+    g[:G => :g3] = 0.2
+    g[:G => :g4] = Interval(0.3, 0.5)
     nodes = [r, v, s, t]
     @test_throws MethodError BayesianNetwork(nodes)
     nodes = [f1, v, s, t]
@@ -66,8 +66,8 @@ end
     nodes = [v, v, s]
     @test_throws ErrorException("Invalid BN: duplicate node names [:V]") BayesianNetwork(nodes)
     h = DiscreteNode(:H)
-    h[:H=>:yesV] = 0.1
-    h[:H=>:noH] = 0.9
+    h[:H => :yesV] = 0.1
+    h[:H => :noH] = 0.9
     nodes = [v, h]
     @test_throws ErrorException("Invalid BN: duplicate node states [:yesV]") BayesianNetwork(nodes)
     nodes = [v, s, g]
@@ -105,14 +105,14 @@ end
 
     bn = BayesianNetwork(DiscreteNode[])
     @test isempty(bn.nodes)
-    @test bn.topology == Dict{Symbol,Int}()
+    @test bn.topology == Dict{Symbol, Int}()
     @test size(bn.A) == (0, 0)
 end
 
-@testitem "Bayesian Network - Sampling" setup=[ExtraDeps, SetupSprinklerBN] begin
+@testitem "Bayesian Network - Sampling" setup = [ExtraDeps, SetupSprinklerBN] begin
     # k standard errors of a sample proportion of size m.
     # k = 6 ⇒ ~2e-9 false-failure probability, independent of the RNG algorithm.
-    band(p, m; k=6) = k * sqrt(p * (1 - p) / m)
+    band(p, m; k = 6) = k * sqrt(p * (1 - p) / m)
 
     n = 50_000
     df = sample(bn_sprinkler, n)
@@ -136,4 +136,3 @@ end
     p̂c = count(==(:Yes), cloudy.R) / nrow(cloudy)
     @test abs(p̂c - 0.8) < band(0.8, nrow(cloudy))
 end
-

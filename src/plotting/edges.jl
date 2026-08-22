@@ -1,8 +1,12 @@
 function _arrowcoords(θ, tip_x, tip_y, arrowlength, angleoffset)
-    arr1 = (tip_x - arrowlength * cos(θ + angleoffset),
-        tip_y - arrowlength * sin(θ + angleoffset))
-    arr2 = (tip_x - arrowlength * cos(θ - angleoffset),
-        tip_y - arrowlength * sin(θ - angleoffset))
+    arr1 = (
+        tip_x - arrowlength * cos(θ + angleoffset),
+        tip_y - arrowlength * sin(θ + angleoffset),
+    )
+    arr2 = (
+        tip_x - arrowlength * cos(θ - angleoffset),
+        tip_y - arrowlength * sin(θ - angleoffset),
+    )
     return arr1, arr2
 end
 
@@ -13,10 +17,12 @@ end
 # Coordinates of every edge: the segment from the source border to the arrowhead
 # base, and the arrowhead triangle whose tip sits on the target border. The line
 # stops at the arrowhead base so it does not show through the filled triangle.
-function _build_edges(edge_list, locs_x, locs_y, nodes, hw, hh,
-    arrowlength, angleoffset)
-    lines = Vector{Vector{Tuple{Float64,Float64}}}(undef, length(edge_list))
-    arrows = Vector{Vector{Tuple{Float64,Float64}}}(undef, length(edge_list))
+function _build_edges(
+        edge_list, locs_x, locs_y, nodes, hw, hh,
+        arrowlength, angleoffset
+    )
+    lines = Vector{Vector{Tuple{Float64, Float64}}}(undef, length(edge_list))
+    arrows = Vector{Vector{Tuple{Float64, Float64}}}(undef, length(edge_list))
 
     for (e_idx, (i, j)) in enumerate(edge_list)
         Δx = locs_x[j] - locs_x[i]

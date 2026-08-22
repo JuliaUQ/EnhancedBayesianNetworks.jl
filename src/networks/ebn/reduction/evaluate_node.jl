@@ -1,7 +1,7 @@
 # Evaluate a continuous functional node into a plain ContinuousNode: for each discrete-ancestor scenario,
 # sample the parents' inputs through the models and refit the output as an EmpiricalDistribution
 # (or lower/upper EmpiricalDistributions when the inputs are imprecise). `collect` keeps the raw samples.
-function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, collect::Bool=true)
+function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, collect::Bool = true)
     scs = _simulation_scenarios(node)
     inputs_vector = map(sc -> (sc, _simulation_inputs(net, node, sc)), scs)
     if collect
@@ -23,7 +23,7 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
         if !UncertaintyQuantification.isimprecise(uqinputs)
             samples = UncertaintyQuantification.sample(uqinputs, node.simulation[scenario...])
             UncertaintyQuantification.evaluate!(node.models, samples)
-            new_continuous[scenario...] = EmpiricalDistribution(samples[:, node.models[end].name]; nbins=node.nbins)
+            new_continuous[scenario...] = EmpiricalDistribution(samples[:, node.models[end].name]; nbins = node.nbins)
             if collect
                 new_continuous.results[scenario...] = samples
             end
@@ -32,8 +32,8 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
             UncertaintyQuantification.propagate_intervals!(node.models, samples)
             lbs = map(s -> s.lb, samples[:, node.models[end].name])
             ubs = map(s -> s.ub, samples[:, node.models[end].name])
-            lb_pdf = EmpiricalDistribution(lbs; nbins=node.nbins)
-            ub_pdf = EmpiricalDistribution(ubs; nbins=node.nbins)
+            lb_pdf = EmpiricalDistribution(lbs; nbins = node.nbins)
+            ub_pdf = EmpiricalDistribution(ubs; nbins = node.nbins)
             new_continuous[scenario...] = [:lb => lb_pdf, :ub => ub_pdf]
             if collect
                 new_continuous.results[scenario...] = samples
@@ -46,7 +46,7 @@ end
 # Evaluate a discrete functional node into a DiscreteNode: for each scenario, estimate the failure
 # probability from the models + performance function, storing it on the _failed state and its complement
 # on _safe. `collect` keeps the raw samples on `results`.
-function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, collect::Bool=true)
+function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, collect::Bool = true)
     scs = _simulation_scenarios(node)
     inputs_vector = map(sc -> (sc, EnhancedBayesianNetworks._simulation_inputs(net, node, sc)), scs)
     if collect
@@ -59,7 +59,7 @@ function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, co
         scenario = i[1]
         uqinputs = i[2]
         sim = node.simulation[scenario...]
-        if isa(sim, Union{DoubleLoop,RandomSlicing}) && !UncertaintyQuantification.isimprecise(uqinputs)
+        if isa(sim, Union{DoubleLoop, RandomSlicing}) && !UncertaintyQuantification.isimprecise(uqinputs)
             error(
                 "Invalid simulation for functional node $(repr(node.name)): the assigned $(nameof(typeof(sim))) is an imprecise (double-loop) simulation, but every input reaching $(repr(node.name)) is precise. This happens when an imprecise continuous ancestor of $(repr(node.name)) is discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding $(repr(node.name)). Use a single-loop simulation (e.g. MonteCarlo) for $(repr(node.name)); the network stays credal through the discretized node. Alternatively, remove the discretization from the imprecise continuous ancestor so its imprecision reaches $(repr(node.name)) directly."
             )
@@ -68,11 +68,11 @@ function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, co
         if collect
             new_discrete.results[scenario...] = res[2:end]
         end
-        new_discrete[(scenario..., node.name=>Symbol(string(node.name)*"_failed"))...] = res[1]
+        new_discrete[(scenario..., node.name => Symbol(string(node.name) * "_failed"))...] = res[1]
         if isa(res[1], Interval)
-            new_discrete[(scenario..., node.name=>Symbol(string(node.name)*"_safe"))...] = Interval(1 - res[1].ub, 1 - res[1].lb)
+            new_discrete[(scenario..., node.name => Symbol(string(node.name) * "_safe"))...] = Interval(1 - res[1].ub, 1 - res[1].lb)
         else
-            new_discrete[(scenario..., node.name=>Symbol(string(node.name)*"_safe"))...] = 1 - res[1]
+            new_discrete[(scenario..., node.name => Symbol(string(node.name) * "_safe"))...] = 1 - res[1]
         end
     end
     return new_discrete

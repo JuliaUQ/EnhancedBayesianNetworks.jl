@@ -22,12 +22,12 @@ using EnhancedBayesianNetworks
 # smokes.
 
 A = DiscreteNode(:A)                 # visit to Asia
-A[:A=>:A_yes] = 0.01
-A[:A=>:A_no] = 0.99
+A[:A => :A_yes] = 0.01
+A[:A => :A_no] = 0.99
 
 S = DiscreteNode(:S)                 # smoker
-S[:S=>:S_yes] = 0.5
-S[:S=>:S_no] = 0.5
+S[:S => :S_yes] = 0.5
+S[:S => :S_no] = 0.5
 
 # ## The diseases
 #
@@ -35,22 +35,22 @@ S[:S=>:S_no] = 0.5
 # on smoking.
 
 T = DiscreteNode(:T, [:A])           # tuberculosis
-T[:A=>:A_yes, :T=>:T_yes] = 0.05
-T[:A=>:A_yes, :T=>:T_no] = 0.95
-T[:A=>:A_no, :T=>:T_yes] = 0.01
-T[:A=>:A_no, :T=>:T_no] = 0.99
+T[:A => :A_yes, :T => :T_yes] = 0.05
+T[:A => :A_yes, :T => :T_no] = 0.95
+T[:A => :A_no, :T => :T_yes] = 0.01
+T[:A => :A_no, :T => :T_no] = 0.99
 
 L = DiscreteNode(:L, [:S])           # lung cancer
-L[:S=>:S_yes, :L=>:L_yes] = 0.10
-L[:S=>:S_yes, :L=>:L_no] = 0.90
-L[:S=>:S_no, :L=>:L_yes] = 0.01
-L[:S=>:S_no, :L=>:L_no] = 0.99
+L[:S => :S_yes, :L => :L_yes] = 0.1
+L[:S => :S_yes, :L => :L_no] = 0.9
+L[:S => :S_no, :L => :L_yes] = 0.01
+L[:S => :S_no, :L => :L_no] = 0.99
 
 B = DiscreteNode(:B, [:S])           # bronchitis
-B[:S=>:S_yes, :B=>:B_yes] = 0.60
-B[:S=>:S_yes, :B=>:B_no] = 0.40
-B[:S=>:S_no, :B=>:B_yes] = 0.30
-B[:S=>:S_no, :B=>:B_no] = 0.70
+B[:S => :S_yes, :B => :B_yes] = 0.6
+B[:S => :S_yes, :B => :B_no] = 0.4
+B[:S => :S_no, :B => :B_yes] = 0.3
+B[:S => :S_no, :B => :B_no] = 0.7
 
 # ## The logical "either" node
 #
@@ -58,14 +58,14 @@ B[:S=>:S_no, :B=>:B_no] = 0.70
 # and `L`, expressed as a CPT whose entries are just 0 and 1.
 
 E = DiscreteNode(:E, [:T, :L])       # tuberculosis OR lung cancer
-E[:T=>:T_yes, :L=>:L_yes, :E=>:E_yes] = 1.0
-E[:T=>:T_yes, :L=>:L_yes, :E=>:E_no] = 0.0
-E[:T=>:T_yes, :L=>:L_no, :E=>:E_yes] = 1.0
-E[:T=>:T_yes, :L=>:L_no, :E=>:E_no] = 0.0
-E[:T=>:T_no, :L=>:L_yes, :E=>:E_yes] = 1.0
-E[:T=>:T_no, :L=>:L_yes, :E=>:E_no] = 0.0
-E[:T=>:T_no, :L=>:L_no, :E=>:E_yes] = 0.0
-E[:T=>:T_no, :L=>:L_no, :E=>:E_no] = 1.0
+E[:T => :T_yes, :L => :L_yes, :E => :E_yes] = 1.0
+E[:T => :T_yes, :L => :L_yes, :E => :E_no] = 0.0
+E[:T => :T_yes, :L => :L_no, :E => :E_yes] = 1.0
+E[:T => :T_yes, :L => :L_no, :E => :E_no] = 0.0
+E[:T => :T_no, :L => :L_yes, :E => :E_yes] = 1.0
+E[:T => :T_no, :L => :L_yes, :E => :E_no] = 0.0
+E[:T => :T_no, :L => :L_no, :E => :E_yes] = 0.0
+E[:T => :T_no, :L => :L_no, :E => :E_no] = 1.0
 
 # ## The observations
 #
@@ -73,20 +73,20 @@ E[:T=>:T_no, :L=>:L_no, :E=>:E_no] = 1.0
 # bronchitis.
 
 X = DiscreteNode(:X, [:E])           # positive X-ray
-X[:E=>:E_yes, :X=>:X_yes] = 0.98
-X[:E=>:E_yes, :X=>:X_no] = 0.02
-X[:E=>:E_no, :X=>:X_yes] = 0.05
-X[:E=>:E_no, :X=>:X_no] = 0.95
+X[:E => :E_yes, :X => :X_yes] = 0.98
+X[:E => :E_yes, :X => :X_no] = 0.02
+X[:E => :E_no, :X => :X_yes] = 0.05
+X[:E => :E_no, :X => :X_no] = 0.95
 
 D = DiscreteNode(:D, [:E, :B])       # dyspnoea
-D[:E=>:E_yes, :B=>:B_yes, :D=>:D_yes] = 0.90
-D[:E=>:E_yes, :B=>:B_yes, :D=>:D_no] = 0.10
-D[:E=>:E_yes, :B=>:B_no, :D=>:D_yes] = 0.70
-D[:E=>:E_yes, :B=>:B_no, :D=>:D_no] = 0.30
-D[:E=>:E_no, :B=>:B_yes, :D=>:D_yes] = 0.80
-D[:E=>:E_no, :B=>:B_yes, :D=>:D_no] = 0.20
-D[:E=>:E_no, :B=>:B_no, :D=>:D_yes] = 0.10
-D[:E=>:E_no, :B=>:B_no, :D=>:D_no] = 0.90
+D[:E => :E_yes, :B => :B_yes, :D => :D_yes] = 0.9
+D[:E => :E_yes, :B => :B_yes, :D => :D_no] = 0.1
+D[:E => :E_yes, :B => :B_no, :D => :D_yes] = 0.7
+D[:E => :E_yes, :B => :B_no, :D => :D_no] = 0.3
+D[:E => :E_no, :B => :B_yes, :D => :D_yes] = 0.8
+D[:E => :E_no, :B => :B_yes, :D => :D_no] = 0.2
+D[:E => :E_no, :B => :B_no, :D => :D_yes] = 0.1
+D[:E => :E_no, :B => :B_no, :D => :D_no] = 0.9
 
 # ## Wiring the network
 #
@@ -107,7 +107,7 @@ order!(bn)
 # The layered layout makes the causal flow easy to read, root causes on top,
 # observations at the bottom.
 
-gplot(bn, background_color="white", legend=true, label_size=10, node_scale=0.8, legend_x=5.5, legend_y=1)
+gplot(bn, background_color = "white", legend = true, label_size = 10, node_scale = 0.8, legend_x = 5.5, legend_y = 1)
 # ## Inference
 #
 # Without evidence, [`infer`](@ref) returns the prior marginal of dyspnoea.
@@ -142,4 +142,4 @@ infer(bn, :L, Evidence(:X => :X_yes))
 
 infer(bn, :D, Evidence(:A => :A_yes, :S => :S_yes))   # warm up (trigger compilation)
 elapsed = @elapsed infer(bn, :D, Evidence(:A => :A_yes, :S => :S_yes))
-println("query solved in ", round(elapsed * 1e3; digits=3), " ms")
+println("query solved in ", round(elapsed * 1.0e3; digits = 3), " ms")

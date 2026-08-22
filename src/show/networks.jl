@@ -1,6 +1,6 @@
 # EnhancedBayesianNetwork: counts by node kind, then a topology table (node, type, precision, parents).
 function Base.show(io::IO, net::EnhancedBayesianNetwork)
-    print(io, "EnhancedBayesianNetwork(", length(net.nodes), " nodes)")
+    return print(io, "EnhancedBayesianNetwork(", length(net.nodes), " nodes)")
 end
 function Base.show(io::IO, ::MIME"text/plain", net::EnhancedBayesianNetwork)
 
@@ -51,11 +51,12 @@ function Base.show(io::IO, ::MIME"text/plain", net::EnhancedBayesianNetwork)
 
         println(io, rpad(string(node.name), 20), rpad(typ, 24), rpad(precision, 12), parstr)
     end
+    return
 end
 
 # BayesianNetwork: node/edge counts, then a topology table (index, node, states, parents).
 function Base.show(io::IO, bn::BayesianNetwork)
-    print(io, "BayesianNetwork(", length(bn.nodes), " nodes)")
+    return print(io, "BayesianNetwork(", length(bn.nodes), " nodes)")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", bn::BayesianNetwork)
@@ -94,11 +95,12 @@ function Base.show(io::IO, ::MIME"text/plain", bn::BayesianNetwork)
             parstr
         )
     end
+    return
 end
 
 # CredalNetwork: precise/credal counts, then a topology table (index, node, precision, parents).
 function Base.show(io::IO, cn::CredalNetwork)
-    print(io, "CredalNetwork(", length(cn.nodes), " nodes)")
+    return print(io, "CredalNetwork(", length(cn.nodes), " nodes)")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", cn::CredalNetwork)
@@ -144,4 +146,5 @@ function Base.show(io::IO, ::MIME"text/plain", cn::CredalNetwork)
             parstr
         )
     end
+    return
 end

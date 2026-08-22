@@ -1,4 +1,3 @@
-
 """
     BayesianNetwork(nodes::AbstractVector{DiscreteNode})
 
@@ -16,7 +15,7 @@ afterwards with [`add_child!`](@ref).
 ```julia
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 
 bn = BayesianNetwork([W, S])
@@ -37,7 +36,7 @@ mutable struct BayesianNetwork <: AbstractNetwork
             error("Invalid BN: duplicate node names $dups")
         end
         # states must be globally unique across nodes (init=Symbol[] handles the empty-network case)
-        states_list = reduce(vcat, states.(nodes); init=Symbol[])
+        states_list = reduce(vcat, states.(nodes); init = Symbol[])
         dups = _not_unique_elements(states_list)
         if !isempty(dups)
             error("Invalid BN: duplicate node states $dups")
@@ -47,7 +46,7 @@ mutable struct BayesianNetwork <: AbstractNetwork
         if !isempty(imprecise_nodes)
             error("Invalid BN: node/s $(getproperty.(imprecise_nodes, :name)) are imprecise; CredalNetwork structure is required")
         end
-        new(nodes, topology, A)
+        return new(nodes, topology, A)
     end
 end
 
@@ -65,7 +64,7 @@ a warning.
 ```julia
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
 
@@ -104,7 +103,7 @@ function joint_probability(bn::BayesianNetwork, scenario::Evidence)
 end
 
 """
-    sample(bn::BayesianNetwork, n::Int=1)
+    sample(bn::BayesianNetwork, n::Int = 1)
 
 Draw discrete samples. Given a `BayesianNetwork`, perform ancestral sampling of `n` joint draws (ordering the network first) and return them as a `DataFrame` with one column per node.
 
@@ -112,14 +111,14 @@ Draw discrete samples. Given a `BayesianNetwork`, perform ancestral sampling of 
 ```julia
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 
 bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
 sample(bn, 3)                               # 3×2 DataFrame with columns :W, :S
 ```
 """
-function sample(bn::BayesianNetwork, n::Int=1)
+function sample(bn::BayesianNetwork, n::Int = 1)
     order!(bn)
     evidences = [Evidence() for _ in 1:n]
     samples = DataFrame()

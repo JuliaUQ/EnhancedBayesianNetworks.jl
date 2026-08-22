@@ -30,10 +30,10 @@ mutable struct EnhancedBayesianNetwork <: AbstractNetwork
     A::SparseMatrixCSC
 
     function EnhancedBayesianNetwork(
-        nodes::AbstractVector{<:AbstractNode},
-        topology::Dict,
-        A::SparseMatrixCSC
-    )
+            nodes::AbstractVector{<:AbstractNode},
+            topology::Dict,
+            A::SparseMatrixCSC
+        )
         # node names must be unique
         node_names = map(i -> i.name, nodes)
         dups = _not_unique_elements(node_names)
@@ -42,14 +42,14 @@ mutable struct EnhancedBayesianNetwork <: AbstractNetwork
         end
         discrete_nodes = filter(x -> isa(x, DiscreteNode), nodes)
         # states must be globally unique across nodes (init=Symbol[] handles the empty-network case)
-        states_list = reduce(vcat, states.(discrete_nodes); init=Symbol[])
+        states_list = reduce(vcat, states.(discrete_nodes); init = Symbol[])
         dups = _not_unique_elements(states_list)
         if !isempty(discrete_nodes)
             if !isempty(dups)
                 error("Invalid eBN: duplicate node states $dups")
             end
         end
-        new(nodes, topology, A)
+        return new(nodes, topology, A)
     end
 end
 
@@ -134,7 +134,7 @@ end
 
 # Grow the set of continuous nodes linked through shared Markov blankets: keep adding continuous nodes
 # found in the current group's blankets until it stabilises. Used to build Markov envelopes.
-function _markov_continuous_group(net::EnhancedBayesianNetwork, node::Union{ContinuousNode,ContinuousFunctionalNode})
+function _markov_continuous_group(net::EnhancedBayesianNetwork, node::Union{ContinuousNode, ContinuousFunctionalNode})
     Xm_group = [node]
     blanket = filter(n -> n.name ∈ markov_blanket(net, node), net.nodes)
     continuous_node_in_blanket = filter(x -> isa(x, AbstractContinuousNode), blanket)
@@ -168,7 +168,7 @@ function _verify_functional_parents(net::EnhancedBayesianNetwork, node::Function
     if isempty(cont_par)
         @warn "Node $(repr(node.name)) is a FunctionalNode with no continuous parents. Resulting failure probabilities are Boolean"
     end
-    if isempty(discrete_ancestors(net, node))
+    return if isempty(discrete_ancestors(net, node))
         @warn "Node $(repr(node.name)) is a FunctionalNode with no discrete parents: its evaluation a single Structural Reliability Problem and its CPT will contain a single scenario."
     end
 end
@@ -176,7 +176,7 @@ end
 # Materialise a functional node's per-scenario simulation table: for every combination of its discrete
 # ancestors' states, store the node's simulation strategy. No-op if the table already exists.
 function _build_simulations!(net::EnhancedBayesianNetwork, node::FunctionalNode)
-    if !isa(node.simulation, ScenariosTable)
+    return if !isa(node.simulation, ScenariosTable)
         anc_nodes = filter(n -> n.name ∈ discrete_ancestors(net, node), net.nodes)
         anc = Symbol[i.name for i in anc_nodes]
         if isa(node, AbstractContinuousNode)
@@ -200,7 +200,7 @@ function _verify_ancestors(net::EnhancedBayesianNetwork, node::FunctionalNode) #
         error("Invalid SimulationTable: node $(repr(node.name)) has nodes $only_in_st defined in the SimulationTable only, but they are not ancestors in the defined eBN")
     end
     only_in_net = setdiff(net_ancestors, st_ancestors)
-    if !isempty(only_in_net)
+    return if !isempty(only_in_net)
         error("Invalid SimulationTable: node $(repr(node.name)) has ancestors $only_in_net defined in the eBN only, but they are not present in its SimulationTable")
     end
 end
@@ -216,4 +216,5 @@ function _verify_scenarios(net::EnhancedBayesianNetwork, node::FunctionalNode)
             error("Invalid SimulationTable: node $(repr(node.name)) is missing the following scenario $(filtering_element)")
         end
     end
+    return
 end

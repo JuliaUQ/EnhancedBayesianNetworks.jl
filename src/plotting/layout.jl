@@ -30,14 +30,14 @@ function _compute_layers(A::SparseMatrixCSC)
     return layer
 end
 
-function _layered_positions(A::SparseMatrixCSC, border_pad::Float64=0.12, top_pad::Float64=0.12)
+function _layered_positions(A::SparseMatrixCSC, border_pad::Float64 = 0.12, top_pad::Float64 = 0.12)
     n = size(A, 1)
     layers = _compute_layers(A)
     max_layer = maximum(layers)
 
     layer_groups = [Int[] for _ in 0:max_layer]
     for i in 1:n
-        push!(layer_groups[layers[i]+1], i)
+        push!(layer_groups[layers[i] + 1], i)
     end
 
     locs_x = zeros(n)

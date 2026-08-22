@@ -7,29 +7,29 @@
 
     # ---- sample nodes: precise/credal discrete, discretized/plain continuous, both functionals ----
     W = DiscreteNode(:W)
-    W[:W=>:sunny] = 0.7
-    W[:W=>:cloudy] = 0.3
+    W[:W => :sunny] = 0.7
+    W[:W => :cloudy] = 0.3
 
     S = DiscreteNode(:S, [:W])
-    S[:W=>:sunny, :S=>:on] = 0.6
-    S[:W=>:sunny, :S=>:off] = 0.4
-    S[:W=>:cloudy, :S=>:on] = 0.2
-    S[:W=>:cloudy, :S=>:off] = 0.8
+    S[:W => :sunny, :S => :on] = 0.6
+    S[:W => :sunny, :S => :off] = 0.4
+    S[:W => :cloudy, :S => :on] = 0.2
+    S[:W => :cloudy, :S => :off] = 0.8
 
     C = DiscreteNode(:C)
-    C[:C=>:yes] = Interval(0.2, 0.4)
-    C[:C=>:no] = Interval(0.6, 0.8)
+    C[:C => :yes] = Interval(0.2, 0.4)
+    C[:C => :no] = Interval(0.6, 0.8)
 
     Sp = DiscreteNode(:Sp, [:on => [Parameter(0.5, :Sp)], :off => [Parameter(0.0, :Sp)]])
-    Sp[:Sp=>:on] = 0.6
-    Sp[:Sp=>:off] = 0.4
+    Sp[:Sp => :on] = 0.6
+    Sp[:Sp => :off] = 0.4
 
     Rc = ContinuousNode(:Rc, ExactDiscretization([-1.0, 1.0]))
     Rc[] = Normal()
 
     U = ContinuousNode(:U, [:W], ApproximatedDiscretization([-1.0, 1.0], 2))
-    U[:W=>:sunny] = Normal()
-    U[:W=>:cloudy] = Normal(2, 1)
+    U[:W => :sunny] = Normal()
+    U[:W => :cloudy] = Normal(2, 1)
 
     D = ContinuousNode(:D)
     D[] = Normal(1, 2)
@@ -44,18 +44,18 @@
 
     # ---- BN (W -> S -> R) ----
     Wb = DiscreteNode(:W)
-    Wb[:W=>:sunny] = 0.7
-    Wb[:W=>:cloudy] = 0.3
+    Wb[:W => :sunny] = 0.7
+    Wb[:W => :cloudy] = 0.3
     Sb = DiscreteNode(:S, [:W])
-    Sb[:W=>:sunny, :S=>:on] = 0.6
-    Sb[:W=>:sunny, :S=>:off] = 0.4
-    Sb[:W=>:cloudy, :S=>:on] = 0.2
-    Sb[:W=>:cloudy, :S=>:off] = 0.8
+    Sb[:W => :sunny, :S => :on] = 0.6
+    Sb[:W => :sunny, :S => :off] = 0.4
+    Sb[:W => :cloudy, :S => :on] = 0.2
+    Sb[:W => :cloudy, :S => :off] = 0.8
     Rb = DiscreteNode(:R, [:S])
-    Rb[:S=>:on, :R=>:hi] = 0.5
-    Rb[:S=>:on, :R=>:lo] = 0.5
-    Rb[:S=>:off, :R=>:hi] = 0.1
-    Rb[:S=>:off, :R=>:lo] = 0.9
+    Rb[:S => :on, :R => :hi] = 0.5
+    Rb[:S => :on, :R => :lo] = 0.5
+    Rb[:S => :off, :R => :hi] = 0.1
+    Rb[:S => :off, :R => :lo] = 0.9
     bn = BayesianNetwork([Wb, Sb, Rb])
     add_child!(bn, :W, :S)
     add_child!(bn, :S, :R)
@@ -63,20 +63,20 @@
 
     # ---- CN (Tampering, Fire -> Alarm) ----
     Tc = DiscreteNode(:Tampering)
-    Tc[:Tampering=>:YesT] = 0.98
-    Tc[:Tampering=>:NoT] = 0.02
+    Tc[:Tampering => :YesT] = 0.98
+    Tc[:Tampering => :NoT] = 0.02
     Fc = DiscreteNode(:Fire)
-    Fc[:Fire=>:YesF] = Interval(0.98, 0.99)
-    Fc[:Fire=>:NoF] = Interval(0.01, 0.02)
+    Fc[:Fire => :YesF] = Interval(0.98, 0.99)
+    Fc[:Fire => :NoF] = Interval(0.01, 0.02)
     Ac = DiscreteNode(:Alarm, [:Tampering, :Fire])
-    Ac[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.4, 0.6)
-    Ac[:Tampering=>:YesT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.4, 0.5)
-    Ac[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.85, 0.9)
-    Ac[:Tampering=>:YesT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.1, 0.15)
-    Ac[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:YesA] = Interval(0.985, 0.99)
-    Ac[:Tampering=>:NoT, :Fire=>:YesF, :Alarm=>:NoA] = Interval(0.01, 0.015)
-    Ac[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:YesA] = Interval(0.0001, 0.0002)
-    Ac[:Tampering=>:NoT, :Fire=>:NoF, :Alarm=>:NoA] = Interval(0.9998, 0.9999)
+    Ac[:Tampering => :YesT, :Fire => :YesF, :Alarm => :YesA] = Interval(0.4, 0.6)
+    Ac[:Tampering => :YesT, :Fire => :YesF, :Alarm => :NoA] = Interval(0.4, 0.5)
+    Ac[:Tampering => :YesT, :Fire => :NoF, :Alarm => :YesA] = Interval(0.85, 0.9)
+    Ac[:Tampering => :YesT, :Fire => :NoF, :Alarm => :NoA] = Interval(0.1, 0.15)
+    Ac[:Tampering => :NoT, :Fire => :YesF, :Alarm => :YesA] = Interval(0.985, 0.99)
+    Ac[:Tampering => :NoT, :Fire => :YesF, :Alarm => :NoA] = Interval(0.01, 0.015)
+    Ac[:Tampering => :NoT, :Fire => :NoF, :Alarm => :YesA] = Interval(0.0001, 0.0002)
+    Ac[:Tampering => :NoT, :Fire => :NoF, :Alarm => :NoA] = Interval(0.9998, 0.9999)
     cn = CredalNetwork([Tc, Fc, Ac])
     add_child!(cn, :Tampering, :Alarm)
     add_child!(cn, :Fire, :Alarm)

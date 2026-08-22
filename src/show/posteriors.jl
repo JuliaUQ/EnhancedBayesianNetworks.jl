@@ -1,6 +1,6 @@
 # Posterior: "P(query | evidence)" header, then the probability table row per state combination.
 function Base.show(io::IO, p::Posterior)
-    print(io, "Posterior ", _pq_string(p.query, p.evidence))
+    return print(io, "Posterior ", _pq_string(p.query, p.evidence))
 end
 function Base.show(io::IO, ::MIME"text/plain", p::Posterior)
     f = p.factor
@@ -21,11 +21,12 @@ function Base.show(io::IO, ::MIME"text/plain", p::Posterior)
         end
         println(io, f.table[I])
     end
+    return
 end
 
 # CredalPosterior: like Posterior but printing [lower, upper] bounds, plus the count of extreme posteriors.
 function Base.show(io::IO, p::CredalPosterior)
-    print(io, "CredalPosterior ", _pq_string(p.query, p.evidence))
+    return print(io, "CredalPosterior ", _pq_string(p.query, p.evidence))
 end
 function Base.show(io::IO, ::MIME"text/plain", p::CredalPosterior)
     lower = p.lower
@@ -44,10 +45,10 @@ function Base.show(io::IO, ::MIME"text/plain", p::CredalPosterior)
         for (var, idx) in zip(lower.vars, idxs)
             print(io, ns.idx_to_state[var][idx], "\t")
         end
-        l = round(lower.table[I], sigdigits=6)
-        u = round(upper.table[I], sigdigits=6)
+        l = round(lower.table[I], sigdigits = 6)
+        u = round(upper.table[I], sigdigits = 6)
         println(io, "[", l, ", ", u, "]")
     end
     println(io)
-    println(io, "Extreme posteriors: ", length(p.posteriors))
+    return println(io, "Extreme posteriors: ", length(p.posteriors))
 end

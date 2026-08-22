@@ -15,8 +15,8 @@
     @test isnothing(node_c.results)
     node_a[] = Normal()
     @test node_a.cpt.data.Π[1] == Normal()
-    node_c[:a=>:a1] = Normal()
-    node_c[:a=>:a2] = Interval(0.3, 0.6)
+    node_c[:a => :a1] = Normal()
+    node_c[:a => :a2] = Interval(0.3, 0.6)
     @test isa(node_c, EnhancedBayesianNetworks.AbstractNode)
     @test isa(node_c, EnhancedBayesianNetworks.AbstractContinuousNode)
     @test isa(node_c, ContinuousNode)
@@ -32,11 +32,11 @@ end
     node_b = ContinuousNode(:b)
     node_b[] = Interval(0.1, 0.3)
     node_c = ContinuousNode(:c, [:a])
-    node_c[:a=>:a1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
-    node_c[:a=>:a2] = Interval(0.3, 0.6)
+    node_c[:a => :a1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+    node_c[:a => :a2] = Interval(0.3, 0.6)
     node_d = ContinuousNode(:d, [:a])
-    node_d[:a=>:a1] = Normal()
-    node_d[:a=>:a2] = Normal(2, 1)
+    node_d[:a => :a1] = Normal()
+    node_d[:a => :a2] = Normal(2, 1)
 
     @test isempty(scenarios(node_a))
     @test isempty(scenarios(node_b))
@@ -52,10 +52,10 @@ end
     @test issetequal(parents(node_c), [:a])
 
     node_e = ContinuousNode(:d, [:a, :b])
-    node_e[:a=>:a1, :b=>:b1] = Interval(0.1, 0.2)
-    node_e[:a=>:a1, :b=>:b2] = Uniform(0.1, 0.2)
-    node_e[:a=>:a2, :b=>:b1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
-    node_e[:a=>:a2, :b=>:b2] = Normal()
+    node_e[:a => :a1, :b => :b1] = Interval(0.1, 0.2)
+    node_e[:a => :a1, :b => :b2] = Uniform(0.1, 0.2)
+    node_e[:a => :a2, :b => :b1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+    node_e[:a => :a2, :b => :b2] = Normal()
     evidence = Evidence()
     @test EnhancedBayesianNetworks._inputs(node_a, evidence) == RandomVariable(Normal(), :a)
     @test EnhancedBayesianNetworks._inputs(node_b, evidence) == IntervalVariable(0.1, 0.3, :b)
@@ -99,10 +99,10 @@ end
     dist = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1), -1, 1)
     @test EnhancedBayesianNetworks._distribution_bounds(dist) == [-1, 1]
     node_e = ContinuousNode(:d, [:a, :b])
-    node_e[:a=>:a1, :b=>:b1] = Interval(0.1, 0.2)
-    node_e[:a=>:a1, :b=>:b2] = Uniform(0.1, 0.2)
-    node_e[:a=>:a2, :b=>:b1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
-    node_e[:a=>:a2, :b=>:b2] = Normal()
+    node_e[:a => :a1, :b => :b1] = Interval(0.1, 0.2)
+    node_e[:a => :a1, :b => :b2] = Uniform(0.1, 0.2)
+    node_e[:a => :a2, :b => :b1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+    node_e[:a => :a2, :b => :b2] = Normal()
     @test EnhancedBayesianNetworks._distribution_bounds(node_e) == [-Inf, Inf]
 
     dist = Normal()
@@ -119,7 +119,7 @@ end
     dist = Interval(0, 1)
     discretization = ExactDiscretization([-1, 0, 1])
     results = EnhancedBayesianNetworks.ScenariosTable{Any}(:A, :res)
-    results[:A=>:a1] = :results
+    results[:A => :a1] = :results
     n = ContinuousNode(:N, dist)
     @test n.name == :N
     @test n.cpt.data.Π == [Interval(0, 1)]

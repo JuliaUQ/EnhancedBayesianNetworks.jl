@@ -23,8 +23,8 @@ end
     @test x[1] ≈ 0.5 && x[4] ≈ 0.5                       # alone on their row: centred
     @test x[2] ≈ _BORDER_PAD && x[3] ≈ 1 - _BORDER_PAD   # sharing a row: spread to the edges
     @test y[1] < y[2] == y[3] < y[4]                     # one row per layer
-    @test all(_BORDER_PAD - 1e-9 .<= x .<= 1 - _BORDER_PAD + 1e-9)
-    @test all(_BORDER_PAD - 1e-9 .<= y .<= 1 - _BORDER_PAD + 1e-9)
+    @test all(_BORDER_PAD - 1.0e-9 .<= x .<= 1 - _BORDER_PAD + 1.0e-9)
+    @test all(_BORDER_PAD - 1.0e-9 .<= y .<= 1 - _BORDER_PAD + 1.0e-9)
 
     # top_pad pushes the first row down and squeezes the rest
     x2, y2 = _layered_positions(diamond, _BORDER_PAD, 0.18)

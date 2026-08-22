@@ -10,18 +10,18 @@ DocMeta.setdocmeta!(
     EnhancedBayesianNetworks,
     :DocTestSetup,
     :(using EnhancedBayesianNetworks);
-    recursive=true,
+    recursive = true,
 )
 
-bib=CitationBibliography(joinpath(@__DIR__, "citations.bib"))
+bib = CitationBibliography(joinpath(@__DIR__, "citations.bib"))
 
 links = InterLinks("UncertaintyQuantification" => "https://juliauq.github.io/UncertaintyQuantification.jl/stable/objects.inv")
 
 format = DocumenterVitepress.MarkdownVitepress(
-    repo="https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl",
-    devbranch="main",
-    devurl="dev",
-    inventory_version=string(pkgversion(EnhancedBayesianNetworks)),
+    repo = "https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl",
+    devbranch = "main",
+    devurl = "dev",
+    inventory_version = string(pkgversion(EnhancedBayesianNetworks)),
 )
 
 pages = [
@@ -67,22 +67,22 @@ pages = [
 ]
 
 makedocs(;
-    modules=[EnhancedBayesianNetworks],
-    plugins=[bib, links],
-    authors="Andrea Perin & Jasper Behrensdorf",
-    sitename="EnhancedBayesianNetworks.jl",
-    pages=pages,
-    source="src",
-    build="build",
-    warnonly=false,
-    format=format,
-    draft=false,
+    modules = [EnhancedBayesianNetworks],
+    plugins = [bib, links],
+    authors = "Andrea Perin & Jasper Behrensdorf",
+    sitename = "EnhancedBayesianNetworks.jl",
+    pages = pages,
+    source = "src",
+    build = "build",
+    warnonly = false,
+    format = format,
+    draft = false,
 )
 
 DocumenterVitepress.deploydocs(;
-    repo="github.com/JuliaUQ/EnhancedBayesianNetworks.jl",
-    target=joinpath(@__DIR__, "build"),
-    branch="gh-pages",
-    devbranch="main",
-    push_preview=true,
+    repo = "github.com/JuliaUQ/EnhancedBayesianNetworks.jl",
+    target = joinpath(@__DIR__, "build"),
+    branch = "gh-pages",
+    devbranch = "main",
+    push_preview = true,
 )

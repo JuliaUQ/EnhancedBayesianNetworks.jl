@@ -1,5 +1,5 @@
 # Corner radius of rounded hexagons, as a fraction of the node half-width.
-const _HEX_CORNER_RADIUS = 0.40
+const _HEX_CORNER_RADIUS = 0.4
 
 # Drawing shape of a node. Functional nodes are hexagons — rounded corners when
 # continuous, pointy corners when discrete — plain nodes keep circle/rectangle.
@@ -19,20 +19,22 @@ end
 
 # Flat-top hexagon inscribed in the (2hw × 2hh) box shared with rectangular nodes.
 function _hexagon_vertices(cx, cy, hw, hh)
-    return [(cx + hw, cy),
+    return [
+        (cx + hw, cy),
         (cx + hw / 2, cy + hh),
         (cx - hw / 2, cy + hh),
         (cx - hw, cy),
         (cx - hw / 2, cy - hh),
-        (cx + hw / 2, cy - hh)]
+        (cx + hw / 2, cy - hh),
+    ]
 end
 
 # Outline of `verts` with every corner replaced by a circular arc of radius `r`,
 # sampled into `arcpoints` segments so it can be drawn as a plain polygon —
 # Compose has no rounded-polygon primitive.
-function _rounded_polygon(verts, r::Float64, arcpoints::Int=8)
+function _rounded_polygon(verts, r::Float64, arcpoints::Int = 8)
     n = length(verts)
-    pts = Tuple{Float64,Float64}[]
+    pts = Tuple{Float64, Float64}[]
     for k in 1:n
         cx, cy = verts[k]
         px, py = verts[mod1(k - 1, n)]
@@ -40,14 +42,14 @@ function _rounded_polygon(verts, r::Float64, arcpoints::Int=8)
         ux, uy = px - cx, py - cy
         vx, vy = nx - cx, ny - cy
         lu, lv = hypot(ux, uy), hypot(vx, vy)
-        if lu < 1e-12 || lv < 1e-12                         # degenerate edge: keep the corner
+        if lu < 1.0e-12 || lv < 1.0e-12                         # degenerate edge: keep the corner
             push!(pts, (cx, cy))
             continue
         end
         ux, uy = ux / lu, uy / lu
         vx, vy = vx / lv, vy / lv
         α = acos(clamp(ux * vx + uy * vy, -1.0, 1.0)) / 2   # half the corner angle
-        if α < 1e-6 || α > π / 2 - 1e-6                     # straight or folded: keep the corner
+        if α < 1.0e-6 || α > π / 2 - 1.0e-6                     # straight or folded: keep the corner
             push!(pts, (cx, cy))
             continue
         end
@@ -86,8 +88,8 @@ end
 
 function _rect_border(cx, cy, θ, hw, hh)
     dx, dy = cos(θ), sin(θ)
-    tx = abs(dx) < 1e-12 ? Inf : hw / abs(dx)
-    ty = abs(dy) < 1e-12 ? Inf : hh / abs(dy)
+    tx = abs(dx) < 1.0e-12 ? Inf : hw / abs(dx)
+    ty = abs(dy) < 1.0e-12 ? Inf : hh / abs(dy)
     t = min(tx, ty)
     return cx + t * dx, cy + t * dy
 end
@@ -102,12 +104,12 @@ function _polygon_border(cx, cy, θ, verts)
         (bx, by) = verts[mod1(k + 1, n)]
         ex, ey = bx - ax, by - ay
         den = dx * ey - dy * ex
-        if abs(den) < 1e-12                                  # ray parallel to this edge
+        if abs(den) < 1.0e-12                                  # ray parallel to this edge
             continue
         end
         t = ((ax - cx) * ey - (ay - cy) * ex) / den          # distance along the ray
         s = ((ax - cx) * dy - (ay - cy) * dx) / den          # position along the edge
-        if t >= 0 && -1e-12 <= s <= 1 + 1e-12 && t < best
+        if t >= 0 && -1.0e-12 <= s <= 1 + 1.0e-12 && t < best
             best = t
         end
     end
@@ -170,7 +172,8 @@ end
 function _build_node_contexts(locs_x, locs_y, node_list, hw, hh)
     ctxs = Compose.Context[]
     for (i, node) in enumerate(node_list)
-        push!(ctxs,
+        push!(
+            ctxs,
             compose(
                 context(),
                 _node_form(node, locs_x[i], locs_y[i], hw, hh),

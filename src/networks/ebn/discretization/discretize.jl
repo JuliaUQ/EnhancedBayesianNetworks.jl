@@ -43,7 +43,7 @@ function _format_interval(node::ContinuousNode)
         deleteat!(intervals, intervals .>= upper_bound)
         push!(intervals, upper_bound)
     end
-    return [[intervals[i], intervals[i+1]] for i in 1:(length(intervals)-1)]
+    return [[intervals[i], intervals[i + 1]] for i in 1:(length(intervals) - 1)]
 end
 
 # Reconstruct a continuous distribution over one interval: Uniform for a bounded interval, a shifted

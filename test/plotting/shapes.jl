@@ -24,12 +24,12 @@ end
     r = _HEX_CORNER_RADIUS * 0.05
     p = _rounded_polygon(v, r, 8)
     @test length(p) == 6 * 9                                   # one 9-sample arc per corner
-    @test all(0.45 - 1e-9 .<= first.(p) .<= 0.55 + 1e-9)       # never leaves the sharp box
-    @test all(0.3525 - 1e-9 .<= last.(p) .<= 0.4475 + 1e-9)
-    @test all(border_distance(q, v) <= r + 1e-9 for q in p)    # never deviates by more than r
+    @test all(0.45 - 1.0e-9 .<= first.(p) .<= 0.55 + 1.0e-9)       # never leaves the sharp box
+    @test all(0.3525 - 1.0e-9 .<= last.(p) .<= 0.4475 + 1.0e-9)
+    @test all(border_distance(q, v) <= r + 1.0e-9 for q in p)    # never deviates by more than r
     @test all(inside_polygon(q, v) for q in p)                 # rounding only cuts, never adds
-    @test sum(first, p) / length(p) ≈ 0.5 atol = 1e-9          # stays centred
-    @test sum(last, p) / length(p) ≈ 0.4 atol = 1e-9
+    @test sum(first, p) / length(p) ≈ 0.5 atol = 1.0e-9          # stays centred
+    @test sum(last, p) / length(p) ≈ 0.4 atol = 1.0e-9
     @test length(unique(_rounded_polygon(v, 0.0, 2))) == 6     # zero radius: back to the vertices
     @test length(_rounded_polygon(v, r, 3)) == 6 * 4           # arc sampling is configurable
     @test all(inside_polygon(q, v) for q in _rounded_polygon(v, 1.0, 4))  # oversized radius clamps
@@ -38,7 +38,7 @@ end
 @testitem "Gplot - Circle and rectangle borders" setup = [ExtraDeps, SetupPlotNet] begin
     @test all(_circle_border(0.5, 0.4, 0.0, 0.05) .≈ (0.55, 0.4))
     @test all(_circle_border(0.5, 0.4, π, 0.05) .≈ (0.45, 0.4))
-    for θ in range(-π, π; length=17)
+    for θ in range(-π, π; length = 17)
         p = _circle_border(0.5, 0.4, θ, 0.05)
         @test hypot(p[1] - 0.5, p[2] - 0.4) ≈ 0.05             # always on the circumference
     end
@@ -62,12 +62,12 @@ end
 
     # for every direction the hit lies on the border and on the requested ray
     v = _hexagon_vertices(0.5, 0.4, 0.05, 0.0475)
-    for θ in range(-π, π; length=73)
+    for θ in range(-π, π; length = 73)
         p = _hexagon_border(0.5, 0.4, θ, 0.05, 0.0475)
         L = hypot(p[1] - 0.5, p[2] - 0.4)
-        @test (p[1] - 0.5) / L ≈ cos(θ) atol = 1e-9
-        @test (p[2] - 0.4) / L ≈ sin(θ) atol = 1e-9
-        @test border_distance(p, v) < 1e-12
+        @test (p[1] - 0.5) / L ≈ cos(θ) atol = 1.0e-9
+        @test (p[2] - 0.4) / L ≈ sin(θ) atol = 1.0e-9
+        @test border_distance(p, v) < 1.0e-12
     end
 end
 

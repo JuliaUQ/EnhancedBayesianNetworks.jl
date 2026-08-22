@@ -1,4 +1,3 @@
-
 """
     Posterior
 
@@ -11,15 +10,15 @@ labelled probability table.
 ```julia
 W = DiscreteNode(:W); W[:W => :sunny] = 0.5; W[:W => :cloudy] = 0.5
 S = DiscreteNode(:S, [:W])
-S[:W => :sunny,  :S => :on] = 0.9; S[:W => :sunny,  :S => :off] = 0.1
+S[:W => :sunny, :S => :on] = 0.9; S[:W => :sunny, :S => :off] = 0.1
 S[:W => :cloudy, :S => :on] = 0.2; S[:W => :cloudy, :S => :off] = 0.8
 bn = BayesianNetwork([W, S]); add_child!(bn, :W, :S); order!(bn)
 
 p = infer(bn, :S, Evidence(:W => :sunny))   # Posterior P(S | W=sunny)
 ```
 """
-struct Posterior{T,A<:AbstractArray{T}}
-    factor::Factor{T,A}
+struct Posterior{T, A <: AbstractArray{T}}
+    factor::Factor{T, A}
     schema::NetworkSchema
     query::Vector{Symbol}
     evidence::Evidence
@@ -45,18 +44,18 @@ cn = CredalNetwork([W, S]); add_child!(cn, :W, :S); order!(cn)
 p = infer(cn, [:S], Evidence(:W => :sunny))  # CredalPosterior with lower/upper bounds
 ```
 """
-struct CredalPosterior{T,A<:AbstractArray{T}}
+struct CredalPosterior{T, A <: AbstractArray{T}}
     posteriors::Vector{<:Posterior}
-    lower::Factor{T,A}
-    upper::Factor{T,A}
+    lower::Factor{T, A}
+    upper::Factor{T, A}
     schema::NetworkSchema
     query::Vector{Symbol}
     evidence::Evidence
 end
 
 """
-    infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun=fill_factor_score)
-    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun=fill_factor_score)
+    infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun = fill_factor_score)
+    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score)
 
 Compute the posterior over query (a Symbol or a vector of them) given evidence, by variable
 elimination. Returns a Posterior for a Bayesian network, or a CredalPosterior with
@@ -77,11 +76,11 @@ infer(bn, :S, Evidence())                   # prior marginal P(S)
 ```
 """
 function infer(
-    bn::BayesianNetwork,
-    query::Union{Symbol,Vector{Symbol}},
-    evidence::Evidence,
-    scorefun=fill_factor_score
-)
+        bn::BayesianNetwork,
+        query::Union{Symbol, Vector{Symbol}},
+        evidence::Evidence,
+        scorefun = fill_factor_score
+    )
     query = _wrap(query)
     _verify_query(query, bn, evidence)
     _verify_evidence(evidence, bn)
@@ -97,11 +96,11 @@ function infer(
 end
 
 function infer(
-    cn::CredalNetwork,
-    query::Union{Symbol,Vector{Symbol}},
-    evidence::Evidence,
-    scorefun=fill_factor_score
-)
+        cn::CredalNetwork,
+        query::Union{Symbol, Vector{Symbol}},
+        evidence::Evidence,
+        scorefun = fill_factor_score
+    )
     query = _wrap(query)
     _verify_query(query, cn, evidence)
     _verify_evidence(evidence, cn)

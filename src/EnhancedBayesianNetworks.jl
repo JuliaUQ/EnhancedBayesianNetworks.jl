@@ -28,7 +28,7 @@ export Evidence
 export Posterior
 
 # Constants
-const Evidence = Dict{Symbol,Symbol}
+const Evidence = Dict{Symbol, Symbol}
 
 # Functions
 export add_child!
