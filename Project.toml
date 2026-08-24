@@ -1,6 +1,6 @@
 name = "EnhancedBayesianNetworks"
 uuid = "886a9665-f0d4-4b74-bc12-f95153dc1848"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Andrea Perin <andrea.perin@irz.uni-hannover.de>"]
 
 [deps]
