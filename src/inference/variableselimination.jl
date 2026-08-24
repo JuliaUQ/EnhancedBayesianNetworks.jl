@@ -4,7 +4,8 @@ function _ve(
         factors::Vector{<:Factor},
         order::Vector{Int},
         query_vars::Vector{Int},
-        evidence_idx::Vector{Tuple{Int, Int}}
+        evidence_idx::Vector{Tuple{Int, Int}};
+        progress::Bool = false
     )
 
     factors = copy(factors)
@@ -14,8 +15,10 @@ function _ve(
         push!(protected, node)
     end
     order = [v for v in order if !(v ∈ protected)]
+    p = Progress(length(order); desc = "Eliminating variables ", enabled = progress)
     for var in order
         factors = _eliminate_var(factors, var)
+        next!(p)
     end
     result_query_vars = setdiff(query_vars, first.(evidence_idx))
     result = multiply(factors)

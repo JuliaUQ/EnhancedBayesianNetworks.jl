@@ -79,7 +79,8 @@ function infer(
         bn::BayesianNetwork,
         query::Union{Symbol, Vector{Symbol}},
         evidence::Evidence,
-        scorefun = fill_factor_score
+        scorefun = fill_factor_score;
+        progress::Bool = isinteractive()
     )
     query = _wrap(query)
     _verify_query(query, bn, evidence)
@@ -91,7 +92,7 @@ function infer(
     query_vars = _query_to_idx(query, ns)
     evidence_idx = _evidence_to_idx(evidence, ns)
     order = _sort_nodes(ig, ns, scorefun)
-    result = _ve(factors, order, query_vars, evidence_idx)
+    result = _ve(factors, order, query_vars, evidence_idx; progress = progress)
     return Posterior(result, ns, query, evidence)
 end
 
@@ -99,7 +100,8 @@ function infer(
         cn::CredalNetwork,
         query::Union{Symbol, Vector{Symbol}},
         evidence::Evidence,
-        scorefun = fill_factor_score
+        scorefun = fill_factor_score;
+        progress::Bool = isinteractive()
     )
     query = _wrap(query)
     _verify_query(query, cn, evidence)
@@ -107,9 +109,10 @@ function infer(
 
     posteriors = Posterior[]
     bns = _extreme_bayesian_networks(cn)
-    @info("Performing inference over $(length(bns)) BNs")
+    p = Progress(length(bns); desc = "Inferring over $(length(bns)) BNs ", enabled = progress)
     for bn in bns
-        push!(posteriors, infer(bn, query, evidence, scorefun))
+        push!(posteriors, infer(bn, query, evidence, scorefun; progress = false))
+        next!(p)
     end
     factors = getproperty.(posteriors, :factor)
     tables = getproperty.(factors, :table)
