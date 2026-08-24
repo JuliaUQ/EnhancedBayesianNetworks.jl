@@ -266,3 +266,30 @@ end
     @test getp(le, :V => :yes) == 0.5
     @test isapprox(getp(le, :V => :no, :T => :t1), 0.25; atol = 1.0e-6)
 end
+
+@testitem "Parameters Learning - progress kwarg (MLE)" setup = [ExtraDeps, SetupLearningSimple] begin
+    df = learndata()
+    # forcing the progress bar on must not change the fitted CPTs
+    l0 = learn_parameters_mle(learndag(), df)
+    l1 = @suppress learn_parameters_mle(learndag(), df; progress = true)
+    order!(l0)
+    order!(l1)
+    @test l1 isa BayesianNetwork
+    @test getp(l1, :V => :yes) == getp(l0, :V => :yes)
+    @test getp(l1, :V => :no, :T => :t1) == getp(l0, :V => :no, :T => :t1)
+end
+
+@testitem "Parameters Learning - progress kwarg (EM)" setup = [ExtraDeps, SetupLearningSimple] begin
+    dfm = DataFrame(
+        V = [fill(:yes, 10); fill(:no, 10)],
+        T = [fill(:t1, 4); fill(:t2, 4); [missing, missing]; fill(:t1, 2); fill(:t2, 6); [missing, missing]],
+    )
+    # forcing the progress bar on must not change the fitted CPTs
+    e0 = learn_parameters_em(learndag(), dfm; tol = 1.0e-10)
+    e1 = @suppress learn_parameters_em(learndag(), dfm; tol = 1.0e-10, progress = true)
+    order!(e0)
+    order!(e1)
+    @test e1 isa BayesianNetwork
+    @test getp(e1, :V => :yes) == getp(e0, :V => :yes)
+    @test getp(e1, :V => :no, :T => :t1) == getp(e0, :V => :no, :T => :t1)
+end
