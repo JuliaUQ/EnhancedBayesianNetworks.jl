@@ -110,3 +110,6 @@ order!(learned)
 ```
 
 Both estimators leave the input `dag` untouched, so the same structure can be relearned on different datasets or with different smoothing.
+
+!!! tip "Progress bar"
+    On a large network or dataset — and especially for EM, which reruns the E/M steps until convergence — [`learn`](@ref) can be slow. It takes a `progress` keyword that shows a progress bar: over the nodes as their CPTs are fitted for maximum likelihood, and over the iterations (annotated with the current maximum CPT change) for EM. It defaults to `isinteractive()` (shown in the REPL, silent in scripts, tests, and this documentation); pass `progress = true` or `progress = false` to force it.

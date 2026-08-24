@@ -192,6 +192,8 @@ Iteration stops when no CPT entry changes by more than `tol`, or after `max_iter
 the Laplace/Dirichlet pseudo-count; node domains are the observed states plus any extra states
 declared on the `dag`. With no missing values EM reduces exactly to [`learn_parameters_mle`](@ref).
 Convergence is to a local optimum, so the (uniform) initialization matters. `dag` is left untouched.
+`progress` shows a progress bar over the EM iterations (annotated with the current maximum CPT change),
+defaulting to `isinteractive()` (REPL only); force it with `progress=true` / `progress=false`.
 
 # Examples
 ```julia
