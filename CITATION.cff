@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 title: EnhancedBayesianNetworks.jl
-# message: >-
-#   If you use this software, please cite it using the
-#   metadata from this file.
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
 type: software
 authors:
   - given-names: Andrea
@@ -23,23 +23,3 @@ identifiers:
 repository-code: 'https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl'
 license: MIT
 version: 0.1.0
-# preferred-citation:
-#   authors:
-#     - given-names: Jasper
-#       family-names: Behrensdorf
-#     - given-names: Ander
-#       family-names: Gray
-#     - given-names: Matteo
-#       family-names: Broggi
-#     - given-names: Michael
-#       family-names: Beer
-#   title: 'UncertaintyQuantification.jl : A New Framework for Uncertainty Quantification in Julia'
-#   type: conference-paper
-#   conference:
-#     name: UNCECOMP 2023
-#     country: GR
-#     city: Athens
-#     date-start: "2023-06-12"
-#     date-end: "2023-06-14"
-#   doi: 10.7712/120223.10347.19810
-#   year: 2023
