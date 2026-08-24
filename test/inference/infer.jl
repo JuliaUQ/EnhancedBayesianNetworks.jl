@@ -206,3 +206,31 @@ end
     @test p.upper.table[1] ≈ 0.9998478952774653
 
 end
+
+@testitem "Inference - progress kwarg (BN)" setup = [ExtraDeps, SetupAsiaBN] begin
+    # forcing the progress bar on must not change the posterior
+    r0 = infer(bn, [:X], Evidence())
+    r1 = @suppress infer(bn, [:X], Evidence(); progress = true)
+    @test r1.factor.table == r0.factor.table
+end
+
+@testitem "Inference - progress kwarg (CN)" setup = [ExtraDeps] begin
+    Wc = DiscreteNode(:Wc)
+    Wc[:Wc => :sunny] = 0.5
+    Wc[:Wc => :cloudy] = 0.5
+    Sc = DiscreteNode(:Sc, [:Wc])
+    Sc[:Wc => :sunny, :Sc => :on] = Interval(0.8, 0.95)
+    Sc[:Wc => :sunny, :Sc => :off] = Interval(0.05, 0.2)
+    Sc[:Wc => :cloudy, :Sc => :on] = 0.2
+    Sc[:Wc => :cloudy, :Sc => :off] = 0.8
+    cn = CredalNetwork([Wc, Sc])
+    add_child!(cn, :Wc, :Sc)
+    order!(cn)
+
+    # forcing the progress bar on must not change the lower/upper bounds
+    c0 = infer(cn, [:Sc], Evidence(:Wc => :sunny))
+    c1 = @suppress infer(cn, [:Sc], Evidence(:Wc => :sunny); progress = true)
+    @test isa(c1, CredalPosterior)
+    @test c1.lower.table == c0.lower.table
+    @test c1.upper.table == c0.upper.table
+end
