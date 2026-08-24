@@ -1,7 +1,9 @@
 # Evaluate a continuous functional node into a plain ContinuousNode: for each discrete-ancestor scenario,
 # sample the parents' inputs through the models and refit the output as an EmpiricalDistribution
 # (or lower/upper EmpiricalDistributions when the inputs are imprecise). `collect` keeps the raw samples.
-function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, collect::Bool = true)
+function evaluate(
+        net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, collect::Bool = true; progress::Bool = isinteractive()
+    )
     scs = _simulation_scenarios(node)
     inputs_vector = map(sc -> (sc, _simulation_inputs(net, node, sc)), scs)
     if collect
@@ -16,7 +18,7 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
         disc = node.discretization
     end
     new_continuous = ContinuousNode(node.name, ancestors, disc, rt)
-
+    p = Progress(length(inputs_vector); desc = "Evaluating $(repr(node.name)) ", enabled = progress)
     for i in inputs_vector
         scenario = i[1]
         uqinputs = i[2]
@@ -39,6 +41,7 @@ function evaluate(net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, 
                 new_continuous.results[scenario...] = samples
             end
         end
+        next!(p)
     end
     return new_continuous
 end
@@ -46,7 +49,9 @@ end
 # Evaluate a discrete functional node into a DiscreteNode: for each scenario, estimate the failure
 # probability from the models + performance function, storing it on the _failed state and its complement
 # on _safe. `collect` keeps the raw samples on `results`.
-function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, collect::Bool = true)
+function evaluate(
+        net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, collect::Bool = true; progress::Bool = isinteractive()
+    )
     scs = _simulation_scenarios(node)
     inputs_vector = map(sc -> (sc, EnhancedBayesianNetworks._simulation_inputs(net, node, sc)), scs)
     if collect
@@ -55,6 +60,7 @@ function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, co
         rt = nothing
     end
     new_discrete = DiscreteNode(node.name, discrete_ancestors(net, node), node.parameters, rt)
+    p = Progress(length(inputs_vector); desc = "Evaluating $(repr(node.name)) ", enabled = progress)
     for i in inputs_vector
         scenario = i[1]
         uqinputs = i[2]
@@ -74,6 +80,7 @@ function evaluate(net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, co
         else
             new_discrete[(scenario..., node.name => Symbol(string(node.name) * "_safe"))...] = 1 - res[1]
         end
+        next!(p)
     end
     return new_discrete
 end

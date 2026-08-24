@@ -21,7 +21,9 @@ add_child!(ebn, :W, :F); add_child!(ebn, :X, :F); order!(ebn)
 reduce(ebn)                                 # -> BayesianNetwork
 ```
 """
-function reduce(net::EnhancedBayesianNetwork, collect::Bool = true)
+function reduce(
+        net::EnhancedBayesianNetwork, collect::Bool = true; progress::Bool = isinteractive()
+    )
     order!(net)
     discretize!(net)
     continuous_functional_node = filter(x -> isa(x, ContinuousFunctionalNode), net.nodes)
@@ -37,7 +39,7 @@ function reduce(net::EnhancedBayesianNetwork, collect::Bool = true)
         _build_simulations!(net, node2eval)
         _verify_ancestors(net, node2eval)
         _verify_scenarios(net, node2eval)
-        evaluated = evaluate(net, node2eval, collect)
+        evaluated = evaluate(net, node2eval, collect; progress = progress)
         par = parents(net, node2eval)
         for n in filter(n -> isa(n, ContinuousNode), filter(n -> n.name ∈ par, net.nodes))
             n_children_functional = filter(n -> isa(n, FunctionalNode), filter(x -> x.name ∈ setdiff(children(net, n), [node2eval.name]), net.nodes))
