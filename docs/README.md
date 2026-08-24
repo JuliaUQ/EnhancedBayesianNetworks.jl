@@ -1,0 +1,19 @@
+# Documentation
+
+To build the documentation, run `scripts/buildDocs.sh` from the project root folder.
+
+Alternatively start julia in the `docs` environment with `julia --project=docs` and run the following code.
+
+```julia
+pkg> up # install latest documentation dependencies
+pkg> dev . # add EnhancedBayesianNetworks.jl as dev dependency
+include("docs/make.jl") # build the docs
+```
+
+The documentation can be viewed using the *LiveServer* package.
+
+```julia
+using LiveServer
+
+LiveServer.serve(; dir = "docs/build/1")
+```
