@@ -63,6 +63,9 @@ p(Q \mid E = e) \;=\;
 
 where ``\mathbf{h}`` ranges over the variables other than ``Q`` and ``E``, and the denominator is the normalizing constant ``p(E=e)``.
 
+!!! tip "Progress bar"
+    On a large network variable elimination is itself expensive — the cost is dominated by the largest intermediate factor. [`infer`](@ref) takes a `progress` keyword that shows a progress bar over the variables as they are eliminated. It defaults to `isinteractive()` (shown in the REPL, silent in scripts, tests, and this documentation); pass `progress = true` or `progress = false` to force it.
+
 ## Elimination order
 
 The elimination order is chosen greedily on the network's *interaction graph* (the moral graph): repeatedly eliminate the remaining node with the lowest score, adding the fill-in edges its removal induces, until none are left. Ren et al. [ren_bayesian_2022](@cite) survey heuristics for constructing a good order and find the *minimum-increase-in-complexity* search, greedily removing the node whose elimination least increases the problem's complexity, to outperform the
@@ -129,6 +132,9 @@ infer(cn, :Sc, Evidence(:Wc => :sunny))     # CredalPosterior: [lower, upper] bo
 ```
 
 The cost grows with the number of extreme networks, one per combination of interval endpoints, so credal inference is exact but exponential in the number of imprecise entries.
+
+!!! tip "Progress bar"
+    Because each extreme network is a full variable-elimination pass, credal inference over many of them can be slow. The same `progress` keyword shows a progress bar over the extreme networks as they are solved (the inner per-network elimination bars are suppressed), likewise defaulting to `isinteractive()`.
 
 ## Sampling
 
