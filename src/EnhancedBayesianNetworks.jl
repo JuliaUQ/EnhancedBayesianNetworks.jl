@@ -1,12 +1,13 @@
 module EnhancedBayesianNetworks
 
+using Compose
 using DataFrames
 using Distributions
 using LinearAlgebra
 using Polyhedra: HalfSpace, doubledescription
+using ProgressMeter: Progress, next!
 using Reexport
 using SparseArrays
-using Compose
 
 @reexport using UncertaintyQuantification
 
