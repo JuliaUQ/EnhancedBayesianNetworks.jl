@@ -86,7 +86,7 @@ parents(dag::DirectAcyclicGraph, name::Symbol) = Symbol[dag.nodes[i].name for i 
 children(dag::DirectAcyclicGraph, name::Symbol) = Symbol[dag.nodes[i].name for i in findnz(dag.A[dag.topology[name], :])[1]]
 
 """
-    learn(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4)
+    learn(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4, progress::Bool = isinteractive())
 
 Learn the CPTs of `dag` from `df`, choosing the algorithm from the data: with no missing entries it
 uses [`learn_parameters_mle`](@ref) (closed-form, exact); with any missing entries it uses
@@ -94,6 +94,9 @@ uses [`learn_parameters_mle`](@ref) (closed-form, exact); with any missing entri
 `max_iter` and `tol` control EM's convergence. Returns a fully-specified [`BayesianNetwork`](@ref);
 call [`order!`](@ref) before inference or sampling. To force a specific algorithm, call
 [`learn_parameters_mle`](@ref) or [`learn_parameters_em`](@ref) directly.
+`progress` shows a progress bar — over the fitted nodes for MLE, over the EM iterations for EM — and
+defaults to `isinteractive()` (shown in the REPL, silent in scripts, tests, and docs); force it with
+`progress=true` / `progress=false`.
 
 # Examples
 ```julia
@@ -115,7 +118,7 @@ function learn(
 end
 
 """
-    learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0)
+    learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, progress::Bool = isinteractive())
 
 Estimate the CPTs of `dag` from complete data `df` by maximum likelihood, returning a fully-specified
 [`BayesianNetwork`](@ref) (call [`order!`](@ref) on it before inference or sampling).
@@ -125,7 +128,9 @@ Each node's domain is the states observed in `df` together with any extra states
 every node and every parent configuration, `P(node = s | parents = config)` is
 `(count + alpha) / (total + alpha * k)`, with `alpha` a Laplace/Dirichlet pseudo-count (`alpha = 0`
 is pure MLE, `k` the number of node states). A parent configuration absent from the data falls back
-to a uniform distribution. `dag` is left untouched.
+to a uniform distribution. `dag` is left untouched. `progress` shows a progress bar over the nodes as
+their CPTs are fitted, defaulting to `isinteractive()` (REPL only); force it with `progress=true` /
+`progress=false`.
 
 # Examples
 ```julia
@@ -170,7 +175,7 @@ function learn_parameters_mle(
 end
 
 """
-    learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4)
+    learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4, progress::Bool = isinteractive())
 
 Estimate the CPTs of `dag` from data `df` that may contain `missing` entries, by
 Expectation-Maximization, returning a fully-specified [`BayesianNetwork`](@ref) (call [`order!`](@ref)
