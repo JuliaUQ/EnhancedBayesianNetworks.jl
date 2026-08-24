@@ -1,5 +1,6 @@
 # Variable elimination: restrict evidence, then eliminate every non-query, non-evidence variable in the
 # given order, multiply what remains, reorder to the query, and normalise into a posterior.
+# `progress` (default false) draws a bar over the eliminated variables; `infer` sets it from `isinteractive()`.
 function _ve(
         factors::Vector{<:Factor},
         order::Vector{Int},
