@@ -1,12 +1,15 @@
 """
-    reduce(net::EnhancedBayesianNetwork, collect::Bool = true)
+    reduce(net::EnhancedBayesianNetwork, collect::Bool = true; progress::Bool = isinteractive())
 
 Transform an enhanced Bayesian network into a purely discrete one ready for inference, returning a
 [`BayesianNetwork`](@ref) (all nodes precise) or a [`CredalNetwork`](@ref) (some imprecise). The
 network is ordered, its continuous nodes discretized, and its functional nodes evaluated in dependency
 order — each functional node is simulated over the scenario grid of its discrete ancestors and replaced
 by the resulting node, eliminating the continuous parents that fed only it. With `collect=true` the
-intermediate simulation samples are kept on the evaluated nodes' `results`.
+intermediate simulation samples are kept on the evaluated nodes' `results`. Since evaluating the functional
+nodes is the slow part — one simulation per scenario — `progress` controls a progress bar over each functional
+node's scenario grid: it defaults to `isinteractive()` (shown in the REPL, silent in scripts, tests, and docs), 
+and can be forced on or off with `progress=true` / `progress=false`.
 
 # Examples
 ```julia
@@ -21,7 +24,9 @@ add_child!(ebn, :W, :F); add_child!(ebn, :X, :F); order!(ebn)
 reduce(ebn)                                 # -> BayesianNetwork
 ```
 """
-function reduce(net::EnhancedBayesianNetwork, collect::Bool = true)
+function reduce(
+        net::EnhancedBayesianNetwork, collect::Bool = true; progress::Bool = isinteractive()
+    )
     order!(net)
     discretize!(net)
     continuous_functional_node = filter(x -> isa(x, ContinuousFunctionalNode), net.nodes)
@@ -37,7 +42,7 @@ function reduce(net::EnhancedBayesianNetwork, collect::Bool = true)
         _build_simulations!(net, node2eval)
         _verify_ancestors(net, node2eval)
         _verify_scenarios(net, node2eval)
-        evaluated = evaluate(net, node2eval, collect)
+        evaluated = evaluate(net, node2eval, collect; progress = progress)
         par = parents(net, node2eval)
         for n in filter(n -> isa(n, ContinuousNode), filter(n -> n.name ∈ par, net.nodes))
             n_children_functional = filter(n -> isa(n, FunctionalNode), filter(x -> x.name ∈ setdiff(children(net, n), [node2eval.name]), net.nodes))

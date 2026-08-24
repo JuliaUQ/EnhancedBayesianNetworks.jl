@@ -86,7 +86,7 @@ parents(dag::DirectAcyclicGraph, name::Symbol) = Symbol[dag.nodes[i].name for i 
 children(dag::DirectAcyclicGraph, name::Symbol) = Symbol[dag.nodes[i].name for i in findnz(dag.A[dag.topology[name], :])[1]]
 
 """
-    learn(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4)
+    learn(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4, progress::Bool = isinteractive())
 
 Learn the CPTs of `dag` from `df`, choosing the algorithm from the data: with no missing entries it
 uses [`learn_parameters_mle`](@ref) (closed-form, exact); with any missing entries it uses
@@ -94,6 +94,9 @@ uses [`learn_parameters_mle`](@ref) (closed-form, exact); with any missing entri
 `max_iter` and `tol` control EM's convergence. Returns a fully-specified [`BayesianNetwork`](@ref);
 call [`order!`](@ref) before inference or sampling. To force a specific algorithm, call
 [`learn_parameters_mle`](@ref) or [`learn_parameters_em`](@ref) directly.
+`progress` shows a progress bar — over the fitted nodes for MLE, over the EM iterations for EM — and
+defaults to `isinteractive()` (shown in the REPL, silent in scripts, tests, and docs); force it with
+`progress=true` / `progress=false`.
 
 # Examples
 ```julia
@@ -103,17 +106,19 @@ learn(dag, df; alpha = 1)                   # smoothing (either algorithm)
 learn(dag, df_with_missing; tol = 1.0e-6, max_iter = 500)
 ```
 """
-function learn(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4)
+function learn(
+        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4, progress::Bool = isinteractive()
+    )
     incomplete = any(n -> any(ismissing, df[!, n.name]), dag.nodes)
     if incomplete
-        return learn_parameters_em(dag, df; alpha = alpha, max_iter = max_iter, tol = tol)
+        return learn_parameters_em(dag, df; alpha = alpha, max_iter = max_iter, tol = tol, progress = progress)
     else
-        return learn_parameters_mle(dag, df; alpha = alpha)
+        return learn_parameters_mle(dag, df; alpha = alpha, progress = progress)
     end
 end
 
 """
-    learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0)
+    learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, progress::Bool = isinteractive())
 
 Estimate the CPTs of `dag` from complete data `df` by maximum likelihood, returning a fully-specified
 [`BayesianNetwork`](@ref) (call [`order!`](@ref) on it before inference or sampling).
@@ -123,7 +128,9 @@ Each node's domain is the states observed in `df` together with any extra states
 every node and every parent configuration, `P(node = s | parents = config)` is
 `(count + alpha) / (total + alpha * k)`, with `alpha` a Laplace/Dirichlet pseudo-count (`alpha = 0`
 is pure MLE, `k` the number of node states). A parent configuration absent from the data falls back
-to a uniform distribution. `dag` is left untouched.
+to a uniform distribution. `dag` is left untouched. `progress` shows a progress bar over the nodes as
+their CPTs are fitted, defaulting to `isinteractive()` (REPL only); force it with `progress=true` /
+`progress=false`.
 
 # Examples
 ```julia
@@ -135,10 +142,13 @@ learned = learn_parameters_mle(dag, df)
 order!(learned)
 ```
 """
-function learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0)
+function learn_parameters_mle(
+        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, progress::Bool = isinteractive()
+    )
     # domain of a node = states seen in the data ∪ extra states declared on the DAG
     statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
     nodes = deepcopy(dag.nodes)
+    p = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
     for node in nodes
         n = node.name
         par = parents(dag, n)
@@ -159,12 +169,13 @@ function learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha::Rea
                 node[pkeys..., n => s] = prob
             end
         end
+        next!(p)
     end
     return BayesianNetwork(nodes, copy(dag.topology), copy(dag.A))
 end
 
 """
-    learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4)
+    learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, max_iter = 100, tol = 1.0e-4, progress::Bool = isinteractive())
 
 Estimate the CPTs of `dag` from data `df` that may contain `missing` entries, by
 Expectation-Maximization, returning a fully-specified [`BayesianNetwork`](@ref) (call [`order!`](@ref)
@@ -181,6 +192,8 @@ Iteration stops when no CPT entry changes by more than `tol`, or after `max_iter
 the Laplace/Dirichlet pseudo-count; node domains are the observed states plus any extra states
 declared on the `dag`. With no missing values EM reduces exactly to [`learn_parameters_mle`](@ref).
 Convergence is to a local optimum, so the (uniform) initialization matters. `dag` is left untouched.
+`progress` shows a progress bar over the EM iterations (annotated with the current maximum CPT change),
+defaulting to `isinteractive()` (REPL only); force it with `progress=true` / `progress=false`.
 
 # Examples
 ```julia
@@ -192,14 +205,19 @@ learned = learn_parameters_em(dag, df)   # df may contain `missing` entries
 order!(learned)
 ```
 """
-function learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4)
+function learn_parameters_em(
+        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4, progress::Bool = isinteractive()
+    )
     domains = Dict(n.name => sort(unique(vcat(get(dag.states, n.name, Symbol[]), collect(skipmissing(df[!, n.name]))))) for n in dag.nodes)
     bn = _em_uniform(dag, domains)
+    p = Progress(max_iter; desc = "EM iteration ", enabled = progress)
     for _ in 1:max_iter
         newbn = _em_mstep(dag, _em_estep(dag, df, bn, domains), domains, alpha)
         change = _em_maxchange(bn, newbn)
         bn = newbn
+        next!(p; showvalues = () -> [("max Δ", change)])
         if change < tol
+            finish!(p)
             break
         end
     end

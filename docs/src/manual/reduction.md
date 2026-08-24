@@ -19,6 +19,9 @@ The intermediate empirical distribution is never built for a node that reduction
 5. **Eliminate** continuous parents. A continuous node that fed only the just-evaluated node is removed, and its parents reconnected to its children (`_eliminate_node!`: node removal [Shachter86a](@cite)); one that still feeds other functional nodes keeps its remaining edges, and only the spent edge is cut.
 6. **Dispatch** to the concrete type: once no node is continuous, an all-precise network becomes a BN and a network with any surviving imprecision a CN.
 
+!!! tip "Progress bar"
+    Step 4 is the expensive part — one Structural Reliability Problem per scenario. [`reduce`](@ref) takes a `progress` keyword that shows a progress bar over each functional node's scenario grid as it is evaluated. It defaults to `isinteractive()` (shown in the REPL, silent in scripts, tests, and this documentation); pass `progress = true` or `progress = false` to force it.
+
 ## Structural Reliability Problems
 
 The heart of step 4 is the **structural reliability problem** (SRP). Each functional node's parents' uncertainty or imprecision are propagated through its

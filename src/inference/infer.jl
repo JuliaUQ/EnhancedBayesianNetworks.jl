@@ -54,14 +54,17 @@ struct CredalPosterior{T, A <: AbstractArray{T}}
 end
 
 """
-    infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun = fill_factor_score)
-    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score)
+    infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
+    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
 
 Compute the posterior over query (a Symbol or a vector of them) given evidence, by variable
 elimination. Returns a Posterior for a Bayesian network, or a CredalPosterior with
 lower/upper bounds over the credal set's extreme networks for a credal one. scorefun selects the
 elimination-ordering heuristic — fill_factor_score (default), fill_score, or
 factor_score. The query must not overlap the evidence, and both must name existing nodes/states.
+`progress` shows a progress bar over the work — the eliminated variables for a Bayesian network,
+the extreme networks for a credal one — and defaults to `isinteractive()` (shown in the REPL,
+silent in scripts, tests, and docs); force it with `progress=true` / `progress=false`.
 
 Examples
 
@@ -79,7 +82,8 @@ function infer(
         bn::BayesianNetwork,
         query::Union{Symbol, Vector{Symbol}},
         evidence::Evidence,
-        scorefun = fill_factor_score
+        scorefun = fill_factor_score;
+        progress::Bool = isinteractive()
     )
     query = _wrap(query)
     _verify_query(query, bn, evidence)
@@ -91,7 +95,7 @@ function infer(
     query_vars = _query_to_idx(query, ns)
     evidence_idx = _evidence_to_idx(evidence, ns)
     order = _sort_nodes(ig, ns, scorefun)
-    result = _ve(factors, order, query_vars, evidence_idx)
+    result = _ve(factors, order, query_vars, evidence_idx; progress = progress)
     return Posterior(result, ns, query, evidence)
 end
 
@@ -99,7 +103,8 @@ function infer(
         cn::CredalNetwork,
         query::Union{Symbol, Vector{Symbol}},
         evidence::Evidence,
-        scorefun = fill_factor_score
+        scorefun = fill_factor_score;
+        progress::Bool = isinteractive()
     )
     query = _wrap(query)
     _verify_query(query, cn, evidence)
@@ -107,9 +112,10 @@ function infer(
 
     posteriors = Posterior[]
     bns = _extreme_bayesian_networks(cn)
-    @info("Performing inference over $(length(bns)) BNs")
+    p = Progress(length(bns); desc = "Inferring over $(length(bns)) BNs ", enabled = progress)
     for bn in bns
-        push!(posteriors, infer(bn, query, evidence, scorefun))
+        push!(posteriors, infer(bn, query, evidence, scorefun; progress = false))
+        next!(p)
     end
     factors = getproperty.(posteriors, :factor)
     tables = getproperty.(factors, :table)

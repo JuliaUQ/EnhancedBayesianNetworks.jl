@@ -371,3 +371,21 @@ end
     EnhancedBayesianNetworks._eliminate_node!(ebn1, C)
     @test C.name ∉ getproperty.(ebn1.nodes, :name)
 end
+
+@testitem "Evaluate Net - progress kwarg" setup = [ExtraDeps] begin
+    Load = DiscreteNode(:Load, [:low => [Parameter(1.0, :Load)], :high => [Parameter(3.0, :Load)]])
+    Load[:Load => :low] = 0.7
+    Load[:Load => :high] = 0.3
+    R = ContinuousNode(:R, Normal(3.0, 0.5))
+    model = Model(df -> df.R .- df.Load, :g)
+    F = DiscreteFunctionalNode(:F, [model], df -> df.g, MonteCarlo(200))
+
+    ebn = EnhancedBayesianNetwork([Load, R, F])
+    add_child!(ebn, :Load, :F)
+    add_child!(ebn, :R, :F)
+    order!(ebn)
+
+    # forcing the progress bar on must not change what reduce returns
+    reduced = @suppress reduce(ebn; progress = true)
+    @test isa(reduced, BayesianNetwork)
+end

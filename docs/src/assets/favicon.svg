@@ -1,6 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <polygon points="32,2 58,17 58,47 32,62 6,47 6,17" fill="#389826"/>
-  <circle cx="24" cy="28" r="5.5" fill="#fff"/><circle cx="24" cy="29" r="2.4" fill="#2a2a2a"/>
-  <circle cx="40" cy="28" r="5.5" fill="#fff"/><circle cx="40" cy="29" r="2.4" fill="#2a2a2a"/>
-  <path d="M22,42 Q32,53 42,42" stroke="#fff" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 252" width="260" height="252">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3a3a3a"/>
+    </marker>
+  </defs>
+
+  <!-- edges (functional parent -> children), mirror-symmetric about x=130 -->
+  <g stroke="#3a3a3a" stroke-width="4" fill="none">
+    <line x1="108" y1="98" x2="90"  y2="153" marker-end="url(#arrow)"/>
+    <line x1="152" y1="98" x2="170" y2="153" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- functional node: hexagon (Julia green) — Zoro (top) -->
+  <g transform="translate(0,-114)">
+    <polygon points="130,138 168,159 168,201 130,222 92,201 92,159" fill="#389826"/>
+    <circle cx="119" cy="178" r="5.5" fill="#fff"/><circle cx="119" cy="179" r="2.4" fill="#2a2a2a"/>
+    <path d="M135,179 q6,3 12,0" stroke="#2a2a2a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M141,172 L141,186" stroke="#e9e7cf" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M121,201 L139,201" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- discrete node: rounded rectangle (Julia red) — Luffy (bottom-left) -->
+  <g transform="translate(4,119)">
+    <rect x="32" y="38" width="72" height="66" rx="14" fill="#CB3C33"/>
+    <circle cx="57" cy="66" r="6" fill="#fff"/><circle cx="57" cy="67" r="2.6" fill="#2a2a2a"/>
+    <circle cx="79" cy="66" r="6" fill="#fff"/><circle cx="79" cy="67" r="2.6" fill="#2a2a2a"/>
+    <path d="M52,74 L60,80" stroke="#7a1f19" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M53,78 l3,-3 M57,81 l3,-3" stroke="#7a1f19" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M50,84 Q68,101 86,84" stroke="#fff" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- continuous node: circle (Julia purple) — Sanji (bottom-right) -->
+  <g transform="translate(2,118)">
+    <circle cx="186" cy="72" r="38" fill="#9558B2"/>
+    <path d="M204,60 Q198,60 196,57 Q194,54 197,53 Q199,53 198,56" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="197" cy="69" r="6" fill="#fff"/><circle cx="197" cy="70" r="2.6" fill="#2a2a2a"/>
+    <path d="M173,84 Q186,96 199,84" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
 </svg>
