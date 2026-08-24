@@ -17,7 +17,7 @@ Current functionality includes:
 * Node types
   * Discrete and continuous nodes, with conditional probability tables or distributions known a priori
   * Discrete and continuous *functional* nodes, whose tables are derived from the parents through [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl) models
-  * Imprecision at every level — interval probabilities and probability boxes
+  * Imprecision at *credal* and *simulation* level — interval probabilities and probability boxes
 * Network types
   * Bayesian networks
   * Credal networks (imprecise)
