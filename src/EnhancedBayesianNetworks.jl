@@ -5,7 +5,7 @@ using DataFrames
 using Distributions
 using LinearAlgebra
 using Polyhedra: HalfSpace, doubledescription
-using ProgressMeter: Progress, next!
+using ProgressMeter: Progress, next!, finish!
 using Reexport
 using SparseArrays
 

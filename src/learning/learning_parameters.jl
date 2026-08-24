@@ -103,12 +103,14 @@ learn(dag, df; alpha = 1)                   # smoothing (either algorithm)
 learn(dag, df_with_missing; tol = 1.0e-6, max_iter = 500)
 ```
 """
-function learn(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4)
+function learn(
+        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4, progress::Bool = isinteractive()
+    )
     incomplete = any(n -> any(ismissing, df[!, n.name]), dag.nodes)
     if incomplete
-        return learn_parameters_em(dag, df; alpha = alpha, max_iter = max_iter, tol = tol)
+        return learn_parameters_em(dag, df; alpha = alpha, max_iter = max_iter, tol = tol, progress = progress)
     else
-        return learn_parameters_mle(dag, df; alpha = alpha)
+        return learn_parameters_mle(dag, df; alpha = alpha, progress = progress)
     end
 end
 
@@ -135,10 +137,13 @@ learned = learn_parameters_mle(dag, df)
 order!(learned)
 ```
 """
-function learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0)
+function learn_parameters_mle(
+        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, progress::Bool = isinteractive()
+    )
     # domain of a node = states seen in the data ∪ extra states declared on the DAG
     statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
     nodes = deepcopy(dag.nodes)
+    p = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
     for node in nodes
         n = node.name
         par = parents(dag, n)
@@ -159,6 +164,7 @@ function learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha::Rea
                 node[pkeys..., n => s] = prob
             end
         end
+        next!(p)
     end
     return BayesianNetwork(nodes, copy(dag.topology), copy(dag.A))
 end
@@ -192,14 +198,19 @@ learned = learn_parameters_em(dag, df)   # df may contain `missing` entries
 order!(learned)
 ```
 """
-function learn_parameters_em(dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4)
+function learn_parameters_em(
+        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4, progress::Bool = isinteractive()
+    )
     domains = Dict(n.name => sort(unique(vcat(get(dag.states, n.name, Symbol[]), collect(skipmissing(df[!, n.name]))))) for n in dag.nodes)
     bn = _em_uniform(dag, domains)
+    p = Progress(max_iter; desc = "EM iteration ", enabled = progress)
     for _ in 1:max_iter
         newbn = _em_mstep(dag, _em_estep(dag, df, bn, domains), domains, alpha)
         change = _em_maxchange(bn, newbn)
         bn = newbn
+        next!(p; showvalues = () -> [("max Δ", change)])
         if change < tol
+            finish!(p)
             break
         end
     end
