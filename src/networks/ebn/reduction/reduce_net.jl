@@ -1,12 +1,15 @@
 """
-    reduce(net::EnhancedBayesianNetwork, collect::Bool = true)
+    reduce(net::EnhancedBayesianNetwork, collect::Bool = true; progress::Bool = isinteractive())
 
 Transform an enhanced Bayesian network into a purely discrete one ready for inference, returning a
 [`BayesianNetwork`](@ref) (all nodes precise) or a [`CredalNetwork`](@ref) (some imprecise). The
 network is ordered, its continuous nodes discretized, and its functional nodes evaluated in dependency
 order — each functional node is simulated over the scenario grid of its discrete ancestors and replaced
 by the resulting node, eliminating the continuous parents that fed only it. With `collect=true` the
-intermediate simulation samples are kept on the evaluated nodes' `results`.
+intermediate simulation samples are kept on the evaluated nodes' `results`. Since evaluating the functional
+nodes is the slow part — one simulation per scenario — `progress` controls a progress bar over each functional
+node's scenario grid: it defaults to `isinteractive()` (shown in the REPL, silent in scripts, tests, and docs), 
+and can be forced on or off with `progress=true` / `progress=false`.
 
 # Examples
 ```julia
