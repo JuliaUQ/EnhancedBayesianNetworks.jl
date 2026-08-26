@@ -22,4 +22,4 @@ identifiers:
     value: 10.5281/zenodo.14054154
 repository-code: 'https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl'
 license: MIT
-version: 0.1.0
+version: 0.2.0
