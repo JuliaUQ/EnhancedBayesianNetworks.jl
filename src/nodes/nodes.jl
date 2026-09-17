@@ -41,7 +41,7 @@ ExactDiscretization() = ExactDiscretization(Vector{Real}())
 
 Discretization strategy for a continuous **non-root (child)** node, allowing evidence to be observed
 on it. The sorted `intervals` edges partition the support into discrete bins, while `sigma` is the
-spread of the normal distribution used to approximate the original continuous distribution's tails
+rate parameter of the exponential used to approximate the original continuous distribution's tails
 when a discrete state is mapped back to a continuous range. `sigma` must be non-negative; a value
 above `2` is accepted but warns, as it tends to give an unrealistic tail approximation.
 
