@@ -37,34 +37,34 @@ end
 ExactDiscretization() = ExactDiscretization(Vector{Real}())
 
 """
-    ApproximatedDiscretization(intervals = Real[], sigma = 0)
+    ApproximatedDiscretization(intervals = Real[], λ = 0)
 
 Discretization strategy for a continuous **non-root (child)** node, allowing evidence to be observed
-on it. The sorted `intervals` edges partition the support into discrete bins, while `sigma` is the
-spread of the normal distribution used to approximate the original continuous distribution's tails
-when a discrete state is mapped back to a continuous range. `sigma` must be non-negative; a value
+on it. The sorted `intervals` edges partition the support into discrete bins, while `λ` is the
+rate parameter of the exponential used to approximate the original continuous distribution's tails
+when a discrete state is mapped back to a continuous range. `λ` must be non-negative; a value
 above `2` is accepted but warns, as it tends to give an unrealistic tail approximation.
 
 # Examples
 ```julia
-# discretize a child node at edges -1, 0, 1, approximating tails with spread 1.5:
+# discretize a child node at edges -1, 0, 1, approximating tails with rate 1.5:
 disc = ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5)
 C = ContinuousNode(:C, [:W], disc)
 ```
 """
 struct ApproximatedDiscretization <: AbstractDiscretization
     intervals::Vector{<:Real}
-    sigma::Real
+    λ::Real
 
-    function ApproximatedDiscretization(intervals::Vector{<:Real}, sigma::Real)
+    function ApproximatedDiscretization(intervals::Vector{<:Real}, λ::Real)
         if !issorted(intervals)
             error("Invalid ApproximatedDiscretization: interval values $intervals are not sorted")
-        elseif sigma < 0
-            error("Invalid ApproximatedDiscretization: variance must be positive")
-        elseif sigma > 2
-            @warn "Selected variance values $sigma could be too large for a realistic tails approximation"
+        elseif λ < 0
+            error("Invalid ApproximatedDiscretization: rate parameter must be non-negative")
+        elseif λ > 2
+            @warn "Selected rate parameter $λ could be too large for a realistic tails approximation"
         end
-        return new(intervals, sigma)
+        return new(intervals, λ)
     end
 end
 

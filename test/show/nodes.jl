@@ -100,7 +100,7 @@ end
     @test helper(_show_parents, W) == "Parents: none\n"
     @test helper(_show_parents, S) == "Parents: W\n"
     @test helper(_show_discretization, ExactDiscretization([-1.0, 1.0])) == "Discretization: ExactDiscretization\n  Intervals: -1.0, 1.0\n"
-    @test helper(_show_discretization, ApproximatedDiscretization([-1.0, 1.0], 2)) == "Discretization: ApproximatedDiscretization\n  Sigma: 2\n  Intervals: -1.0, 1.0\n"
+    @test helper(_show_discretization, ApproximatedDiscretization([-1.0, 1.0], 2)) == "Discretization: ApproximatedDiscretization\n  λ: 2\n  Intervals: -1.0, 1.0\n"
     @test helper(_show_discretization, D.discretization) == ""
     @test helper(_show_models, cf.models) == "Models: 1\n  Names: fc\n"
     @test helper(_show_parameters, W.parameters) == ""
@@ -134,7 +134,7 @@ end
     @test occursin("ContinuousNode: U", u)
     @test occursin("Parents: W", u)
     @test occursin("Discretization: ApproximatedDiscretization", u)
-    @test occursin("Sigma: 2", u)
+    @test occursin("λ: 2", u)
     @test occursin("Type: Precise", u)
     @test occursin("Support:", u)
     d = plainshow(D)
