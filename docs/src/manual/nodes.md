@@ -115,7 +115,7 @@ To keep evidence observable on a continuous node and to let it enter discrete in
 The strategy is attached to the node and depends on its position:
 
 - a **root** carries an [`ExactDiscretization`](@ref): the discrete probabilities follow *exactly* from the node's distribution, because the marginal is known;
-- a **child** carries an [`ApproximatedDiscretization`](@ref): the marginal is not generally available, so the tails are approximated (a uniform assumption over each bounded interval and an exponential assumption, with rate/spread `sigma`, over an unbounded tail).
+- a **child** carries an [`ApproximatedDiscretization`](@ref): the marginal is not generally available, so the tails are approximated (a uniform assumption over each bounded interval and an exponential assumption, with rate `λ`, over an unbounded tail).
 
 Throughout, ``x_{ik}^-`` and ``x_{ik}^+`` denote the lower and upper edges of the ``k``-th discretization interval.
 
@@ -145,7 +145,7 @@ F_{X_i}(x_i \mid k) =
 \end{cases}
 ```
 
-and an unbounded (right) tail with an **exponential** assumption of rate ``\lambda`` (the `sigma`
+and an unbounded (right) tail with an **exponential** assumption of rate ``\lambda`` (the `λ`
 argument):
 
 ```math

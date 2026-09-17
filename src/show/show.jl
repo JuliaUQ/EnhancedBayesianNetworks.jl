@@ -13,13 +13,13 @@ function _show_parents(io, node)
     end
 end
 
-# Discretization block: scheme name, the sigma line only for ApproximatedDiscretization, then intervals.
+# Discretization block: scheme name, the λ line only for ApproximatedDiscretization, then intervals.
 # Prints nothing for an empty discretization.
 function _show_discretization(io, d)
     return if !isempty(d)
         println(io, "Discretization: ", nameof(typeof(d)))
         if d isa ApproximatedDiscretization
-            println(io, "  Sigma: ", d.sigma)
+            println(io, "  λ: ", d.λ)
         end
         println(io, "  Intervals: ", join(d.intervals, ", "))
     end

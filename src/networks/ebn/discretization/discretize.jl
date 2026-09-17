@@ -13,7 +13,7 @@ function _discretize(node::ContinuousNode)
         for i in intervals
             map((sc) -> discretized_node[(vcat(first.(sc), name_discrete) .=> vcat(last.(sc), Symbol(i)))...] = _discretize(node[(sc)...], i), scenarios(node))
         end
-        map(i -> new_continuous[(name_discrete .=> Symbol(i))] = _approximate(i, node.discretization.sigma), intervals)
+        map(i -> new_continuous[(name_discrete .=> Symbol(i))] = _approximate(i, node.discretization.λ), intervals)
     end
     return (discretized_node, new_continuous)
 end

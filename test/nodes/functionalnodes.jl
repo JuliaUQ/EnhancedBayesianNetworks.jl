@@ -26,13 +26,13 @@ end
     @test node.simulation == simulation
     @test isa(node.discretization, ApproximatedDiscretization)
     @test node.discretization.intervals == Real[]
-    @test node.discretization.sigma == 0
+    @test node.discretization.λ == 0
     @test node.nbins == 0
 
     node = ContinuousFunctionalNode(name, models, simulation, discretization)
     @test isa(node.discretization, ApproximatedDiscretization)
     @test node.discretization.intervals == [-2, -1, 0, 1, 2]
-    @test node.discretization.sigma == 2
+    @test node.discretization.λ == 2
     @test node.nbins == 0
     @test_throws ErrorException(":Π is not allowed as node name") ContinuousFunctionalNode(:Π, models, simulation)
     @test_throws ErrorException(":sim is not allowed as node name") ContinuousFunctionalNode(:sim, models, simulation)
@@ -45,7 +45,7 @@ end
     node = ContinuousFunctionalNode(name, models, simulation, discretization, nbins)
     @test isa(node.discretization, ApproximatedDiscretization)
     @test node.discretization.intervals == [-2, -1, 0, 1, 2]
-    @test node.discretization.sigma == 2
+    @test node.discretization.λ == 2
     @test node.nbins == nbins
 
     node = ContinuousFunctionalNode(name, models, simulation, nbins)
