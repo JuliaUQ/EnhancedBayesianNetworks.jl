@@ -160,7 +160,7 @@ function infer(
     end
     if isempty(posteriors)
         evidence_str = "[" * join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ") * "]"
-        error("Invalid Evidence: evidence $evidence_str has upper probability zero, it is impossible under every measure of the credal set, therefore the conditional probability is undefined")
+        error("Invalid Evidence: evidence $evidence_str " * (iszero(tol) ? "has upper probability zero, it is impossible under every measure of the credal set" : "has no extreme network with P(evidence) > $(repr(tol))") * ", therefore the conditional probability is undefined")
     end
     factors = getproperty.(posteriors, :factor)
     tables = getproperty.(factors, :table)
