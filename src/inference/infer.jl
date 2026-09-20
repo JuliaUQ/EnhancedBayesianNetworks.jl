@@ -135,6 +135,9 @@ function infer(
         progress::Bool = isinteractive(),
         tol::Real = 0.0
     )
+    if !isfinite(tol) || tol < 0
+        throw(ArgumentError("tol must be finite and nonnegative"))
+    end
     query = _wrap(query)
     _verify_query(query, cn, evidence)
     _verify_evidence(evidence, cn)
