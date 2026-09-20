@@ -57,6 +57,9 @@ struct CredalPosterior{T, A <: AbstractArray{T}}
     discarded::Int
 end
 
+CredalPosterior(posteriors, lower, upper, schema, query, evidence) =
+    CredalPosterior(posteriors, lower, upper, schema, query, evidence, 0)
+
 """
     infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
     infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive(), tol::Real = 0.0)
