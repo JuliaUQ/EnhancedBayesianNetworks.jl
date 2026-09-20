@@ -1,6 +1,9 @@
-# Variable elimination: restrict evidence, then eliminate every non-query, non-evidence variable in the
-# given order, multiply what remains, reorder to the query, and normalise into a posterior.
-# `progress` (default false) draws a bar over the eliminated variables; `infer` sets it from `isinteractive()`.
+# Variable elimination: restrict evidence, then eliminate every non-query, non-evidence
+# variable in the given order, multiply what remains, reorder to the query, and normalise
+# into a posterior. Returns that posterior together with P(evidence), the mass the table
+# carried before normalisation.
+# `progress` (default false) draws a bar over the eliminated variables; `infer` sets it
+# from `isinteractive()`.
 function _ve(
         factors::Vector{<:Factor},
         order::Vector{Int},
@@ -24,7 +27,12 @@ function _ve(
     result_query_vars = setdiff(query_vars, first.(evidence_idx))
     result = multiply(factors)
     result = _reorder(result, result_query_vars)
-    return normalize(result)
+    # The unnormalised table sums to P(evidence): every factor has been restricted to the observed
+    # states and every non-query variable summed out. Handing it back alongside the posterior is what
+    # lets credal inference recognise the extreme networks under which the evidence is impossible,
+    # instead of dividing by zero and propagating NaN into both bounds.
+    evidence_probability = sum(result.table)
+    return normalize(result), evidence_probability
 end
 
 # Apply evidence in place: restrict every factor that mentions an observed variable to its observed state.

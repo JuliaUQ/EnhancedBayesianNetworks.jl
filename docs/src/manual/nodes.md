@@ -181,6 +181,9 @@ d^+ = \overline{F}(x_{ik}^+) - \overline{F}(x_{ik}^-),
 
 while for a bare **interval** entry no CDF is available — only the support — so every interval receives the vacuous mass ``p_{ik} = [0, 1]``. Either way the surrogate node becomes imprecise (credal), and that is what carries the imprecision into inference.
 
+!!! note "Vacuous masses and conditioning"
+    A node discretized from a bare **interval** is *vacuous*: masses of ``[0, 1]`` on every bin constrain nothing beyond summing to one, so the node's credal set is the whole probability simplex over its states and its extreme points are the degenerate distributions putting all the mass on a single bin. Evidence on such a node then has probability zero under some of those extreme points, and meaningful bounds are only obtained under regular extension — see [Credal inference](@ref). A [`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`) can narrow these mass intervals, but it avoids zero-probability extremes only when the lower mass of the observed bin is strictly positive.
+
 The residual then differs by position. On a **root** it keeps the imprecision: a probability box is restricted to ``[x_{ik}^-, x_{ik}^+]`` (a narrower box) and an interval entry becomes the sub-interval ``[x_{ik}^-, x_{ik}^+]``. On a **child** the residual is the same precise uniform (or exponential-tail) approximation as in the precise case, regardless of the entry's imprecision.
 
 The asymmetry is deliberate: on a root the imprecision lives in both the surrogate probabilities and the residual; on a child it is pushed entirely into the surrogate's interval probabilities, leaving a precise residual.
