@@ -150,6 +150,13 @@ end
     @test cp.query == [:W]
     @test isempty(cp.evidence)
     @test cp.discarded == 0
+
+    # the six-argument constructor is kept for compatibility and means "nothing discarded"
+    cp6 = EnhancedBayesianNetworks.CredalPosterior([p], f2, f1, ns, [:W], Evidence())
+    @test cp6.discarded == 0
+    @test cp6.lower === f2
+    @test cp6.upper === f1
+    @test cp6.query == [:W]
 end
 
 @testitem "Inference - extreme bns" setup = [SetupFireProtectionCN] begin
@@ -329,4 +336,44 @@ end
 
     # Raising tol above the surviving extreme's P(evidence) discards it too, leaving nothing.
     @test_throws ErrorException infer(cn, [:Q], Evidence(:V => :a); tol = 0.01)
+
+    # Exhausting the extremes by raising tol is the caller's doing, not a property of the model, so
+    # the message must not claim the evidence was impossible or the conditional undefined.
+    e = try
+        infer(cn, [:Q], Evidence(:V => :a); tol = 0.01)
+    catch err
+        err
+    end
+    @test occursin("tol discarded all of them", e.msg)
+    @test !occursin("upper probability zero", e.msg)
+    @test !occursin("undefined", e.msg)
+end
+
+@testitem "Inference - tol must be finite and nonnegative" begin
+    V = DiscreteNode(:V)
+    V[:V => :a] = Interval(0.3, 0.5)
+    V[:V => :b] = Interval(0.5, 0.7)
+    Q = DiscreteNode(:Q, [:V])
+    Q[:V => :a, :Q => :yes] = 0.25
+    Q[:V => :a, :Q => :no] = 0.75
+    Q[:V => :b, :Q => :yes] = 0.9
+    Q[:V => :b, :Q => :no] = 0.1
+    cn = CredalNetwork([V, Q])
+    add_child!(cn, :V, :Q)
+    order!(cn)
+
+    # A negative tol would readmit the extremes with P(evidence) = 0 and bring the NaN bounds back.
+    @test_throws ErrorException infer(cn, [:Q], Evidence(:V => :a); tol = -1.0)
+    @test_throws ErrorException infer(cn, [:Q], Evidence(:V => :a); tol = Inf)
+    @test_throws ErrorException infer(cn, [:Q], Evidence(:V => :a); tol = NaN)
+
+    e = try
+        infer(cn, [:Q], Evidence(:V => :a); tol = -1.0)
+    catch err
+        err
+    end
+    @test occursin("Invalid tol", e.msg)
+
+    # A valid tol still goes through untouched.
+    @test infer(cn, [:Q], Evidence(:V => :a); tol = 0.0) isa CredalPosterior
 end

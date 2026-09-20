@@ -57,8 +57,18 @@ struct CredalPosterior{T, A <: AbstractArray{T}}
     discarded::Int
 end
 
-CredalPosterior(posteriors, lower, upper, schema, query, evidence) =
-    CredalPosterior(posteriors, lower, upper, schema, query, evidence, 0)
+# Six-argument constructor kept for compatibility: a CredalPosterior built without a discarded
+# count is one where no extreme network was discarded.
+function CredalPosterior(
+        posteriors::Vector{<:Posterior},
+        lower::Factor{T, A},
+        upper::Factor{T, A},
+        schema::NetworkSchema,
+        query::Vector{Symbol},
+        evidence::Evidence
+    ) where {T, A <: AbstractArray{T}}
+    return CredalPosterior(posteriors, lower, upper, schema, query, evidence, 0)
+end
 
 """
     infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
@@ -136,7 +146,7 @@ function infer(
         tol::Real = 0.0
     )
     if !isfinite(tol) || tol < 0
-        throw(ArgumentError("tol must be finite and nonnegative"))
+        error("Invalid tol: tol must be finite and nonnegative, got $(repr(tol))")
     end
     query = _wrap(query)
     _verify_query(query, cn, evidence)
@@ -160,7 +170,14 @@ function infer(
     end
     if isempty(posteriors)
         evidence_str = "[" * join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ") * "]"
-        error("Invalid Evidence: evidence $evidence_str " * (iszero(tol) ? "has upper probability zero, it is impossible under every measure of the credal set" : "has no extreme network with P(evidence) > $(repr(tol))") * ", therefore the conditional probability is undefined")
+        # With the default tol every surviving extreme was genuinely impossible, so the conditional
+        # does not exist. With a raised tol the extremes may well have admitted the evidence and been
+        # cut by the threshold instead, which is the caller's doing and not a property of the model.
+        if iszero(tol)
+            error("Invalid Evidence: evidence $evidence_str has upper probability zero, it is impossible under every measure of the credal set, therefore the conditional probability is undefined")
+        else
+            error("Invalid Evidence: evidence $evidence_str has P(evidence) <= $(repr(tol)) under every extreme network of the credal set, so tol discarded all of them; lower tol to condition on it")
+        end
     end
     factors = getproperty.(posteriors, :factor)
     tables = getproperty.(factors, :table)
