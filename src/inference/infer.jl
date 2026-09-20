@@ -59,7 +59,7 @@ end
 
 """
     infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
-    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
+    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive(), tol::Real = 0.0)
 
 Compute the posterior over query (a Symbol or a vector of them) given evidence, by variable
 elimination. Returns a Posterior for a Bayesian network, or a CredalPosterior with
@@ -69,6 +69,13 @@ factor_score. The query must not overlap the evidence, and both must name existi
 `progress` shows a progress bar over the work — the eliminated variables for a Bayesian network,
 the extreme networks for a credal one — and defaults to `isinteractive()` (shown in the REPL,
 silent in scripts, tests, and docs); force it with `progress=true` / `progress=false`.
+
+On a credal network the bounds are taken over the extreme networks under which the evidence is
+possible; one under which P(evidence) is zero gives a 0/0 posterior and is discarded (regular
+extension). `tol` is the threshold at or below which P(evidence) counts as impossible, and
+defaults to 0.0, which discards exactly the structurally degenerate extremes. If the evidence is
+impossible under every extreme network, so that its upper probability is zero, infer raises an
+error rather than returning a vacuous interval.
 
 Examples
 
