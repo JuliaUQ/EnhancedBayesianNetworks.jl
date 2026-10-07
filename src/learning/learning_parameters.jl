@@ -28,11 +28,11 @@ mutable struct DirectAcyclicGraph
     nodes::AbstractVector{DiscreteNode}
     topology::Dict
     A::SparseMatrixCSC
-    states::Dict{Symbol, Vector{Symbol}}   # declared domain per node name
+    states::Dict{Symbol,Vector{Symbol}}   # declared domain per node name
 end
 
 DirectAcyclicGraph() = DirectAcyclicGraph(
-    DiscreteNode[], Dict{Symbol, Int}(), spzeros(Bool, 0, 0), Dict{Symbol, Vector{Symbol}}()
+    DiscreteNode[], Dict{Symbol,Int}(), spzeros(Bool, 0, 0), Dict{Symbol,Vector{Symbol}}()
 )
 
 """
@@ -53,11 +53,11 @@ add_node!(dag, :G; parents = [:R])
 ```
 """
 function add_node!(
-        dag::DirectAcyclicGraph,
-        name::Symbol,
-        node_states::Vector{Symbol} = Symbol[];
-        parents::Vector{Symbol} = Symbol[]
-    )
+    dag::DirectAcyclicGraph,
+    name::Symbol,
+    node_states::Vector{Symbol}=Symbol[];
+    parents::Vector{Symbol}=Symbol[]
+)
     if haskey(dag.topology, name)
         error("Invalid DAG: node $(repr(name)) is already present")
     end
@@ -107,16 +107,68 @@ learn(dag, df_with_missing; tol = 1.0e-6, max_iter = 500)
 ```
 """
 function learn(
-        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4, progress::Bool = isinteractive()
-    )
+    dag::DirectAcyclicGraph, df::DataFrame; alpha::Real=0, max_iter::Int=100, tol::Real=1.0e-4, progress::Bool=isinteractive()
+)
     incomplete = any(n -> any(ismissing, df[!, n.name]), dag.nodes)
     if incomplete
-        return learn_parameters_em(dag, df; alpha = alpha, max_iter = max_iter, tol = tol, progress = progress)
+        return learn_parameters_em(dag, df; alpha=alpha, max_iter=max_iter, tol=tol, progress=progress)
     else
-        return learn_parameters_mle(dag, df; alpha = alpha, progress = progress)
+        return learn_parameters_mle(dag, df; alpha=alpha, progress=progress)
     end
 end
 
+function learn_cn(dag::DirectAcyclicGraph, df::DataFrame)
+    unique(df[:,])
+end
+
+function _quesenberry_hurst(dag::DirectAcyclicGraph, df::DataFrame, dof::Int, α::Real=0.05)
+    statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
+    nodes = deepcopy(dag.nodes)
+    p = Progress(length(nodes); desc="Fitting CPTs ", enabled=progress)
+    for node in nodes
+        n = node.name
+        par = parents(dag, n)
+        node_states = statespace(n)
+        k = length(node_states)
+        parent_states = [statespace(p) for p in par]
+        for config in Iterators.product(parent_states...)
+            pkeys = [par[i] => config[i] for i in eachindex(par)]
+            mask = trues(nrow(df))
+            for (p, c) in zip(par, config)
+                mask .&= df[!, p] .== c
+            end
+            total = count(mask)
+            for s in node_states
+                cnt = count(mask .& (df[!, n] .== s))
+                # Interval needs to be computed here. 
+                prob = total == 0 ? 1 / k : (cnt + alpha) / (total + alpha * k)
+                A = quantile(Chisq(col_states-1), 1 - α)
+                lower = (A + 2*n_i - sqrt(A * (A + 4*n_i*(N-n_i)/N))) / (2*(N+A))
+                upper = (A + 2*n_i - sqrt(A * (A + 4*n_i*(N-n_i)/N))) / (2*(N+A))
+                node[pkeys..., n=>s] = Interval(lower, upper)
+            end
+        end
+        next!(p)
+    end
+    return # Should return a credal net.
+
+
+    for inode in 1:size(df[1, :])
+
+        if inode == 1
+            col_states = statespace(inode)
+            A = quantile(Chisq(col_states-1), 1 - α)
+            lower = (A + 2*n_i - sqrt(A * (A + 4*n_i*(N-n_i)/N))) / (2*(N+A))
+            upper = (A + 2*n_i - sqrt(A * (A + 4*n_i*(N-n_i)/N))) / (2*(N+A))
+
+
+        else
+
+
+
+        end
+    end
+end
 """
     learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, progress::Bool = isinteractive())
 
@@ -143,12 +195,12 @@ order!(learned)
 ```
 """
 function learn_parameters_mle(
-        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, progress::Bool = isinteractive()
-    )
+    dag::DirectAcyclicGraph, df::DataFrame; alpha::Real=0, progress::Bool=isinteractive()
+)
     # domain of a node = states seen in the data ∪ extra states declared on the DAG
     statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
     nodes = deepcopy(dag.nodes)
-    p = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
+    p = Progress(length(nodes); desc="Fitting CPTs ", enabled=progress)
     for node in nodes
         n = node.name
         par = parents(dag, n)
@@ -166,7 +218,7 @@ function learn_parameters_mle(
             for s in node_states
                 cnt = count(mask .& (df[!, n] .== s))
                 prob = total == 0 ? 1 / k : (cnt + alpha) / (total + alpha * k)
-                node[pkeys..., n => s] = prob
+                node[pkeys..., n=>s] = prob
             end
         end
         next!(p)
@@ -206,16 +258,16 @@ order!(learned)
 ```
 """
 function learn_parameters_em(
-        dag::DirectAcyclicGraph, df::DataFrame; alpha::Real = 0, max_iter::Int = 100, tol::Real = 1.0e-4, progress::Bool = isinteractive()
-    )
+    dag::DirectAcyclicGraph, df::DataFrame; alpha::Real=0, max_iter::Int=100, tol::Real=1.0e-4, progress::Bool=isinteractive()
+)
     domains = Dict(n.name => sort(unique(vcat(get(dag.states, n.name, Symbol[]), collect(skipmissing(df[!, n.name]))))) for n in dag.nodes)
     bn = _em_uniform(dag, domains)
-    p = Progress(max_iter; desc = "EM iteration ", enabled = progress)
+    p = Progress(max_iter; desc="EM iteration ", enabled=progress)
     for _ in 1:max_iter
         newbn = _em_mstep(dag, _em_estep(dag, df, bn, domains), domains, alpha)
         change = _em_maxchange(bn, newbn)
         bn = newbn
-        next!(p; showvalues = () -> [("max Δ", change)])
+        next!(p; showvalues=() -> [("max Δ", change)])
         if change < tol
             finish!(p)
             break
@@ -235,7 +287,7 @@ function _em_uniform(dag::DirectAcyclicGraph, domains)
         for config in Iterators.product((domains[p] for p in par)...)
             pkeys = [par[i] => config[i] for i in eachindex(par)]
             for s in node_states
-                node[pkeys..., n => s] = 1 / k
+                node[pkeys..., n=>s] = 1 / k
             end
         end
     end
@@ -304,7 +356,7 @@ function _em_mstep(dag::DirectAcyclicGraph, completed::DataFrame, domains, alpha
                 # clamp absorbs floating-point drift from summing fractional weights (cnt/total can
                 # exceed 1 by an ulp, which the CPT's [0,1] check would reject)
                 prob = total == 0 ? 1 / k : clamp((cnt + alpha) / (total + alpha * k), 0.0, 1.0)
-                node[pkeys..., n => s] = prob
+                node[pkeys..., n=>s] = prob
             end
         end
     end
