@@ -117,6 +117,35 @@ function learn(
     end
 end
 
+function learn_cn(dag::DirectAcyclicGraph, df::DataFrame, α::Real = 0.05)
+    statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
+    nodes = deepcopy(dag.nodes)
+    p = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
+    for node in nodes
+        n = node.name
+        par = parents(dag, n)
+        node_states = statespace(n)
+        k = length(node_states)
+        A = quantile(Chisq(k - 1), 1 - α)
+        parent_states = [statespace(p) for p in par]
+        for config in Iterators.product(parent_states...)
+            pkeys = [par[i] => config[i] for i in eachindex(par)]
+            mask = trues(nrow(df))
+            for (p, c) in zip(par, config)
+                mask .&= df[!, p] .== c
+            end
+            total = count(mask)
+            for s in node_states
+                cnt = count(mask .& (df[!, n] .== s))
+                lower = total == 0 ? 0.0 : (A + 2 * cnt - sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
+                upper = total == cnt ? 1.0 : (A + 2 * cnt + sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
+                node[pkeys..., n => s] = Interval(lower, upper)
+            end
+        end
+        next!(p)
+    end
+    return CredalNetwork(nodes, copy(dag.topology), copy(dag.A))
+end
 """
     learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, progress::Bool = isinteractive())
 
