@@ -118,10 +118,10 @@ function learn(
 end
 
 function learn_cn(dag::DirectAcyclicGraph, df::DataFrame)
-    unique(df[:,])
+    return quesenberry_hurst(dag, df, alpha=alpha)
 end
 
-function _quesenberry_hurst(dag::DirectAcyclicGraph, df::DataFrame, dof::Int, α::Real=0.05)
+function quesenberry_hurst(dag::DirectAcyclicGraph, df::DataFrame, α::Real=0.05)
     statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
     nodes = deepcopy(dag.nodes)
     p = Progress(length(nodes); desc="Fitting CPTs ", enabled=progress)
@@ -140,35 +140,15 @@ function _quesenberry_hurst(dag::DirectAcyclicGraph, df::DataFrame, dof::Int, α
             total = count(mask)
             for s in node_states
                 cnt = count(mask .& (df[!, n] .== s))
-                # Interval needs to be computed here. 
-                prob = total == 0 ? 1 / k : (cnt + alpha) / (total + alpha * k)
-                A = quantile(Chisq(col_states-1), 1 - α)
-                lower = (A + 2*n_i - sqrt(A * (A + 4*n_i*(N-n_i)/N))) / (2*(N+A))
-                upper = (A + 2*n_i - sqrt(A * (A + 4*n_i*(N-n_i)/N))) / (2*(N+A))
+                A = quantile(Chisq(node_states-1), 1 - α)
+                lower = (A + 2*cnt - sqrt(A * (A + 4*cnt*(total-cnt)/total))) / (2*(total+A))
+                upper = (A + 2*cnt - sqrt(A * (A + 4*cnt*(total-cnt)/total))) / (2*(total+A))
                 node[pkeys..., n=>s] = Interval(lower, upper)
             end
         end
         next!(p)
     end
-    return # Should return a credal net.
-
-
-    for inode in 1:size(df[1, :])
-
-        if inode == 1
-            col_states = statespace(inode)
-            A = quantile(Chisq(col_states-1), 1 - α)
-            lower = (A + 2*n_i - sqrt(A * (A + 4*n_i*(N-n_i)/N))) / (2*(N+A))
-            upper = (A + 2*n_i - sqrt(A * (A + 4*n_i*(N-n_i)/N))) / (2*(N+A))
-
-
-        else
-
-
-
-        end
-    end
-end
+    return CredalNetwork(nodes, copy(dag.topology), copy(dag.A))
 """
     learn_parameters_mle(dag::DirectAcyclicGraph, df::DataFrame; alpha = 0, progress::Bool = isinteractive())
 
