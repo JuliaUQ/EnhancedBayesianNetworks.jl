@@ -45,6 +45,7 @@ export isprecise
 export isroot
 export joint_probability
 export learn
+export learn_cn
 export learn_parameters_em
 export learn_parameters_mle
 export markov_blanket
