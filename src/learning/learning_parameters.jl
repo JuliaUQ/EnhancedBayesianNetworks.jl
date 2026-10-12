@@ -117,7 +117,7 @@ function learn(
     end
 end
 
-function learn_cn(dag::DirectAcyclicGraph, df::DataFrame, α::Real = 0.05)
+function learn_cn(dag::DirectAcyclicGraph, df::DataFrame; α::Real = 0.05, progress::Bool = isinteractive())
     statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
     nodes = deepcopy(dag.nodes)
     p = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
