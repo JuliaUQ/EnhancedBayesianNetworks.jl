@@ -123,10 +123,10 @@ function learn_cn(dag::DirectAcyclicGraph, df::DataFrame; α::Real = 0.05, progr
     p = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
     for node in nodes
         n = node.name
+        println(string(n))
         par = parents(dag, n)
         node_states = statespace(n)
         k = length(node_states)
-        A = quantile(Chisq(k - 1), 1 - α)
         parent_states = [statespace(p) for p in par]
         for config in Iterators.product(parent_states...)
             pkeys = [par[i] => config[i] for i in eachindex(par)]
@@ -136,10 +136,17 @@ function learn_cn(dag::DirectAcyclicGraph, df::DataFrame; α::Real = 0.05, progr
             end
             total = count(mask)
             for s in node_states
-                cnt = count(mask .& (df[!, n] .== s))
-                lower = total == 0 ? 0.0 : (A + 2 * cnt - sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
-                upper = total == cnt ? 1.0 : (A + 2 * cnt + sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
-                node[pkeys..., n => s] = Interval(lower, upper)
+                if k == 1
+                    node[pkeys..., n => s] = Interval(1.0, 1.0)
+                elseif total == 0
+                    error("No data for node $n in DataFrame.")
+                else
+                    cnt = count(mask .& (df[!, n] .== s))
+                    A = quantile(Chisq(k - 1), 1 - α)
+                    lower = total == 0 ? 0.0 : (A + 2 * cnt - sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
+                    upper = total == cnt ? 1.0 : (A + 2 * cnt + sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
+                    node[pkeys..., n => s] = Interval(lower, upper)
+                end
             end
         end
         next!(p)
