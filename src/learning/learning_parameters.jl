@@ -121,9 +121,9 @@ function learn_cn(dag::DirectAcyclicGraph, df::DataFrame; α::Real = 0.05, progr
     statespace(col) = sort(unique(vcat(get(dag.states, col, Symbol[]), df[!, col])))
     nodes = deepcopy(dag.nodes)
     p = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
+
     for node in nodes
         n = node.name
-        println(string(n))
         par = parents(dag, n)
         node_states = statespace(n)
         k = length(node_states)
@@ -138,13 +138,17 @@ function learn_cn(dag::DirectAcyclicGraph, df::DataFrame; α::Real = 0.05, progr
             for s in node_states
                 if k == 1
                     node[pkeys..., n => s] = Interval(1.0, 1.0)
-                elseif total == 0
-                    error("No data for node $n in DataFrame.")
                 else
                     cnt = count(mask .& (df[!, n] .== s))
                     A = quantile(Chisq(k - 1), 1 - α)
-                    lower = total == 0 ? 0.0 : (A + 2 * cnt - sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
-                    upper = total == cnt ? 1.0 : (A + 2 * cnt + sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
+                    if total == 0
+                        # engineering assumption, since not covered by QH
+                        lower = 0.0
+                        upper = 10.0^(-round(Int, log10(size(df, 1))))
+                    else
+                        lower = cnt == 0 ? 0.0 : (A + 2 * cnt - sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
+                        upper = cnt == total ? 1.0 : (A + 2 * cnt + sqrt(A * (A + 4 * cnt * (total - cnt) / total))) / (2 * (total + A))
+                    end
                     node[pkeys..., n => s] = Interval(lower, upper)
                 end
             end
