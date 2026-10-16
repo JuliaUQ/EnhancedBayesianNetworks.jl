@@ -93,7 +93,7 @@
     f2 = EnhancedBayesianNetworks.Factor([1], [0.3, 0.7])
     post = EnhancedBayesianNetworks.Posterior(f1, ns, [:W], EnhancedBayesianNetworks.Evidence())
     poste = EnhancedBayesianNetworks.Posterior(f1, ns, [:W], EnhancedBayesianNetworks.Evidence(:X => :on))
-    cpost = EnhancedBayesianNetworks.CredalPosterior([post], f2, f1, ns, [:W], EnhancedBayesianNetworks.Evidence())
+    cpost = EnhancedBayesianNetworks.CredalPosterior([post], f2, f1, ns, [:W], EnhancedBayesianNetworks.Evidence(), 0)
 end
 
 @testitem "Show - node helpers" setup = [SetupShowNet] begin

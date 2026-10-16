@@ -30,7 +30,10 @@ end
 
 The result of infer on a CredalNetwork: lower and upper posterior probabilities
 over the query given evidence. lower/upper are the element-wise min/max Factors over the
-posteriors obtained from every extreme Bayesian network of the credal set; schema, query, and
+posteriors obtained from the extreme Bayesian networks of the credal set that admit the evidence.
+An extreme network under which the evidence has probability zero gives a 0/0 posterior and says
+nothing about the conditional, so it is left out of the bounds rather than folded into them; this
+is regular extension, and discarded counts the extremes dropped that way. schema, query, and
 evidence mirror Posterior. Display it to see the labelled [lower, upper] table.
 
 Examples
@@ -51,11 +54,25 @@ struct CredalPosterior{T, A <: AbstractArray{T}}
     schema::NetworkSchema
     query::Vector{Symbol}
     evidence::Evidence
+    discarded::Int
+end
+
+# Six-argument constructor kept for compatibility: a CredalPosterior built without a discarded
+# count is one where no extreme network was discarded.
+function CredalPosterior(
+        posteriors::Vector{<:Posterior},
+        lower::Factor{T, A},
+        upper::Factor{T, A},
+        schema::NetworkSchema,
+        query::Vector{Symbol},
+        evidence::Evidence
+    ) where {T, A <: AbstractArray{T}}
+    return CredalPosterior(posteriors, lower, upper, schema, query, evidence, 0)
 end
 
 """
     infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
-    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
+    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive(), tol::Real = 0.0)
 
 Compute the posterior over query (a Symbol or a vector of them) given evidence, by variable
 elimination. Returns a Posterior for a Bayesian network, or a CredalPosterior with
@@ -65,6 +82,13 @@ factor_score. The query must not overlap the evidence, and both must name existi
 `progress` shows a progress bar over the work — the eliminated variables for a Bayesian network,
 the extreme networks for a credal one — and defaults to `isinteractive()` (shown in the REPL,
 silent in scripts, tests, and docs); force it with `progress=true` / `progress=false`.
+
+On a credal network the bounds are taken over the extreme networks under which the evidence is
+possible; one under which P(evidence) is zero gives a 0/0 posterior and is discarded (regular
+extension). `tol` is the threshold at or below which P(evidence) counts as impossible, and
+defaults to 0.0, which discards exactly the structurally degenerate extremes. If the evidence is
+impossible under every extreme network, so that its upper probability is zero, infer raises an
+error rather than returning a vacuous interval.
 
 Examples
 
@@ -89,14 +113,28 @@ function infer(
     _verify_query(query, bn, evidence)
     _verify_evidence(evidence, bn)
 
+    posterior, _ = _infer_ve(bn, query, evidence, scorefun; progress = progress)
+    return posterior
+end
+
+# One variable-elimination pass over a precise network: the posterior, and P(evidence) under it.
+# `infer` keeps only the posterior; credal inference needs P(evidence) to tell whether a given
+# extreme network admits the evidence at all.
+function _infer_ve(
+        bn::BayesianNetwork,
+        query::Vector{Symbol},
+        evidence::Evidence,
+        scorefun;
+        progress::Bool = false
+    )
     ns = NetworkSchema(bn)
     ig = InteractionGraph(bn)
     factors = _factorize(bn)
     query_vars = _query_to_idx(query, ns)
     evidence_idx = _evidence_to_idx(evidence, ns)
     order = _sort_nodes(ig, ns, scorefun)
-    result = _ve(factors, order, query_vars, evidence_idx; progress = progress)
-    return Posterior(result, ns, query, evidence)
+    result, evidence_probability = _ve(factors, order, query_vars, evidence_idx; progress = progress)
+    return Posterior(result, ns, query, evidence), evidence_probability
 end
 
 function infer(
@@ -104,18 +142,42 @@ function infer(
         query::Union{Symbol, Vector{Symbol}},
         evidence::Evidence,
         scorefun = fill_factor_score;
-        progress::Bool = isinteractive()
+        progress::Bool = isinteractive(),
+        tol::Real = 0.0
     )
+    if !isfinite(tol) || tol < 0
+        error("Invalid tol: tol must be finite and nonnegative, got $(repr(tol))")
+    end
     query = _wrap(query)
     _verify_query(query, cn, evidence)
     _verify_evidence(evidence, cn)
 
     posteriors = Posterior[]
+    discarded = 0
     bns = _extreme_bayesian_networks(cn)
     p = Progress(length(bns); desc = "Inferring over $(length(bns)) BNs ", enabled = progress)
     for bn in bns
-        push!(posteriors, infer(bn, query, evidence, scorefun; progress = false))
+        posterior, evidence_probability = _infer_ve(bn, query, evidence, scorefun; progress = false)
+        # Regular extension: an extreme network under which the evidence is impossible says nothing
+        # about the conditional — its posterior is 0/0 — so it is dropped rather than folded into the
+        # bounds, where a single NaN would swallow both of them.
+        if evidence_probability > tol
+            push!(posteriors, posterior)
+        else
+            discarded += 1
+        end
         next!(p)
+    end
+    if isempty(posteriors)
+        evidence_str = "[" * join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ") * "]"
+        # With the default tol every surviving extreme was genuinely impossible, so the conditional
+        # does not exist. With a raised tol the extremes may well have admitted the evidence and been
+        # cut by the threshold instead, which is the caller's doing and not a property of the model.
+        if iszero(tol)
+            error("Invalid Evidence: evidence $evidence_str has upper probability zero, it is impossible under every measure of the credal set, therefore the conditional probability is undefined")
+        else
+            error("Invalid Evidence: evidence $evidence_str has P(evidence) <= $(repr(tol)) under every extreme network of the credal set, so tol discarded all of them; lower tol to condition on it")
+        end
     end
     factors = getproperty.(posteriors, :factor)
     tables = getproperty.(factors, :table)
@@ -129,7 +191,8 @@ function infer(
         Factor(factors[1].vars, upper_table),
         posteriors[1].schema,
         query,
-        evidence
+        evidence,
+        discarded
     )
 end
 

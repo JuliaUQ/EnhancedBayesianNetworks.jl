@@ -20,4 +20,14 @@ end
     @test occursin("CredalPosterior P(W)", p)
     @test occursin("Interval", p)
     @test occursin("Extreme posteriors: 1", p)
+    # nothing discarded: the line stays exactly as it was before regular extension
+    @test !occursin("discarded", p)
+end
+
+@testitem "Show - CredalPosterior with discarded extremes" setup = [SetupShowNet] begin
+    cpost_discarded = EnhancedBayesianNetworks.CredalPosterior(
+        [post], f2, f1, ns, [:W], EnhancedBayesianNetworks.Evidence(), 3
+    )
+    p = plainshow(cpost_discarded)
+    @test occursin("Extreme posteriors: 1 (3 discarded: P(evidence) = 0)", p)
 end

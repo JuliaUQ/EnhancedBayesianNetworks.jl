@@ -50,5 +50,8 @@ function Base.show(io::IO, ::MIME"text/plain", p::CredalPosterior)
         println(io, "[", l, ", ", u, "]")
     end
     println(io)
-    return println(io, "Extreme posteriors: ", length(p.posteriors))
+    if iszero(p.discarded)
+        return println(io, "Extreme posteriors: ", length(p.posteriors))
+    end
+    return println(io, "Extreme posteriors: ", length(p.posteriors), " (", p.discarded, " discarded: P(evidence) = 0)")
 end
