@@ -4,7 +4,6 @@ version = "0.2.1"
 authors = ["Andrea Perin <andrea.perin@irz.uni-hannover.de>"]
 
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Compose = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -16,7 +15,6 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 UncertaintyQuantification = "7183a548-a887-11e9-15ce-a56ab60bad7a"
 
 [compat]
-CSV = "0.10.17"
 Compose = "0.9.5"
 DataFrames = "1.8.2"
 Distributions = "0.25.130"
