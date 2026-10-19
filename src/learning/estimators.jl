@@ -7,33 +7,45 @@
 """
     ParameterEstimator
 
-Abstract supertype of the estimators accepted by [`learn`](@ref). An estimator fixes *how* a CPT row is derived from data counts, and with it the kind of network returned:
+Abstract supertype of the estimators accepted by [`learn`](@ref). An estimator fixes *how* the probabilities for one parent configuration are derived from data counts, and with it the kind of network returned:
 
-  - [`PreciseEstimator`](@ref) — one probability per cell, giving a [`BayesianNetwork`](@ref).
-  - [`ImpreciseEstimator`](@ref) — an `Interval` per cell, giving a [`CredalNetwork`](@ref).
+  - [`PreciseEstimator`](@ref) — one probability per node state, giving a [`BayesianNetwork`](@ref).
+  - [`ImpreciseEstimator`](@ref) — an `Interval` per node state, giving a [`CredalNetwork`](@ref).
 
-Available estimators are [`PreciseDirichletModel`](@ref), [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref). All of them require complete data.
+Every estimator works on **one parent configuration**: one node together with one configuration of its parents' states. Three quantities describe it, and every formula in this module is written in terms of them:
+
+  - `k` — how many states the node has.
+  - `cnt` — how many data rows match the parent configuration *and* have the node in the state being estimated.
+  - `total` — how many data rows match the parent configuration at all, whatever the node's state.
+
+Available estimators are [`PreciseDirichletModel`](@ref), [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref).
 """
 abstract type ParameterEstimator end
 
 """
     PreciseEstimator <: ParameterEstimator
 
-Estimators returning a single probability per cell, so that [`learn`](@ref) returns a [`BayesianNetwork`](@ref). See [`PreciseDirichletModel`](@ref).
+Estimators returning a single probability per node state, so that [`learn`](@ref) returns a [`BayesianNetwork`](@ref). See [`PreciseDirichletModel`](@ref).
 """
 abstract type PreciseEstimator <: ParameterEstimator end
 
 """
     ImpreciseEstimator <: ParameterEstimator
 
-Estimators returning an `Interval` per cell, so that [`learn`](@ref) returns a [`CredalNetwork`](@ref). See [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref).
+Estimators returning an `Interval` per node state, so that [`learn`](@ref) returns a [`CredalNetwork`](@ref). See [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref).
 """
 abstract type ImpreciseEstimator <: ParameterEstimator end
 
 """
     PreciseDirichletModel(α = 0)
 
-Dirichlet parameter estimation: `P(node = x | parents = config) = (cnt + α) / (total + α * k)`, with `k` the number of node states and `α ≥ 0` a pseudo-count added to every cell.
+Based on a Dirichlet **prior** that can be written as a **concentration** vector `a = (a₁, …, aₖ)` or in terms of **strength** (s) `s = Σᵢ aᵢ` and **mean** (t) `tᵢ = aᵢ / s`.
+The **posterior mean** is then expressed as `E(θᵢ | data) = (cntᵢ + aᵢ) / (total + s) = (cntᵢ + tᵢ * s) / (total + s)`.
+
+See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`.
+
+The Precise Dirichlet Model evaluates CPT's entries as `(cnt + α) / (total + α * k)`, with `α ≥ 0` a pseudo-count added to each of the `k` states. The pseudo-count `α` is the same in every state, which means the Dirichlet prior is symmetric and its mean is uniform, `tᵢ = 1 / k` for every `i`.
+When `α = 0` the posterior falls back to maximum likelihood estimation.
 
 Named special cases, all the same formula:
 
@@ -42,7 +54,7 @@ Named special cases, all the same formula:
 | `0` | maximum likelihood, the relative frequency (the default) |
 | any | additive, Lidstone or Laplace smoothing |
 
-Larger `α` pulls the estimate towards uniform. `α = 0` is unbiased but overconfident on sparse data: a state never observed in a configuration is assigned exactly `0`. Use [`ImpreciseDirichletModel`](@ref) to report that uncertainty as an interval rather than smooth it away.
+`α = 0` is unbiased but overconfident on sparse data: a state never observed in a configuration is assigned exactly `0`. Larger `α` tends to smooth away the zero probability, pushing towards a uniform distribution. Use [`ImpreciseDirichletModel`](@ref) to report that uncertainty as an interval rather than smooth it away.
 
 The estimator is due to the actuaries Hardy (1889) and Lidstone (1920), and was recast by Johnson (1932) as the interpolation above. Reference: Lidstone, G. J. (1920), *Note on the general case of the Bayes-Laplace formula for inductive or a posteriori probabilities*, Transactions of the Faculty of Actuaries 8, 182–192.
 
@@ -66,11 +78,21 @@ end
 """
     ImpreciseDirichletModel(s = 1)
 
-Imprecise Dirichlet Model: `P(node = x | parents = config) ∈ [cnt / (total + s), (cnt + s) / (total + s)]`, with `s > 0` the prior strength — the number of unseen observations the model is willing to imagine.
+Based on a Dirichlet **prior** that can be written as a **concentration** vector `a = (a₁, …, aₖ)` or in terms of **strength** (s) `s = Σᵢ aᵢ` and **mean** (t) `tᵢ = aᵢ / s`.
+The **posterior mean** is then expressed as `E(θᵢ | data) = (cntᵢ + aᵢ) / (total + s) = (cntᵢ + tᵢ * s) / (total + s)`.
 
-The interval is exactly the set of [`PreciseDirichletModel`](@ref) estimates obtained as the prior mean ranges over the whole simplex at fixed strength `s`. So this is the imprecise counterpart of [`PreciseDirichletModel`](@ref): the same family, with the choice of prior no longer pinned down. `s = 1` and `s = 2` are the usual choices; larger `s` gives wider intervals.
+See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`.
 
-Two properties make it the recommended default for credal learning. It is **coherent by construction** — the lower bounds of a row sum to `total / (total + s) ≤ 1` and the upper bounds to `(total + k * s) / (total + s) ≥ 1`, so the credal set is never empty. And a parent configuration absent from the data gives `[0, 1]` with no special case: with no observations the model says nothing, which is the honest answer and the one [`infer`](@ref) handles via the regular extension.
+The Imprecise Dirichlet Model (IDM) of Walley evaluates CPT's entries as the interval defined by `[cnt / (total + s), (cnt + s) / (total + s)]`, with `s > 0` the prior strength. `s = 1` and `s = 2` are the usual choices; larger `s` gives wider intervals.
+
+The bounds can be read straight off: `s` is a number of extra, imagined observations, and the model is not told which states they belong to. The **lower** bound assumes none of them fall in the evaluated state of the nodes; the **upper** bound assumes all `s` of them do.
+
+Formally, IDM fixes the strength `s` and leaves the mean `tᵢ` free, which is [`PreciseDirichletModel`](@ref) with the prior no longer pinned down. Only `tᵢ` appears in the posterior mean above, and the expression is increasing in it, so letting the mean range over every possible distribution sends `tᵢ = 0` to the lower bound and `tᵢ = 1` to the upper one: the interval is exactly that range. Substituting `tᵢ = 1 / k` recovers `PreciseDirichletModel(s / k)`, since `total + (s / k) * k = total + s`, so the interval always contains the uniform-prior case.
+
+Two properties make it the recommended default for credal learning.
+
+1. It is **coherent by construction**: the lower bounds of a parent configuration sum to `total / (total + s) ≤ 1` and the upper bounds to `(total + k * s) / (total + s) ≥ 1`, so the credal set is never empty.
+2. A parent configuration absent from the data gives `[0, 1]` with no special case: with no observations the model says nothing, which is the honest answer and the one [`infer`](@ref) handles via the regular extension.
 
 Reference: Walley, P. (1996), *Inferences from Multinomial Data: Learning About a Bag of Marbles*, Journal of the Royal Statistical Society Series B 58(1), 3–34.
 
@@ -100,15 +122,15 @@ Keeping every `θ` with `Σᵢ (cntᵢ - total * θᵢ)^2 / (total * θᵢ) ≤ 
 
     θ = [(A + 2 * cnt) ± sqrt(A * (A + 4 * cnt * (total - cnt) / total))] / (2 * (total + A))
 
-with `A = quantile(Chisq(k - 1), confidence)` and `k` the number of node states. The `k - 1` degrees of freedom are what make the coverage **simultaneous** over the `k` cells rather than cell by cell. At `k = 2` this reduces exactly to the Wilson score interval, since `χ²(1, 0.95) = 1.959964^2`.
+with `A = quantile(Chisq(k - 1), confidence)`. The `k - 1` degrees of freedom are what make the coverage **simultaneous** over the `k` node states rather than one state at a time. At `k = 2` this reduces exactly to the Wilson score interval, since `χ²(1, 0.95) = 1.959964^2`.
 
-Unlike [`ImpreciseDirichletModel`](@ref) this is a frequentist confidence region read as a credal set: it carries repeated-sampling coverage, not a behavioural interpretation, so results should say which of the two produced them. Coherence is nonetheless guaranteed whenever `total > 0`, because the projected ellipsoid contains the maximum likelihood estimate, whose cells sum to `1`.
+Unlike [`ImpreciseDirichletModel`](@ref) this is a frequentist confidence region read as a credal set: it carries repeated-sampling coverage, not a behavioural interpretation, so results should say which of the two produced them. Coherence is nonetheless guaranteed whenever `total > 0`, because the projected ellipsoid contains the maximum likelihood estimate, whose probabilities sum to `1`.
 
 Reference: Quesenberry, C. P. and Hurst, D. C. (1964), *Large Sample Simultaneous Confidence Intervals for Multinomial Proportions*, Technometrics 6(2), 191–195.
 
 # Examples
 ```julia
-cn = learn(dag, df, QuesenberryHurst())        # 95%
+cn = learn(dag, df, QuesenberryHurst())
 cn = learn(dag, df, QuesenberryHurst(0.99))
 ```
 """
@@ -123,34 +145,37 @@ struct QuesenberryHurst <: ImpreciseEstimator
 end
 
 # --------------------------------------------------------------------------------------------------
-# _estimate(estimator, counts, total) -> one CPT row
+# _estimate(estimator, counts, total) -> one parents' configuration
 #
-# `counts[i]` is the number of rows matching the parent configuration whose node state is the i-th of the node's domain; `total` is the number of rows matching the configuration at all. For complete  data `total == sum(counts)`, but the two are passed separately on purpose: under missing data a row  can match the parents while leaving the node unobserved, counting towards `total` and towards no cell. Counts are `Real`, not `Int`, because EM's M-step sums fractional responsibilities.
-
-# `k = length(counts)` is read off the row, so anything depending only on `k` — notably the  chi-square quantile — is computed once per row rather than once per cell.
-
+# `counts[i]` is the number of data's rows matching the parent configuration whose node state is the i-th of the node's domain; `total` is the number of rows matching the configuration at all. For complete data `total == sum(counts)`, but the two are passed separately on purpose: under missing data a row can match the parents while leaving the node unobserved. Counts are `Real`, not `Int`, because EM's M-step sums fractional responsibilities.
+#
+# `k = length(counts)` is read off the row, so anything depending only on `k` — notably the chi-square quantile — is computed once per parents' configuration rather than once per node state.
+#
 # Each method owns its own degenerate cases; the fitting loop has none.
 # --------------------------------------------------------------------------------------------------
 
 function _estimate(estimator::PreciseDirichletModel, counts::AbstractVector{<:Real}, total::Real)
     k = length(counts)
-    if k == 1
+    if k == 1   # node with 1 state only
         return DiscreteProbability[1.0]
     end
     α = estimator.α
-    # Any α > 0 already yields α / (k * α) = 1 / k below; only pure maximum likelihood, which has no
-    # relative frequency to report, needs the uniform fallback.
+    # MLE and parents configuration not present
     if (iszero(total) && iszero(α))
         return DiscreteProbability[1 / k for _ in 1:k]
     end
+    # all the other cases are covered, clamp is here only for the em-steps where cnt might be bigger than total
     return DiscreteProbability[clamp((cnt + α) / (total + α * k), 0.0, 1.0) for cnt in counts]
 end
 
 function _estimate(estimator::ImpreciseDirichletModel, counts::AbstractVector{<:Real}, total::Real)
     k = length(counts)
-    k == 1 && return DiscreteProbability[1.0]
+    if k == 1   # node with 1 state only
+        return DiscreteProbability[1.0]
+    end
     s = estimator.s
-    # total == 0 needs no branch: [0 / s, s / s] = [0, 1], vacuous, which is the honest answer.
+    # all the other cases are covered, clamp is here only for the em-steps where cnt might be bigger than total
+    # total == 0: [0 / s, s / s] = [0, 1]
     return DiscreteProbability[
         Interval(
             clamp(cnt / (total + s), 0.0, 1.0),
@@ -161,9 +186,14 @@ end
 
 function _estimate(estimator::QuesenberryHurst, counts::AbstractVector{<:Real}, total::Real)
     k = length(counts)
-    k == 1 && return DiscreteProbability[1.0]
+    if k == 1   # node with 1 state only
+        return DiscreteProbability[1.0]
+    end
     # No observations means no confidence region at all, so report the vacuous interval.
-    iszero(total) && return DiscreteProbability[Interval(0.0, 1.0) for _ in 1:k]
+    if iszero(total)
+        return DiscreteProbability[Interval(0.0, 1.0) for _ in 1:k]
+    end
+    # all the other cases are covered by the formula
     A = quantile(Chisq(k - 1), estimator.confidence)
     return DiscreteProbability[_qh_interval(cnt, total, A) for cnt in counts]
 end

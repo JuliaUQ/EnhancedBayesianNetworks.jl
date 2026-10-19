@@ -266,3 +266,20 @@ end
 
 # Largest change in any CPT entry between successive iterations (rows are built in the same order).
 _em_maxchange(a::BayesianNetwork, b::BayesianNetwork) = maximum(maximum(abs.(x.cpt.data.Π .- y.cpt.data.Π)) for (x, y) in zip(a.nodes, b.nodes))
+
+# ==================================================================================================
+# Shared fitting engine
+#
+# One walk over the DAG, shared by every estimator: resolve each node's domain, enumerate the parent
+# configurations, count the rows matching each, and hand the counts to `_estimate`. The estimator
+# decides what goes into the CPT; nothing here knows whether that is a number or an `Interval`.
+# ==================================================================================================
+
+# Domain of every node: the states declared on the DAG (see `add_node!`) together with those observed
+# in `df`, sorted so that parent configurations are always enumerated in the same order. `skipmissing`
+# keeps `missing` out of the domain -- it marks an absent observation, not a state of the node.
+# Whether missing values are tolerated at all is `_verify_complete`'s business, not this function's.
+function _domains(dag::DirectAcyclicGraph, df::DataFrame)
+    domain(name) = sort(unique(vcat(get(dag.states, name, Symbol[]), collect(skipmissing(df[!, name])))))
+    return Dict{Symbol, Vector{Symbol}}(n.name => domain(n.name) for n in dag.nodes)
+end
