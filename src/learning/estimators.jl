@@ -198,15 +198,12 @@ function _estimate(estimator::QuesenberryHurst, counts::AbstractVector{<:Real}, 
     return DiscreteProbability[_qh_interval(cnt, total, A) for cnt in counts]
 end
 
-# The two roots of θ^2 * (total + A) - θ * (2 * cnt + A) + cnt^2 / total = 0, the projection of the
-# chi-square ellipsoid onto one coordinate. At cnt = 0 the algebra gives exactly 0 and at
-# cnt = total exactly 1, so the clamp absorbs floating-point dust rather than doing any modelling;
-# `max(..., 0)` guards the root against a fractional count drifting a hair past `total`.
+# At cnt = 0 the algebra gives exactly 0 and at cnt = total exactly 1, so the clamp absorbs floating-point dust rather than doing any modelling;
 function _qh_interval(cnt::Real, total::Real, A::Real)
     spread = sqrt(max(A * (A + 4 * cnt * (total - cnt) / total), 0.0))
     denominator = 2 * (total + A)
     return Interval(
         clamp((A + 2 * cnt - spread) / denominator, 0.0, 1.0),
-        clamp((A + 2 * cnt + spread) / denominator, 0.0, 1.0)
+        cnt == total ? 1.0 : clamp((A + 2 * cnt + spread) / denominator, 0.0, 1.0)
     )
 end
