@@ -249,7 +249,8 @@ function _extreme_nodes(node::DiscreteNode)
             vars = vcat(par, node.name)
             n = DiscreteNode(node.name, par, node.parameters, node.results)
             for row in eachrow(df)
-                n[map(v -> v => row[v], vars)...] = row[:Π]
+                # calmping to avoid the fact that a corner lying exactly on `pᵢ = 0` can land a half-ulp on the wrong side, and `_verify_probability_value` would reject it.
+                n[map(v -> v => row[v], vars)...] = clamp(row[:Π], 0.0, 1.0)
             end
             push!(extreme_nodes, n)
         end
