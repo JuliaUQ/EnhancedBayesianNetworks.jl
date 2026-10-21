@@ -51,9 +51,7 @@ export isprecise
 export isroot
 export joint_probability
 export learn
-export learn_cn
 export learn_parameters_em
-export learn_parameters_mle
 export markov_blanket
 export markov_envelope
 export order!
@@ -68,6 +66,7 @@ include("nodes/nodes.jl")
 include("networks/networks.jl")
 include("inference/inference.jl")
 include("learning/dag.jl")
+include("learning/em.jl")
 include("learning/estimators.jl")
 include("learning/learning_parameters.jl")
 include("plotting/plotting.jl")

@@ -1,7 +1,7 @@
 # ==================================================================================================
 # Parameter estimators
 #
-# An estimator answers one question: given the data counts of a single parent configuration, what goes in that row of the CPT? Precise estimators return numbers and yield a `BayesianNetwork`; imprecise ones return `Interval`s and yield a `CredalNetwork`. Everything else — walking the nodes, matching rows, counting — is shared, and does not belong here.  Parameters are validated in the constructors, so an unusable estimator cannot be built and the fitting loop never has to check.
+# An estimator answers one question: given the data counts of a single parent configuration, what goes in that row of the CPT? Precise estimators return numbers and yield a `BayesianNetwork`; imprecise ones return `Interval`s and yield a `CredalNetwork`.
 # ==================================================================================================
 
 """
@@ -145,7 +145,7 @@ struct QuesenberryHurst <: ImpreciseEstimator
 end
 
 # --------------------------------------------------------------------------------------------------
-# _estimate(estimator, counts, total) -> one parents' configuration
+# _estimate(estimator, counts, total) -> one parents' configuration, whole discrete node conditional probabilities given parents' configuration
 #
 # `counts[i]` is the number of data's rows matching the parent configuration whose node state is the i-th of the node's domain; `total` is the number of rows matching the configuration at all. For complete data `total == sum(counts)`, but the two are passed separately on purpose: under missing data a row can match the parents while leaving the node unobserved. Counts are `Real`, not `Int`, because EM's M-step sums fractional responsibilities.
 #
