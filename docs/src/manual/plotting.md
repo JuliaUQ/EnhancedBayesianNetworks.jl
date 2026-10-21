@@ -1,7 +1,7 @@
 # Plotting
 
 [`gplot`](@ref) draws a network as a layered, top-down graph: roots on the first row, every other node one row below its deepest parent, with edges attached to the exact border of each shape. 
-It works on any network, [Bayesian Network](@ref) (BN), [Credal Network](@ref) (CN), or [Enhanced Bayesian Network](@ref) (eBN), and on a [`DirectAcyclicGraph`](@ref), so a structure can be inspected before its parameters are even [learned](parameterlearning.md).
+It works on any network, [Bayesian Network](@ref) (BN), [Credal Network](@ref) (CN), or [Enhanced Bayesian Network](@ref) (eBN), and on a [`DirectAcyclicGraph`](@ref), so a structure can be inspected before its parameters are even [learned](../api/learning.md).
 
 ```@example plotting
 using EnhancedBayesianNetworks # hide

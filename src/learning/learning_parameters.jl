@@ -6,7 +6,7 @@ Learn the CPTs of `dag` from `df` with `estimator`, which decides both how each 
   - a [`PreciseEstimator`](@ref), namely [`PreciseDirichletModel`](@ref), gives a [`BayesianNetwork`](@ref).
   - an [`ImpreciseEstimator`](@ref), namely [`ImpreciseDirichletModel`](@ref) or [`QuesenberryHurst`](@ref), gives a [`CredalNetwork`](@ref).
 
-Every node of `dag` must have a complete `Symbol` column in `df`; columns of `df` that are not nodes of `dag` are ignored with a warning. For data containing `missing` use [`learn_parameters_em`](@ref).
+Every node of `dag` must have a complete `Symbol` column in `df`; columns of `df` that are not nodes of `dag` are ignored with a warning.
 
 A node's domain is the set of states observed in `df` together with any declared through [`add_node!`](@ref), so a state that never occurs still receives a CPT entry, and a parent configuration that never occurs is estimated from `total == 0`: uniform under maximum likelihood, vacuous under either imprecise estimator.
 
@@ -64,7 +64,7 @@ end
 function _verify_complete(dag::DirectAcyclicGraph, df::DataFrame)
     incomplete = [n.name for n in dag.nodes if any(ismissing, df[!, n.name])]
     if !isempty(incomplete)
-        error("Invalid data: column(s) $incomplete contain missing values; the estimators require complete data, use learn_parameters_em instead")
+        error("Invalid data: column(s) $incomplete contain missing values")
     end
     return nothing
 end

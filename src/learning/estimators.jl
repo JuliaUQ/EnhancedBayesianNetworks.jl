@@ -147,7 +147,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # _estimate(estimator, counts, total) -> one parents' configuration, whole discrete node conditional probabilities given parents' configuration
 #
-# `counts[i]` is the number of data's rows matching the parent configuration whose node state is the i-th of the node's domain; `total` is the number of rows matching the configuration at all. For complete data `total == sum(counts)`, but the two are passed separately on purpose: under missing data a row can match the parents while leaving the node unobserved. Counts are `Real`, not `Int`, because EM's M-step sums fractional responsibilities.
+# `counts[i]` is the number of data's rows matching the parent configuration whose node state is the i-th of the node's domain; `total` is the number of such rows whatever the node's state, so `total == sum(counts)` and it is the normaliser. They are passed separately because `total` is read off the row mask in one pass rather than re-summed per state. Counts are `Real`, not `Int`, so that a future conservative treatment of missing data can pass bounds through unchanged.
 #
 # `k = length(counts)` is read off the row, so anything depending only on `k` — notably the chi-square quantile — is computed once per parents' configuration rather than once per node state.
 #
