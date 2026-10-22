@@ -104,15 +104,34 @@ function _domains(dag::DirectAcyclicGraph, df::DataFrame)
     return Dict{Symbol, Vector{Symbol}}(n.name => domain(n.name) for n in dag.nodes)
 end
 
-# Counts of a single parent configuration. `mask` selects the rows whose parents all sit in the states `parent_config` prescribes; for a root it is empty, the loop body never runs, and the mask stays all-true, which is the one configuration covering every row. `total` is read off the mask andit is the normaliser the estimators divide by.
-function _counts(df::DataFrame, node_name::Symbol, node_states::Vector{Symbol}, parent_config)
-    mask = trues(nrow(df))
-    for (parent, state) in parent_config
-        mask .&= isequal.(df[!, parent], state)
-    end
+# Counts of a single parent configuration. Two masks rather than one: `definite` selects the rows whose parents are all observed and all sit in the states `parent_config` prescribes, while `consistent` selects the rows that could be *completed* as this configuration, that is every observed parent matches but at least one is missing. For a root the loops never run, `definite` stays all-true (the one configuration covering every row) and `consistent` stays all-false, since with no parents nothing can be ambiguous.
+function _counts(df::DataFrame, node_name::Symbol, node_states::Vector{Symbol}, parent_config, incomplete::Bool)
     column = df[!, node_name]
-    counts = [count(mask .& isequal.(column, s)) for s in node_states]
-    return counts, count(mask)
+    definite = trues(nrow(df))
+    for (parent, state) in parent_config
+        definite .&= isequal.(df[!, parent], state)
+    end
+    counts = Int[count(definite .& isequal.(column, s)) for s in node_states]
+    if !incomplete
+        return ConfigurationCounts(counts, sum(counts), 0, zeros(Int, length(node_states)), 0)
+    end
+    consistent = trues(nrow(df))
+    anymissing = falses(nrow(df))
+    for (parent, state) in parent_config
+        col = df[!, parent]
+        unknown = ismissing.(col)
+        consistent .&= unknown .| isequal.(col, state)
+        anymissing .|= unknown
+    end
+    consistent .&= anymissing
+    unobserved = ismissing.(column)
+    return ConfigurationCounts(
+        counts,
+        sum(counts),
+        count(definite .& unobserved),
+        Int[count(consistent .& isequal.(column, s)) for s in node_states],
+        count(consistent .& unobserved),
+    )
 end
 
 # One walk over the DAG: resolve the domains, enumerate each node's parent configurations, count the rows matching each and hand the counts to `_estimate`. Returns the fitted nodes rather than a finished network, because the same loop serves both kinds: `learn` wraps them in a `BayesianNetwork` or a `CredalNetwork` according to the estimator it was given. Nothing here knows whether a CPT entry is a number or an `Interval`. `parent_config` is built once per configuration and used twice, as the mask recipe for `_counts` and as the CPT key prefix. For a root it is empty, which is one configuration covering every row.
@@ -126,6 +145,7 @@ function _fit_cpts(
     _verify_columns(dag, df)
     _verify_complete(dag, df)
     domains = _domains(dag, df)
+    has_missing = any(n -> any(ismissing, df[!, n.name]), dag.nodes)
     nodes = deepcopy(dag.nodes)
     meter = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
     for node in nodes
@@ -134,8 +154,8 @@ function _fit_cpts(
         node_states = domains[node_name]
         for config in Iterators.product((domains[p] for p in par)...)
             parent_config = [par[i] => config[i] for i in eachindex(par)]
-            counts, total = _counts(df, node_name, node_states, parent_config)
-            probabilities = _estimate(estimators[node_name], counts, total)
+            config_counts = _counts(df, node_name, node_states, parent_config, has_missing)
+            probabilities = _estimate(estimators[node_name], config_counts)
             for (i, state) in enumerate(node_states)
                 node[parent_config..., node_name => state] = probabilities[i]
             end

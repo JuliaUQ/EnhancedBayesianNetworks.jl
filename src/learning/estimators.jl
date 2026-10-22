@@ -1,3 +1,13 @@
+# The frequencies a single parent configuration contributes to one node's CPT column. Under complete data only `counts` and `total` are non-zero, and the estimators reduce to their familiar form. The other three carry what an incomplete row still tells you, and are what the robust Bayesian estimator (Ramoni & Sebastiani 2001) needs to bound an estimate over every consistent completion of the data.
+# Parametric rather than fixed to `Int` because not every frequency is a count of rows: an EM step divides a row between the states it might have taken, so its M-step reaches `_estimate` with sums of responsibilities. `T` is `Int` for data counted off a data frame and `Float64` there, and the five fields share it, so a caller mixing the two must convert first.
+struct ConfigurationCounts{T <: Real}
+    counts::Vector{T}           # n(x_k | pi_j): parents and node both observed
+    total::T                    # n(pi_j) = sum(counts), complete cases only
+    node_missing::T             # n(? | pi_j): parents observed, node missing
+    parents_missing::Vector{T}  # n(x_k | ?): node observed, parents consistent but incomplete
+    both_missing::T             # n(? | ?): neither observed, parents consistent
+end
+
 # ==================================================================================================
 # Parameter estimators
 #
@@ -145,57 +155,61 @@ struct QuesenberryHurst <: ImpreciseEstimator
 end
 
 # --------------------------------------------------------------------------------------------------
-# _estimate(estimator, counts, total) -> one parents' configuration, whole discrete node conditional probabilities given parents' configuration
+# _estimate(estimator, frequencies) -> one parents' configuration, whole discrete node conditional probabilities given parents' configuration
 #
-# `counts[i]` is the number of data's rows matching the parent configuration whose node state is the i-th of the node's domain; `total` is the number of such rows whatever the node's state, so `total == sum(counts)` and it is the normaliser. They are passed separately because `total` is read off the row mask in one pass rather than re-summed per state. Counts are `Real`, not `Int`, so that a future conservative treatment of missing data can pass bounds through unchanged.
+# `frequencies` is the `ConfigurationCounts` of a single parent configuration: `frequencies.counts[i]` is the number of rows matching that configuration whose node state is the i-th of the node's domain, and `frequencies.total == sum(frequencies.counts)` is the normaliser. The whole record is passed rather than those two fields alone because a conservative treatment of missing data also needs the three incomplete-case frequencies, which are zero throughout on complete data and leave every formula below untouched.
 #
-# `k = length(counts)` is read off the row, so anything depending only on `k` — notably the chi-square quantile — is computed once per parents' configuration rather than once per node state.
+# `k = length(frequencies.counts)` is read off the record, so anything depending only on `k` — notably the chi-square quantile — is computed once per parents' configuration rather than once per node state.
 #
 # Each method owns its own degenerate cases; the fitting loop has none.
 # --------------------------------------------------------------------------------------------------
 
-function _estimate(estimator::PreciseDirichletModel, counts::AbstractVector{<:Real}, total::Real)
-    k = length(counts)
+function _estimate(estimator::PreciseDirichletModel, frequencies::ConfigurationCounts)
+    k = length(frequencies.counts)
     if k == 1   # node with 1 state only
         return DiscreteProbability[1.0]
     end
     α = estimator.α
     # MLE and parents configuration not present
-    if (iszero(total) && iszero(α))
+    if (iszero(frequencies.total) && iszero(α))
         return DiscreteProbability[1 / k for _ in 1:k]
     end
-    # all the other cases are covered, clamp is here only for the em-steps where cnt might be bigger than total
-    return DiscreteProbability[clamp((cnt + α) / (total + α * k), 0.0, 1.0) for cnt in counts]
+    # all the other cases are covered; the clamp is defensive, since with exact counts the ratio already lies in [0, 1], and it earns its keep only where `cnt` is not an exact count, as in the EM steps
+    return DiscreteProbability[clamp((cnt + α) / (frequencies.total + α * k), 0.0, 1.0) for cnt in frequencies.counts]
 end
 
-function _estimate(estimator::ImpreciseDirichletModel, counts::AbstractVector{<:Real}, total::Real)
-    k = length(counts)
+function _estimate(estimator::ImpreciseDirichletModel, frequencies::ConfigurationCounts)
+    k = length(frequencies.counts)
     if k == 1   # node with 1 state only
         return DiscreteProbability[1.0]
     end
     s = estimator.s
-    # all the other cases are covered, clamp is here only for the em-steps where cnt might be bigger than total
-    # total == 0: [0 / s, s / s] = [0, 1]
+    # Virtual frequencies (Ramoni & Sebastiani 2001, Eqs. 3-4): how many incomplete rows each bound may ascribe to this configuration. Rows whose node value is unknown are shared, since they could have been any state; a row whose node value is known but whose parents are not counts towards the upper bound of its own state and towards the lower bound of every other one, because ascribing it here inflates their denominator without touching their numerator.
+    shared = frequencies.node_missing + frequencies.both_missing
+    ambiguous = sum(frequencies.parents_missing)
+    upper_virtual = shared .+ frequencies.parents_missing
+    lower_virtual = shared .+ ambiguous .- frequencies.parents_missing
+    # all the other cases are covered; the clamp is defensive, as above
     return DiscreteProbability[
         Interval(
-            clamp(cnt / (total + s), 0.0, 1.0),
-            clamp((cnt + s) / (total + s), 0.0, 1.0)
-        ) for cnt in counts
+            clamp(frequencies.counts[i] / (frequencies.total + lower_virtual[i] + s), 0.0, 1.0),
+            clamp((frequencies.counts[i] + upper_virtual[i] + s) / (frequencies.total + upper_virtual[i] + s), 0.0, 1.0)
+        ) for i in 1:k
     ]
 end
 
-function _estimate(estimator::QuesenberryHurst, counts::AbstractVector{<:Real}, total::Real)
-    k = length(counts)
-    if k == 1   # node with 1 state only
+function _estimate(estimator::QuesenberryHurst, frequencies::ConfigurationCounts)
+    k = length(frequencies.counts)
+    if k == 1   # a node with a single state is certain whatever the estimator, and there is nothing left to bound
         return DiscreteProbability[1.0]
     end
     # No observations means no confidence region at all, so report the vacuous interval.
-    if iszero(total)
+    if iszero(frequencies.total)
         return DiscreteProbability[Interval(0.0, 1.0) for _ in 1:k]
     end
     # all the other cases are covered by the formula
     A = quantile(Chisq(k - 1), estimator.confidence)
-    return DiscreteProbability[_qh_interval(cnt, total, A) for cnt in counts]
+    return DiscreteProbability[_qh_interval(cnt, frequencies.total, A) for cnt in frequencies.counts]
 end
 
 # At cnt = 0 the algebra gives exactly 0 and at cnt = total exactly 1, so the clamp absorbs floating-point dust rather than doing any modelling;
