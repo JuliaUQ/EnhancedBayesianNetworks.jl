@@ -104,7 +104,11 @@ Two properties make it the recommended default for credal learning.
 1. It is **coherent by construction**: the lower bounds of a parent configuration sum to `total / (total + s) ≤ 1` and the upper bounds to `(total + k * s) / (total + s) ≥ 1`, so the credal set is never empty.
 2. A parent configuration absent from the data gives `[0, 1]` with no special case: with no observations the model says nothing, which is the honest answer and the one [`infer`](@ref) handles via the regular extension.
 
-Reference: Walley, P. (1996), *Inferences from Multinomial Data: Learning About a Bag of Marbles*, Journal of the Royal Statistical Society Series B 58(1), 3–34.
+On an **incomplete** data set the same interval widens to the envelope of the estimates over every completion of the data consistent with what was observed, so nothing is assumed about *why* a value is absent — in particular not that it is missing at random, the assumption the imprecise framework exists to avoid. Each bound gains a *virtual frequency*, the number of incomplete rows it may ascribe to the parent configuration. A row whose node value is unknown could have been any state, so it widens both ends; a row whose node value is known but whose parents are not raises the upper bound of its own state and the lower bound of every other one, since ascribing it here inflates their denominator without touching their numerator. A row contradicted by any *observed* parent is excluded however much else is unknown.
+
+Two consequences are worth knowing. With no missing values both virtual frequencies vanish and the expression above is recovered exactly, and every additional missing value can only widen the interval, so the estimate is **monotone in the information available** — losing data can never make it more confident. Against that, the two bounds of a given entry are attained by *different* completions, so for `k > 2` the resulting CPT is an outer approximation of the credal set the data really licenses: correct, in that it contains the truth, but wider than strictly necessary. For `k = 2` it is exact.
+
+References: Walley, P. (1996), *Inferences from Multinomial Data: Learning About a Bag of Marbles*, Journal of the Royal Statistical Society Series B 58(1), 3–34. For the treatment of incomplete data, Ramoni, M. & Sebastiani, P. (2001), *Robust Learning with Missing Data*, Machine Learning 45(2), 147–170, whose robust Bayesian estimator gives the bounds above in closed form.
 
 # Examples
 ```julia
