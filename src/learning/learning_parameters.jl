@@ -47,7 +47,7 @@ function learn(
         error("Invalid call: node(s) $declared declare their own estimator; call learn(dag, df) to fit with the declared ones, or build the DAG without estimators to fit every node with a single one")
     end
     nodes = _fit_cpts(dag, df, _uniform_estimators(dag, estimator); progress = progress)
-    return _dispatch(EnhancedBayesianNetwork(nodes, copy(dag.topology), copy(dag.A)))
+    return _dispatch(nodes, copy(dag.topology), copy(dag.A))
 end
 
 function learn(
@@ -61,7 +61,7 @@ function learn(
         error("Invalid DAG: node(s) $undeclared declare no estimator while $declared do; declare one for every node or none at all")
     end
     nodes = _fit_cpts(dag, df, dag.estimators; progress = progress)
-    return _dispatch(EnhancedBayesianNetwork(nodes, copy(dag.topology), copy(dag.A)))
+    return _dispatch(nodes, copy(dag.topology), copy(dag.A))
 end
 
 # ==================================================================================================

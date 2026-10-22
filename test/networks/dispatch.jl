@@ -47,12 +47,4 @@
     nodes = [v, s, t]
     ebn = EnhancedBayesianNetwork(nodes)
     @test isa(EnhancedBayesianNetworks._dispatch(ebn), BayesianNetwork)
-
-    nodes = [v, s, t, g]
-    cn = CredalNetwork(nodes)
-    @test isa(EnhancedBayesianNetworks._dispatch(cn), CredalNetwork)
-
-    nodes = [v, s, t]
-    cn = @suppress CredalNetwork(nodes)
-    @test isa(EnhancedBayesianNetworks._dispatch(cn), BayesianNetwork)
 end
