@@ -1,19 +1,18 @@
 """
-    learn(dag::DirectAcyclicGraph, df::DataFrame, estimator::ParameterEstimator; progress::Bool = isinteractive())
-    learn(dag::DirectAcyclicGraph, df::DataFrame; progress::Bool = isinteractive())
+    learn(dag::DirectAcyclicGraph, df::DataFrame, estimator::ParameterEstimator; max_iter::Int = 100, tol::Real = 1.0e-4, progress::Bool = isinteractive())
+    learn(dag::DirectAcyclicGraph, df::DataFrame; max_iter::Int = 100, tol::Real = 1.0e-4, progress::Bool = isinteractive())
 
-Learn the CPTs of `dag` from `df`. The estimator can be supplied in either of two ways, and the two forms exclude each other:
+Learn the CPTs of `dag` from `df`. Either pass one `estimator` for every node, or declare one per node with [`add_node!`](@ref) and call the two-argument form. The two exclude each other, and a DAG declaring an estimator for only some of its nodes is rejected here rather than at [`add_node!`](@ref), since a DAG under construction is legitimately partial.
 
-  - pass a single `estimator`, which fits every node the same way. The DAG must declare none of its own.
-  - declare one per node through [`add_node!`](@ref) and call `learn(dag, df)`, which lets a single DAG mix precisely and imprecisely estimated nodes. It is all or nothing: a DAG where some nodes declare an estimator and others do not is rejected here rather than at [`add_node!`](@ref), because a DAG under construction is legitimately partial and the rule only has to hold at the moment it is fitted.
+Every node of `dag` needs a `Symbol` column in `df`; other columns are ignored with a warning. A node's domain is the states observed in `df` together with any declared through [`add_node!`](@ref). A [`PreciseEstimator`](@ref) writes numbers and an [`ImpreciseEstimator`](@ref) writes `Interval`s; one interval anywhere gives a [`CredalNetwork`](@ref), otherwise a [`BayesianNetwork`](@ref).
 
-Which kind of network comes back follows from the fitted CPTs rather than from the estimator: a [`PreciseEstimator`](@ref), namely [`PreciseDirichletModel`](@ref), writes numbers, while an [`ImpreciseEstimator`](@ref), namely [`ImpreciseDirichletModel`](@ref) or [`QuesenberryHurst`](@ref), writes intervals. One interval anywhere gives a [`CredalNetwork`](@ref), and otherwise the result is a [`BayesianNetwork`](@ref). The two coincide except for a node with a single state, whose probability is `1` under every estimator, so a DAG of such nodes stays precise however it was fitted.
+`missing` entries are allowed, and the estimators fix how they are treated:
 
-Every node of `dag` must have a complete `Symbol` column in `df`; columns of `df` that are not nodes of `dag` are ignored with a warning.
+  - every node precise: expectation maximisation, which assumes the data are **missing at random**. `max_iter` and `tol` bound the iteration and are read on no other path.
+  - every node imprecise: every entry is bounded over all completions of the data, assuming nothing about the missingness.
+  - [`QuesenberryHurst`](@ref) on incomplete data, or a DAG mixing precise and imprecise nodes on incomplete data: refused with an error.
 
-A node's domain is the set of states observed in `df` together with any declared through [`add_node!`](@ref), so a state that never occurs still receives a CPT entry, and a parent configuration that never occurs is estimated from `total == 0`: uniform under maximum likelihood, vacuous under either imprecise estimator.
-
-The returned network is fully specified but unordered, so call [`order!`](@ref) before inference or sampling. `progress` shows a bar over the fitted nodes and defaults to `isinteractive()`, visible in the REPL and silent in scripts, tests and docs.
+The returned network is fully specified but unordered, so call [`order!`](@ref) before inference or sampling. `progress` defaults to `isinteractive()`, silent in scripts, tests and docs.
 
 # Examples
 
@@ -27,7 +26,7 @@ cn = learn(dag, df, QuesenberryHurst(0.99))        # 99% simultaneous intervals
 order!(cn)
 ```
 
-Or one per node, declared on the DAG, where a single imprecise node is enough to make the result credal:
+Or one per node, where a single imprecise node makes the result credal:
 
 ```julia
 dag = DirectAcyclicGraph()
@@ -40,18 +39,27 @@ order!(cn)
 ```
 """
 function learn(
-        dag::DirectAcyclicGraph, df::DataFrame, estimator::ParameterEstimator; progress::Bool = isinteractive()
+        dag::DirectAcyclicGraph,
+        df::DataFrame,
+        estimator::ParameterEstimator;
+        max_iter::Int = 100,
+        tol::Real = 1.0e-4,
+        progress::Bool = isinteractive()
     )
     declared = [n.name for n in dag.nodes if haskey(dag.estimators, n.name)]
     if !isempty(declared)
         error("Invalid call: node(s) $declared declare their own estimator; call learn(dag, df) to fit with the declared ones, or build the DAG without estimators to fit every node with a single one")
     end
-    nodes = _fit_cpts(dag, df, _uniform_estimators(dag, estimator); progress = progress)
+    nodes = _fit_cpts(dag, df, _uniform_estimators(dag, estimator); max_iter = max_iter, tol = tol, progress = progress)
     return _dispatch(nodes, copy(dag.topology), copy(dag.A))
 end
 
 function learn(
-        dag::DirectAcyclicGraph, df::DataFrame; progress::Bool = isinteractive()
+        dag::DirectAcyclicGraph,
+        df::DataFrame;
+        max_iter::Int = 100,
+        tol::Real = 1.0e-4,
+        progress::Bool = isinteractive()
     )
     undeclared = [n.name for n in dag.nodes if !haskey(dag.estimators, n.name)]
     if length(undeclared) == length(dag.nodes)
@@ -60,7 +68,7 @@ function learn(
         declared = [n.name for n in dag.nodes if haskey(dag.estimators, n.name)]
         error("Invalid DAG: node(s) $undeclared declare no estimator while $declared do; declare one for every node or none at all")
     end
-    nodes = _fit_cpts(dag, df, dag.estimators; progress = progress)
+    nodes = _fit_cpts(dag, df, dag.estimators; max_iter = max_iter, tol = tol, progress = progress)
     return _dispatch(nodes, copy(dag.topology), copy(dag.A))
 end
 
@@ -89,13 +97,26 @@ function _verify_columns(dag::DirectAcyclicGraph, df::DataFrame)
     return nothing
 end
 
-# Check that there are no `missing` values in the DataFrame
-function _verify_complete(dag::DirectAcyclicGraph, df::DataFrame)
+# Which treatment incomplete data gets is fixed by the estimators rather than chosen by the caller: a precise network is completed by expectation maximisation, an imprecise one by bounding every entry over the completions of the data. This is also where the two combinations with no coherent answer are refused.
+function _verify_missingness(
+        dag::DirectAcyclicGraph,
+        df::DataFrame,
+        estimators::AbstractDict{Symbol, <:ParameterEstimator}
+    )
     incomplete = [n.name for n in dag.nodes if any(ismissing, df[!, n.name])]
-    if !isempty(incomplete)
-        error("Invalid data: column(s) $incomplete contain missing values")
+    if isempty(incomplete)
+        return :complete
     end
-    return nothing
+    refused = sort([name for (name, e) in estimators if e isa QuesenberryHurst])
+    if !isempty(refused)
+        error("Invalid estimator: column(s) $incomplete contain missing values, which QuesenberryHurst on node(s) $refused cannot be fitted from; its simultaneous confidence region has no closed-form envelope over the completions of the data, and bounding each entry separately would no longer carry the stated confidence. Use ImpreciseDirichletModel, whose bounds over the completions are exact")
+    end
+    imprecise = sort([name for (name, e) in estimators if e isa ImpreciseEstimator])
+    precise = sort([name for (name, e) in estimators if e isa PreciseEstimator])
+    if !isempty(imprecise) && !isempty(precise)
+        error("Invalid DAG: column(s) $incomplete contain missing values, and node(s) $precise are estimated precisely while $imprecise are not; expectation maximisation is a property of the whole network while bounding over the completions is local to a node, so the two treatments cannot be mixed. Declare one kind of estimator throughout, or complete the data")
+    end
+    return isempty(imprecise) ? :em : :envelope
 end
 
 # Domain of every node: the states declared on the DAG (see `add_node!`) together with those observed in `df`, sorted so that parent configurations are always enumerated in the same order. `skipmissing` keeps `missing` out of the domain. It marks an absent observation, not a state of the node.
@@ -105,7 +126,13 @@ function _domains(dag::DirectAcyclicGraph, df::DataFrame)
 end
 
 # Counts of a single parent configuration. Two masks rather than one: `definite` selects the rows whose parents are all observed and all sit in the states `parent_config` prescribes, while `consistent` selects the rows that could be *completed* as this configuration, that is every observed parent matches but at least one is missing. For a root the loops never run, `definite` stays all-true (the one configuration covering every row) and `consistent` stays all-false, since with no parents nothing can be ambiguous.
-function _counts(df::DataFrame, node_name::Symbol, node_states::Vector{Symbol}, parent_config, incomplete::Bool)
+function _counts(
+        df::DataFrame,
+        node_name::Symbol,
+        node_states::Vector{Symbol},
+        parent_config,
+        incomplete::Bool
+    )
     column = df[!, node_name]
     definite = trues(nrow(df))
     for (parent, state) in parent_config
@@ -134,18 +161,54 @@ function _counts(df::DataFrame, node_name::Symbol, node_states::Vector{Symbol}, 
     )
 end
 
-# One walk over the DAG: resolve the domains, enumerate each node's parent configurations, count the rows matching each and hand the counts to `_estimate`. Returns the fitted nodes rather than a finished network, because the same loop serves both kinds: `learn` wraps them in a `BayesianNetwork` or a `CredalNetwork` according to the estimator it was given. Nothing here knows whether a CPT entry is a number or an `Interval`. `parent_config` is built once per configuration and used twice, as the mask recipe for `_counts` and as the CPT key prefix. For a root it is empty, which is one configuration covering every row.
-# states invariancy: `_estimate` returns a vector of probability coherent with the vector coming from `_counts`, which is applied only once in the `_fit_cpts` and only over `domains[node_name]`. Therefore the states order is garantee
+# EM's M-step: the E-step has already expanded each incomplete row into weighted completions, so every frequency is a sum of responsibilities and nothing is left incomplete. Dispatches apart from the `Bool` method by the type of the last argument.
+function _counts(
+        df::DataFrame,
+        node_name::Symbol,
+        node_states::Vector{Symbol},
+        parent_config,
+        weights::AbstractVector{<:Real}
+    )
+    column = df[!, node_name]
+    definite = trues(nrow(df))
+    for (parent, state) in parent_config
+        definite .&= isequal.(df[!, parent], state)
+    end
+    counts = Float64[sum(weights[definite .& isequal.(column, s)]; init = 0.0) for s in node_states]
+    return ConfigurationCounts(counts, sum(counts), 0.0, zeros(Float64, length(node_states)), 0.0)
+end
+
 function _fit_cpts(
-        dag::DirectAcyclicGraph, df::DataFrame, estimators::AbstractDict{Symbol, <:ParameterEstimator}; progress::Bool = isinteractive()
+        dag::DirectAcyclicGraph,
+        df::DataFrame,
+        estimators;
+        max_iter::Int = 100,
+        tol::Real = 1.0e-4,
+        progress::Bool = isinteractive()
     )
     if nrow(df) == 0
         error("Invalid data: the data frame has no rows, there is nothing to learn from")
     end
     _verify_columns(dag, df)
-    _verify_complete(dag, df)
+    treatment = _verify_missingness(dag, df, estimators)
     domains = _domains(dag, df)
-    has_missing = any(n -> any(ismissing, df[!, n.name]), dag.nodes)
+    if treatment === :em
+        return _em(dag, df, domains, estimators, max_iter, tol, progress)
+    else
+        return _fit_loop(dag, df, estimators, domains; has_missing = treatment === :envelope, progress = progress)
+    end
+end
+
+# The walk itself, with no verification: `_fit_cpts` has already checked the columns and chosen the treatment, and EM reaches this once per iteration on its own expanded frame, whose extra `:weight` column would otherwise trip `_verify_columns` on every pass. `has_missing` and `weights` are alternatives, not companions: the first bounds each entry over the completions of the data, the second fits from responsibilities the E-step has already resolved, so nothing is left incomplete for it to bound.
+function _fit_loop(
+        dag::DirectAcyclicGraph,
+        df::DataFrame,
+        estimators,
+        domains;
+        has_missing::Bool = false,
+        weights::Union{Nothing, AbstractVector{<:Real}} = nothing,
+        progress::Bool = false
+    )
     nodes = deepcopy(dag.nodes)
     meter = Progress(length(nodes); desc = "Fitting CPTs ", enabled = progress)
     for node in nodes
@@ -154,7 +217,11 @@ function _fit_cpts(
         node_states = domains[node_name]
         for config in Iterators.product((domains[p] for p in par)...)
             parent_config = [par[i] => config[i] for i in eachindex(par)]
-            config_counts = _counts(df, node_name, node_states, parent_config, has_missing)
+            if isnothing(weights)
+                config_counts = _counts(df, node_name, node_states, parent_config, has_missing)
+            else
+                config_counts = _counts(df, node_name, node_states, parent_config, weights)
+            end
             probabilities = _estimate(estimators[node_name], config_counts)
             for (i, state) in enumerate(node_states)
                 node[parent_config..., node_name => state] = probabilities[i]
@@ -164,6 +231,102 @@ function _fit_cpts(
     end
     return nodes
 end
+
+# ==================================================================================================
+# Expectation maximisation
+#
+# The precise treatment of incomplete data, reached only when every node is estimated precisely. The E-step replaces each incomplete row by its weighted completions under the current network, and the M-step is the ordinary fitting walk over those weights, so the estimator a node declares applies unchanged: `_estimate(PreciseDirichletModel(α), ...)` IS the M-step formula. Unlike bounding over the completions, this asserts the data are missing at random, which is why `learn` never reaches it with an imprecise estimator.
+# ==================================================================================================
+
+function _em(
+        dag::DirectAcyclicGraph, df::DataFrame, domains, estimators, max_iter::Int, tol::Real, progress::Bool
+    )
+    if max_iter < 1
+        error("Invalid call: max_iter must be at least 1, got $max_iter")
+    end
+    if tol <= 0
+        error("Invalid call: tol must be strictly positive, got $(repr(tol))")
+    end
+    bn = _em_uniform(dag, domains)
+    meter = Progress(max_iter; desc = "EM iteration ", enabled = progress)
+    for _ in 1:max_iter
+        completed = _em_estep(dag, df, bn, domains)
+        new_bn = BayesianNetwork(
+            _fit_loop(dag, completed, estimators, domains; weights = completed[!, :weight]),
+            copy(dag.topology), copy(dag.A)
+        )
+        change = _em_maxchange(bn, new_bn)
+        bn = new_bn
+        next!(meter; showvalues = () -> [("max Δ", change)])
+        if change < tol
+            finish!(meter)
+            break
+        end
+    end
+    return bn.nodes
+end
+
+# Uniform starting network: every conditional distribution is 1/k over the node's domain.
+function _em_uniform(dag::DirectAcyclicGraph, domains)
+    nodes = deepcopy(dag.nodes)
+    for node in nodes
+        n = node.name
+        par = parents(dag, n)
+        node_states = domains[n]
+        k = length(node_states)
+        for config in Iterators.product((domains[p] for p in par)...)
+            pkeys = [par[i] => config[i] for i in eachindex(par)]
+            for s in node_states
+                node[pkeys..., n => s] = 1 / k
+            end
+        end
+    end
+    return BayesianNetwork(nodes, copy(dag.topology), copy(dag.A))
+end
+
+# E-step: expand every row into weighted completions of its missing variables. A complete row keeps
+# weight 1; an incomplete row yields one completed row per assignment of its missing variables,
+# weighted by P(missing | observed) = normalized joint_probability under bn. Returns the completed
+# data with an added :weight column.
+function _em_estep(dag::DirectAcyclicGraph, df::DataFrame, bn::BayesianNetwork, domains)
+    node_names = [n.name for n in dag.nodes]
+    columns = Dict(c => Symbol[] for c in node_names)
+    weights = Float64[]
+    for row in eachrow(df)
+        missing_vars = [c for c in node_names if ismissing(row[c])]
+        if isempty(missing_vars)
+            for c in node_names
+                push!(columns[c], row[c])
+            end
+            push!(weights, 1.0)
+            continue
+        end
+        observed = [c => row[c] for c in node_names if !ismissing(row[c])]
+        completions = collect(Iterators.product((domains[v] for v in missing_vars)...))
+        w = map(completions) do combo
+            scenario = Evidence(vcat(observed, [missing_vars[j] => combo[j] for j in eachindex(missing_vars)]))
+            joint_probability(bn, scenario)
+        end
+        total = sum(w)
+        w = total == 0 ? fill(1 / length(w), length(w)) : w ./ total
+        for (combo, weight) in zip(completions, w)
+            assignment = Dict(observed)
+            for j in eachindex(missing_vars)
+                assignment[missing_vars[j]] = combo[j]
+            end
+            for c in node_names
+                push!(columns[c], assignment[c])
+            end
+            push!(weights, weight)
+        end
+    end
+    completed = DataFrame(columns)
+    completed[!, :weight] = weights
+    return completed
+end
+
+# Largest change in any CPT entry between successive iterations (rows are built in the same order).
+_em_maxchange(a::BayesianNetwork, b::BayesianNetwork) = maximum(maximum(abs.(x.cpt.data.Π .- y.cpt.data.Π)) for (x, y) in zip(a.nodes, b.nodes))
 
 # One estimator for every node, so that `_fit_cpts` only ever sees the per-node form.
 _uniform_estimators(dag::DirectAcyclicGraph, estimator::ParameterEstimator) =

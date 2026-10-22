@@ -19,14 +19,14 @@ end
 
 Abstract supertype of the estimators accepted by [`learn`](@ref). An estimator fixes *how* the probabilities for one parent configuration are derived from data counts, and with it the kind of network returned:
 
-  - [`PreciseEstimator`](@ref) — one probability per node state, giving a [`BayesianNetwork`](@ref).
-  - [`ImpreciseEstimator`](@ref) — an `Interval` per node state, giving a [`CredalNetwork`](@ref).
+  - [`PreciseEstimator`](@ref), one probability per node state, giving a [`BayesianNetwork`](@ref).
+  - [`ImpreciseEstimator`](@ref), an `Interval` per node state, giving a [`CredalNetwork`](@ref).
 
 Every estimator works on **one parent configuration**: one node together with one configuration of its parents' states. Three quantities describe it, and every formula in this module is written in terms of them:
 
-  - `k` — how many states the node has.
-  - `cnt` — how many data rows match the parent configuration *and* have the node in the state being estimated.
-  - `total` — how many data rows match the parent configuration at all, whatever the node's state.
+  - `k`, how many states the node has.
+  - `cnt`, how many data rows match the parent configuration *and* have the node in the state being estimated.
+  - `total`, how many such rows there are over all `k` states, so `total` is always `sum(cnt)` and is the normaliser. On incomplete data it counts only the rows where the node *and* every one of its parents were observed; a row that merely could belong to the configuration is carried separately, and only [`ImpreciseDirichletModel`](@ref) reads it.
 
 Available estimators are [`PreciseDirichletModel`](@ref), [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref).
 """
@@ -49,24 +49,13 @@ abstract type ImpreciseEstimator <: ParameterEstimator end
 """
     PreciseDirichletModel(α = 0)
 
-Based on a Dirichlet **prior** that can be written as a **concentration** vector `a = (a₁, …, aₖ)` or in terms of **strength** (s) `s = Σᵢ aᵢ` and **mean** (t) `tᵢ = aᵢ / s`.
-The **posterior mean** is then expressed as `E(θᵢ | data) = (cntᵢ + aᵢ) / (total + s) = (cntᵢ + tᵢ * s) / (total + s)`.
+CPT entries as `(cnt + α) / (total + α * k)`, the mean of a symmetric Dirichlet posterior with pseudo-count `α ≥ 0` in each of the `k` states. See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`.
 
-See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`.
+`α = 0` is maximum likelihood, the relative frequency, and gives exactly `0` to a state never observed in a configuration; any `α > 0` is additive, Lidstone or Laplace smoothing, pulling towards the uniform. Use [`ImpreciseDirichletModel`](@ref) to report that uncertainty as an interval rather than smooth it away. A parent configuration absent from the data gives the uniform distribution.
 
-The Precise Dirichlet Model evaluates CPT's entries as `(cnt + α) / (total + α * k)`, with `α ≥ 0` a pseudo-count added to each of the `k` states. The pseudo-count `α` is the same in every state, which means the Dirichlet prior is symmetric and its mean is uniform, `tᵢ = 1 / k` for every `i`.
-When `α = 0` the posterior falls back to maximum likelihood estimation.
+On incomplete data [`learn`](@ref) reaches this estimator through expectation maximisation, which assumes the data are missing at random; `max_iter` and `tol` control the iteration.
 
-Named special cases, all the same formula:
-
-| `α` | name |
-|:--|:--|
-| `0` | maximum likelihood, the relative frequency (the default) |
-| any | additive, Lidstone or Laplace smoothing |
-
-`α = 0` is unbiased but overconfident on sparse data: a state never observed in a configuration is assigned exactly `0`. Larger `α` tends to smooth away the zero probability, pushing towards a uniform distribution. Use [`ImpreciseDirichletModel`](@ref) to report that uncertainty as an interval rather than smooth it away.
-
-The estimator is due to the actuaries Hardy (1889) and Lidstone (1920), and was recast by Johnson (1932) as the interpolation above. Reference: Lidstone, G. J. (1920), *Note on the general case of the Bayes-Laplace formula for inductive or a posteriori probabilities*, Transactions of the Faculty of Actuaries 8, 182–192.
+The estimator is due to Hardy (1889) and Lidstone (1920), and was recast by Johnson (1932) as an interpolation between the relative frequency and the uniform. Reference: Lidstone, G. J. (1920), *Note on the general case of the Bayes-Laplace formula for inductive or a posteriori probabilities*, Transactions of the Faculty of Actuaries 8, 182–192.
 
 # Examples
 ```julia
@@ -88,27 +77,13 @@ end
 """
     ImpreciseDirichletModel(s = 1)
 
-Based on a Dirichlet **prior** that can be written as a **concentration** vector `a = (a₁, …, aₖ)` or in terms of **strength** (s) `s = Σᵢ aᵢ` and **mean** (t) `tᵢ = aᵢ / s`.
-The **posterior mean** is then expressed as `E(θᵢ | data) = (cntᵢ + aᵢ) / (total + s) = (cntᵢ + tᵢ * s) / (total + s)`.
+CPT entries as the interval `[cnt / (total + s), (cnt + s) / (total + s)]`, with `s > 0` the prior strength: `s` extra observations whose states are left unspecified, placed outside the estimated state for the lower bound and inside it for the upper. See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`. `s = 1` and `s = 2` are the usual choices; larger `s` gives wider intervals.
 
-See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`.
+It is [`PreciseDirichletModel`](@ref) with the prior mean left free instead of pinned to the uniform, so the interval always contains `PreciseDirichletModel(s / k)`. Two properties make it the default for credal learning: the credal set is never empty, the lower bounds of a configuration summing to at most `1` and the upper bounds to at least `1`; and a configuration absent from the data gives `[0, 1]` with no special case, which [`infer`](@ref) handles through the regular extension.
 
-The Imprecise Dirichlet Model (IDM) of Walley evaluates CPT's entries as the interval defined by `[cnt / (total + s), (cnt + s) / (total + s)]`, with `s > 0` the prior strength. `s = 1` and `s = 2` are the usual choices; larger `s` gives wider intervals.
+On incomplete data the interval widens to the envelope of the estimates over every completion of the data consistent with what was observed, so nothing is assumed about *why* a value is absent. In particular not that it is missing at random. Each bound gains a virtual frequency counting the incomplete rows it may ascribe to the configuration; a row contradicted by any observed parent is excluded however much else is unknown.
 
-The bounds can be read straight off: `s` is a number of extra, imagined observations, and the model is not told which states they belong to. The **lower** bound assumes none of them fall in the evaluated state of the nodes; the **upper** bound assumes all `s` of them do.
-
-Formally, IDM fixes the strength `s` and leaves the mean `tᵢ` free, which is [`PreciseDirichletModel`](@ref) with the prior no longer pinned down. Only `tᵢ` appears in the posterior mean above, and the expression is increasing in it, so letting the mean range over every possible distribution sends `tᵢ = 0` to the lower bound and `tᵢ = 1` to the upper one: the interval is exactly that range. Substituting `tᵢ = 1 / k` recovers `PreciseDirichletModel(s / k)`, since `total + (s / k) * k = total + s`, so the interval always contains the uniform-prior case.
-
-Two properties make it the recommended default for credal learning.
-
-1. It is **coherent by construction**: the lower bounds of a parent configuration sum to `total / (total + s) ≤ 1` and the upper bounds to `(total + k * s) / (total + s) ≥ 1`, so the credal set is never empty.
-2. A parent configuration absent from the data gives `[0, 1]` with no special case: with no observations the model says nothing, which is the honest answer and the one [`infer`](@ref) handles via the regular extension.
-
-On an **incomplete** data set the same interval widens to the envelope of the estimates over every completion of the data consistent with what was observed, so nothing is assumed about *why* a value is absent — in particular not that it is missing at random, the assumption the imprecise framework exists to avoid. Each bound gains a *virtual frequency*, the number of incomplete rows it may ascribe to the parent configuration. A row whose node value is unknown could have been any state, so it widens both ends; a row whose node value is known but whose parents are not raises the upper bound of its own state and the lower bound of every other one, since ascribing it here inflates their denominator without touching their numerator. A row contradicted by any *observed* parent is excluded however much else is unknown.
-
-Two consequences are worth knowing. With no missing values both virtual frequencies vanish and the expression above is recovered exactly, and every additional missing value can only widen the interval, so the estimate is **monotone in the information available** — losing data can never make it more confident. Against that, the two bounds of a given entry are attained by *different* completions, so for `k > 2` the resulting CPT is an outer approximation of the credal set the data really licenses: correct, in that it contains the truth, but wider than strictly necessary. For `k = 2` it is exact.
-
-References: Walley, P. (1996), *Inferences from Multinomial Data: Learning About a Bag of Marbles*, Journal of the Royal Statistical Society Series B 58(1), 3–34. For the treatment of incomplete data, Ramoni, M. & Sebastiani, P. (2001), *Robust Learning with Missing Data*, Machine Learning 45(2), 147–170, whose robust Bayesian estimator gives the bounds above in closed form.
+References: Walley, P. (1996), *Inferences from Multinomial Data: Learning About a Bag of Marbles*, Journal of the Royal Statistical Society Series B 58(1), 3–34. For incomplete data, Ramoni, M. & Sebastiani, P. (2001), *Robust Learning with Missing Data*, Machine Learning 45(2), 147–170, whose robust Bayesian estimator gives the bounds in closed form.
 
 # Examples
 ```julia
@@ -130,15 +105,15 @@ end
 """
     QuesenberryHurst(confidence = 0.95)
 
-Simultaneous confidence intervals for multinomial proportions: the set of parameters the data does not reject, obtained by inverting Pearson's score test.
-
-Keeping every `θ` with `Σᵢ (cntᵢ - total * θᵢ)^2 / (total * θᵢ) ≤ A` carves an ellipsoid out of the simplex. Projecting it onto one coordinate is a quadratic in `θ`, whose roots are
+CPT entries as the simultaneous confidence region for multinomial proportions projected onto one coordinate, obtained by inverting Pearson's score test:
 
     θ = [(A + 2 * cnt) ± sqrt(A * (A + 4 * cnt * (total - cnt) / total))] / (2 * (total + A))
 
-with `A = quantile(Chisq(k - 1), confidence)`. The `k - 1` degrees of freedom are what make the coverage **simultaneous** over the `k` node states rather than one state at a time. At `k = 2` this reduces exactly to the Wilson score interval, since `χ²(1, 0.95) = 1.959964^2`.
+with `A = quantile(Chisq(k - 1), confidence)`. See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`. The `k - 1` degrees of freedom are what make the coverage **simultaneous** over the node's states rather than one state at a time; at `k = 2` this is exactly the Wilson score interval. A configuration absent from the data gives `[0, 1]`, and coherence holds whenever `total > 0`.
 
-Unlike [`ImpreciseDirichletModel`](@ref) this is a frequentist confidence region read as a credal set: it carries repeated-sampling coverage, not a behavioural interpretation, so results should say which of the two produced them. Coherence is nonetheless guaranteed whenever `total > 0`, because the projected ellipsoid contains the maximum likelihood estimate, whose probabilities sum to `1`.
+Unlike [`ImpreciseDirichletModel`](@ref) this is a frequentist confidence region read as a credal set: it carries repeated-sampling coverage, not a behavioural interpretation, so results should say which of the two produced them.
+
+[`learn`](@ref) refuses this estimator on incomplete data, where the envelope over the completions has no closed form and the simultaneity above would no longer hold; use [`ImpreciseDirichletModel`](@ref).
 
 Reference: Quesenberry, C. P. and Hurst, D. C. (1964), *Large Sample Simultaneous Confidence Intervals for Multinomial Proportions*, Technometrics 6(2), 191–195.
 
@@ -163,7 +138,7 @@ end
 #
 # `frequencies` is the `ConfigurationCounts` of a single parent configuration: `frequencies.counts[i]` is the number of rows matching that configuration whose node state is the i-th of the node's domain, and `frequencies.total == sum(frequencies.counts)` is the normaliser. The whole record is passed rather than those two fields alone because a conservative treatment of missing data also needs the three incomplete-case frequencies, which are zero throughout on complete data and leave every formula below untouched.
 #
-# `k = length(frequencies.counts)` is read off the record, so anything depending only on `k` — notably the chi-square quantile — is computed once per parents' configuration rather than once per node state.
+# `k = length(frequencies.counts)` is read off the record, so anything depending only on `k`, notably the chi-square quantile, is computed once per parents' configuration rather than once per node state.
 #
 # Each method owns its own degenerate cases; the fitting loop has none.
 # --------------------------------------------------------------------------------------------------
