@@ -137,7 +137,7 @@ function infer(
     # Count before building: enumerating the extreme networks is what costs, so refuse an infeasible network up front rather than hanging in the enumeration.
     n = _n_extreme_bayesian_networks(cn)
     if n > max_networks
-        error("Invalid CredalNetwork: exact credal inference enumerates every extreme Bayesian network, and this one has $n of them (≈ 10^$(round(log10(n); digits = 1))), above max_networks = $max_networks; raise max_networks or reduce the imprecision of the network")
+        error("Invalid CredalNetwork: exact credal inference enumerates every extreme Bayesian network, and this one has $(n <= 10^12 ? n : "≈ 10^$(round(Float64(log10(n)); digits = 1))") of them, above max_networks = $max_networks; raise max_networks or reduce the imprecision of the network")
     end
     bns = _extreme_bayesian_networks(cn)
     p = Progress(Int(n); desc = "Inferring over $n BNs ", enabled = progress)

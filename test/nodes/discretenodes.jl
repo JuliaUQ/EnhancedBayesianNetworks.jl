@@ -161,7 +161,6 @@ end
     @test nodes[2].cpt.data.Π == [0.5, 0.3, 0.2]
     @test nodes[3].cpt.data.Π == [0.5, 0.4, 0.1]
     @test EnhancedBayesianNetworks._n_extreme_nodes(node_x) == length(nodes)
-    @test EnhancedBayesianNetworks._n_extreme_nodes(node_x) == length(nodes)
 
     nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
     @test length(nodes) == 400
@@ -171,14 +170,12 @@ end
     nodes = EnhancedBayesianNetworks._extreme_nodes(node_a)
     @test length(nodes) == 100
     @test EnhancedBayesianNetworks._n_extreme_nodes(node_a) == length(nodes)
-    @test EnhancedBayesianNetworks._n_extreme_nodes(node_a) == length(nodes)
 
     node_b = DiscreteNode(:b)
     node_b[:b => :b1] = 0.4
     node_b[:b => :b2] = 0.3
     node_b[:b => :b3] = 0.3
     @test EnhancedBayesianNetworks._extreme_nodes(node_b) == [node_b]
-    @test EnhancedBayesianNetworks._n_extreme_nodes(node_b) == 1
     @test EnhancedBayesianNetworks._n_extreme_nodes(node_b) == 1
 end
 
