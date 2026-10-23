@@ -214,6 +214,20 @@ function _inputs(node::DiscreteNode, evidence::Evidence)
     end
 end
 
+# One sub-CPT per parent configuration: each parent-state combination indexes an independent conditional distribution of the node. A root has a single one, the whole CPT.
+function _sub_cpts(node::DiscreteNode)
+    par = parents(node)
+    if isempty(par)
+        return [deepcopy(node.cpt.data)]
+    end
+    par_comb = collect.(Iterators.product(map(p -> unique(node.cpt.data[:, p]), par)...))
+    return map(pc -> filter(node.cpt, (par .=> pc)...), par_comb)
+end
+
+# How many precise nodes `_extreme_nodes` would return, computed without building any of them. `BigInt` because a credal network multiplies these counts together and overflows `Int` quickly.
+_n_extreme_nodes(node::DiscreteNode) =
+    isprecise(node) ? big(1) : prod(c -> big(length(_extreme_probabilities(c.Π...))), _sub_cpts(node))
+
 function _extreme_nodes(node::DiscreteNode)
     # Expand a credal (imprecise) node into the finite set of precise DiscreteNodes sitting at the vertices of its credal set.
     # A precise node is its own single vertex.
@@ -232,14 +246,7 @@ function _extreme_nodes(node::DiscreteNode)
         return [node]
     else
         par = parents(node)
-        if !isempty(par)
-            # Each parent-state combination indexes an independent conditional distribution; split the CPT into those per-combination sub-CPTs.
-            par_comb = collect.(Iterators.product(map(p -> unique(node.cpt.data[:, p]), par)...))
-            sub_cpts = map(pc -> filter(node.cpt, (par .=> pc)...), par_comb)
-        else
-            # Root node: the whole CPT is a single conditional distribution.
-            sub_cpts = [deepcopy(node.cpt.data)]
-        end
+        sub_cpts = _sub_cpts(node)
         # Choose one vertex per sub-CPT independently; each combination reassembles a full precise CPT.
         combinations = Iterators.product(map(sub_cpt -> _extreme_points(sub_cpt), sub_cpts)...) |> collect
         extreme_dataframes = vec(map(c -> vcat(c...), combinations))

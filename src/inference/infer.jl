@@ -1,10 +1,7 @@
 """
     Posterior
 
-The result of [`infer`](@ref) on a [`BayesianNetwork`](@ref): the posterior distribution over the
-`query` variables given `evidence`. Holds the resulting probability `Factor`, the `NetworkSchema`
-needed to map ids back to names/states, and the original `query`/`evidence`. Display it to see the
-labelled probability table.
+The result of [`infer`](@ref) on a [`BayesianNetwork`](@ref): the posterior distribution over the `query` variables given `evidence`. Holds the resulting probability `Factor`, the `NetworkSchema` needed to map ids back to names/states, and the original `query`/`evidence`. Display it to see the labelled probability table.
 
 # Examples
 ```julia
@@ -28,13 +25,7 @@ end
 """
     CredalPosterior
 
-The result of infer on a CredalNetwork: lower and upper posterior probabilities
-over the query given evidence. lower/upper are the element-wise min/max Factors over the
-posteriors obtained from the extreme Bayesian networks of the credal set that admit the evidence.
-An extreme network under which the evidence has probability zero gives a 0/0 posterior and says
-nothing about the conditional, so it is left out of the bounds rather than folded into them; this
-is regular extension, and discarded counts the extremes dropped that way. schema, query, and
-evidence mirror Posterior. Display it to see the labelled [lower, upper] table.
+The result of infer on a CredalNetwork: lower and upper posterior probabilities over the query given evidence. lower/upper are the element-wise min/max Factors over the posteriors obtained from the extreme Bayesian networks of the credal set that admit the evidence. An extreme network under which the evidence has probability zero gives a 0/0 posterior and says nothing about the conditional, so it is left out of the bounds rather than folded into them; this is regular extension, and discarded counts the extremes dropped that way. schema, query, and evidence mirror Posterior. Display it to see the labelled [lower, upper] table.
 
 Examples
 
@@ -72,23 +63,13 @@ end
 
 """
     infer(bn::BayesianNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive())
-    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive(), tol::Real = 0.0)
+    infer(cn::CredalNetwork, query, evidence::Evidence, scorefun = fill_factor_score; progress::Bool = isinteractive(), tol::Real = 0.0, max_networks::Integer = 10^6)
 
-Compute the posterior over query (a Symbol or a vector of them) given evidence, by variable
-elimination. Returns a Posterior for a Bayesian network, or a CredalPosterior with
-lower/upper bounds over the credal set's extreme networks for a credal one. scorefun selects the
-elimination-ordering heuristic — fill_factor_score (default), fill_score, or
-factor_score. The query must not overlap the evidence, and both must name existing nodes/states.
-`progress` shows a progress bar over the work — the eliminated variables for a Bayesian network,
-the extreme networks for a credal one — and defaults to `isinteractive()` (shown in the REPL,
-silent in scripts, tests, and docs); force it with `progress=true` / `progress=false`.
+Compute the posterior over query (a Symbol or a vector of them) given evidence, by variable elimination. Returns a Posterior for a Bayesian network, or a CredalPosterior with lower/upper bounds over the credal set's extreme networks for a credal one. scorefun selects the elimination-ordering heuristic — fill_factor_score (default), fill_score, or factor_score. The query must not overlap the evidence, and both must name existing nodes/states. `progress` shows a progress bar over the work — the eliminated variables for a Bayesian network, the extreme networks for a credal one — and defaults to `isinteractive()` (shown in the REPL, silent in scripts, tests, and docs); force it with `progress=true` / `progress=false`.
 
-On a credal network the bounds are taken over the extreme networks under which the evidence is
-possible; one under which P(evidence) is zero gives a 0/0 posterior and is discarded (regular
-extension). `tol` is the threshold at or below which P(evidence) counts as impossible, and
-defaults to 0.0, which discards exactly the structurally degenerate extremes. If the evidence is
-impossible under every extreme network, so that its upper probability is zero, infer raises an
-error rather than returning a vacuous interval.
+On a credal network the bounds are taken over the extreme networks under which the evidence is possible; one under which P(evidence) is zero gives a 0/0 posterior and is discarded (regular extension). `tol` is the threshold at or below which P(evidence) counts as impossible, and defaults to 0.0, which discards exactly the structurally degenerate extremes. If the evidence is impossible under every extreme network, so that its upper probability is zero, infer raises an error rather than returning a vacuous interval.
+
+Exact credal inference runs one variable elimination per extreme network, and their number is the product of the vertex counts of every conditional distribution, so it grows exponentially with the imprecise nodes. `infer` counts them before building any and raises an error when the count exceeds `max_networks` (default `10^6`); raise it to accept a longer run.
 
 Examples
 
@@ -117,9 +98,7 @@ function infer(
     return posterior
 end
 
-# One variable-elimination pass over a precise network: the posterior, and P(evidence) under it.
-# `infer` keeps only the posterior; credal inference needs P(evidence) to tell whether a given
-# extreme network admits the evidence at all.
+# One variable-elimination pass over a precise network: the posterior, and P(evidence) under it. `infer` keeps only the posterior; credal inference needs P(evidence) to tell whether a given extreme network admits the evidence at all.
 function _infer_ve(
         bn::BayesianNetwork,
         query::Vector{Symbol},
@@ -143,7 +122,8 @@ function infer(
         evidence::Evidence,
         scorefun = fill_factor_score;
         progress::Bool = isinteractive(),
-        tol::Real = 0.0
+        tol::Real = 0.0,
+        max_networks::Integer = 10^6
     )
     if !isfinite(tol) || tol < 0
         error("Invalid tol: tol must be finite and nonnegative, got $(repr(tol))")
@@ -154,13 +134,16 @@ function infer(
 
     posteriors = Posterior[]
     discarded = 0
+    # Count before building: enumerating the extreme networks is what costs, so refuse an infeasible network up front rather than hanging in the enumeration.
+    n = _n_extreme_bayesian_networks(cn)
+    if n > max_networks
+        error("Invalid CredalNetwork: exact credal inference enumerates every extreme Bayesian network, and this one has $n of them (≈ 10^$(round(log10(n); digits = 1))), above max_networks = $max_networks; raise max_networks or reduce the imprecision of the network")
+    end
     bns = _extreme_bayesian_networks(cn)
-    p = Progress(length(bns); desc = "Inferring over $(length(bns)) BNs ", enabled = progress)
+    p = Progress(Int(n); desc = "Inferring over $n BNs ", enabled = progress)
     for bn in bns
         posterior, evidence_probability = _infer_ve(bn, query, evidence, scorefun; progress = false)
-        # Regular extension: an extreme network under which the evidence is impossible says nothing
-        # about the conditional — its posterior is 0/0 — so it is dropped rather than folded into the
-        # bounds, where a single NaN would swallow both of them.
+        # Regular extension: an extreme network under which the evidence is impossible says nothing about the conditional — its posterior is 0/0 — so it is dropped rather than folded into the bounds, where a single NaN would swallow both of them.
         if evidence_probability > tol
             push!(posteriors, posterior)
         else
@@ -170,9 +153,7 @@ function infer(
     end
     if isempty(posteriors)
         evidence_str = "[" * join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ") * "]"
-        # With the default tol every surviving extreme was genuinely impossible, so the conditional
-        # does not exist. With a raised tol the extremes may well have admitted the evidence and been
-        # cut by the threshold instead, which is the caller's doing and not a property of the model.
+        # With the default tol every surviving extreme was genuinely impossible, so the conditional does not exist. With a raised tol the extremes may well have admitted the evidence and been cut by the threshold instead, which is the caller's doing and not a property of the model.
         if iszero(tol)
             error("Invalid Evidence: evidence $evidence_str has upper probability zero, it is impossible under every measure of the credal set, therefore the conditional probability is undefined")
         else
@@ -196,13 +177,11 @@ function infer(
     )
 end
 
+# Number of extreme networks of `cn`, computed without building any: the product of the per-node counts.
+_n_extreme_bayesian_networks(cn::CredalNetwork) = prod(_n_extreme_nodes, cn.nodes; init = big(1))
+
+# Lazy: one network is built per iteration, so memory stays flat however many there are.
 function _extreme_bayesian_networks(cn::CredalNetwork)
-    node_extremes = map(EnhancedBayesianNetworks._extreme_nodes, cn.nodes)
-    combinations = Iterators.product(node_extremes...)
-    bns = BayesianNetwork[]
-    for nodes in combinations
-        bn = BayesianNetwork(collect(nodes), copy(cn.topology), copy(cn.A))
-        push!(bns, bn)
-    end
-    return bns
+    node_extremes = map(_extreme_nodes, cn.nodes)
+    return (BayesianNetwork(collect(nodes), copy(cn.topology), copy(cn.A)) for nodes in Iterators.product(node_extremes...))
 end
