@@ -154,6 +154,8 @@ end
     complete = DataFrame(R = [:wet, :wet, :dry, :dry, :wet, :dry], G = [:green, :green, :brown, :brown, :brown, :green])
     domains = EnhancedBayesianNetworks._domains(dag, complete)
     iterated = EnhancedBayesianNetworks._em(dag, complete, domains, estimators, 100, 1.0e-10, false)
+    @test_logs (:warn, r"EM did not converge within max_iter = 1 iterations") EnhancedBayesianNetworks._em(dag, complete, domains, estimators, 1, 1.0e-10, false)
+
     direct = learn(dag, complete, PreciseDirichletModel(1); progress = false)
     @test all(a.cpt.data.Π == b.cpt.data.Π for (a, b) in zip(iterated, direct.nodes))
 

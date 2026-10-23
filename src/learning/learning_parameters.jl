@@ -257,6 +257,8 @@ function _em(
     end
     bn = _em_uniform(dag, domains)
     meter = Progress(max_iter; desc = "EM iteration ", enabled = progress)
+    converged = false
+    change = Inf
     for _ in 1:max_iter
         completed = _em_estep(dag, df, bn, domains)
         new_bn = BayesianNetwork(
@@ -267,9 +269,13 @@ function _em(
         bn = new_bn
         next!(meter; showvalues = () -> [("max Δ", change)])
         if change < tol
+            converged = true
             finish!(meter)
             break
         end
+    end
+    if !converged
+        @warn("EM did not converge within max_iter = $max_iter iterations: the largest CPT change in the last iteration was $change, above tol = $tol. Increase max_iter or tol")
     end
     return bn.nodes
 end

@@ -1,5 +1,5 @@
 # The frequencies a single parent configuration contributes to one node's CPT column. Under complete data only `counts` and `total` are non-zero, and the estimators reduce to their familiar form. The other three carry what an incomplete row still tells you, and are what the robust Bayesian estimator (Ramoni & Sebastiani 2001) needs to bound an estimate over every consistent completion of the data.
-# Parametric rather than fixed to `Int` because not every frequency is a count of rows: an EM step divides a row between the states it might have taken, so its M-step reaches `_estimate` with sums of responsibilities. `T` is `Int` for data counted off a data frame and `Float64` there, and the five fields share it, so a caller mixing the two must convert first.
+# Parametric rather than fixed to `Int` because not every frequency is a count of rows: an EM step divides a row between the states it might have taken, so its M-step reaches `_estimate` with sums of responsibilities. `T` is `Int` for data counted off a data frame and `Float64` when EM is employed, and the five fields share it, so a caller mixing the two must convert first.
 struct ConfigurationCounts{T <: Real}
     counts::Vector{T}           # n(x_k | pi_j): parents and node both observed
     total::T                    # n(pi_j) = sum(counts), complete cases only
