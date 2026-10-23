@@ -180,8 +180,19 @@ end
 # Number of extreme networks of `cn`, computed without building any: the product of the per-node counts.
 _n_extreme_bayesian_networks(cn::CredalNetwork) = prod(_n_extreme_nodes, cn.nodes; init = big(1))
 
-# Lazy: one network is built per iteration, so memory stays flat however many there are.
+# Lazy: one network is built per iteration, so memory stays flat however many there are. The combinations are walked with an integer counter rather than `Iterators.product(node_extremes...)`, whose splat makes the compiler specialise on a tuple as long as the network and costs tens of seconds on the first call for a network of a hundred nodes.
 function _extreme_bayesian_networks(cn::CredalNetwork)
     node_extremes = map(_extreme_nodes, cn.nodes)
-    return (BayesianNetwork(collect(nodes), copy(cn.topology), copy(cn.A)) for nodes in Iterators.product(node_extremes...))
+    sizes = length.(node_extremes)
+    return (BayesianNetwork(_extreme_combination(node_extremes, sizes, i), copy(cn.topology), copy(cn.A)) for i in 0:(prod(sizes) - 1))
+end
+
+# The `i`-th combination of one extreme per node, in the same order as `Iterators.product`: the first node varies fastest.
+function _extreme_combination(node_extremes, sizes, i::Integer)
+    nodes = Vector{DiscreteNode}(undef, length(sizes))
+    for k in eachindex(sizes)
+        i, r = divrem(i, sizes[k])
+        nodes[k] = node_extremes[k][r + 1]
+    end
+    return nodes
 end
