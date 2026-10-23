@@ -192,6 +192,10 @@ function _fit_cpts(
     _verify_columns(dag, df)
     treatment = _verify_missingness(dag, df, estimators)
     domains = _domains(dag, df)
+    stateless = [n.name for n in dag.nodes if isempty(domains[n.name])]
+    if !isempty(stateless)
+        error("Invalid data: node(s) $stateless have no states; their column is entirely missing and none were declared through add_node!")
+    end
     if treatment === :em
         return _em(dag, df, domains, estimators, max_iter, tol, progress)
     else
@@ -231,6 +235,10 @@ function _fit_loop(
     end
     return nodes
 end
+
+# One estimator for every node, so that `_fit_cpts` only ever sees the per-node form.
+_uniform_estimators(dag::DirectAcyclicGraph, estimator::ParameterEstimator) =
+    Dict{Symbol, ParameterEstimator}(n.name => estimator for n in dag.nodes)
 
 # ==================================================================================================
 # Expectation maximisation
@@ -327,7 +335,3 @@ end
 
 # Largest change in any CPT entry between successive iterations (rows are built in the same order).
 _em_maxchange(a::BayesianNetwork, b::BayesianNetwork) = maximum(maximum(abs.(x.cpt.data.Π .- y.cpt.data.Π)) for (x, y) in zip(a.nodes, b.nodes))
-
-# One estimator for every node, so that `_fit_cpts` only ever sees the per-node form.
-_uniform_estimators(dag::DirectAcyclicGraph, estimator::ParameterEstimator) =
-    Dict{Symbol, ParameterEstimator}(n.name => estimator for n in dag.nodes)
