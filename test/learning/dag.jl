@@ -64,8 +64,7 @@ end
 @testitem "DAG declared states and estimators" setup = [ExtraDeps] begin
     dag = DirectAcyclicGraph()
 
-    # omitted keywords store nothing, so `_verify_estimators` can tell "declared none" from "declared
-    # an empty list" and `_domains` can take the whole domain from the data
+    # omitted keywords store nothing, so `_verify_estimators` can tell "declared none" from "declared an empty list" and `_domains` can take the whole domain from the data
     add_node!(dag, :W)
     @test !haskey(dag.states, :W)
     @test !haskey(dag.estimators, :W)
@@ -76,8 +75,7 @@ end
     add_node!(dag, :Q; parents = [:W], estimator = nothing)
     @test !haskey(dag.estimators, :Q)
 
-    # declared states are kept verbatim, unsorted: `_domains` sorts them together with the states
-    # observed in the data, so the DAG itself never reorders what was declared
+    # declared states are kept verbatim, unsorted: `_domains` sorts them together with the states observed in the data, so the DAG itself never reorders what was declared
     add_node!(dag, :R; states = [:b, :a], parents = [:W], estimator = ImpreciseDirichletModel(2))
     @test dag.states[:R] == [:b, :a]
     @test dag.estimators[:R] == ImpreciseDirichletModel(2)
