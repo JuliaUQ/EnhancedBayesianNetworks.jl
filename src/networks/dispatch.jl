@@ -1,25 +1,16 @@
-# Final step of `reduce`: pick the concrete network type for a (reduced) enhanced network. If any node
-# is still continuous it cannot become a purely discrete network, so return the eBN unchanged; otherwise
-# all nodes are discrete, giving a BayesianNetwork when every node is precise and a CredalNetwork when
-# some are imprecise.
-function _dispatch(ebn::EnhancedBayesianNetwork)
-    if any(isa.(ebn.nodes, EnhancedBayesianNetworks.AbstractContinuousNode))
-        return ebn
+# Pick the concrete network type for a set of already-discrete nodes: a BayesianNetwork when every node is precise, a CredalNetwork when some are imprecise.
+function _dispatch(nodes::AbstractVector{DiscreteNode}, topology::Dict, A::SparseMatrixCSC)
+    if all(isprecise.(nodes))
+        return BayesianNetwork(nodes, topology, A)
     else
-        nodes = Vector{DiscreteNode}(ebn.nodes)
-        if all(isprecise.(ebn.nodes))
-            return BayesianNetwork(nodes, ebn.topology, ebn.A)
-        else
-            return CredalNetwork(nodes, ebn.topology, ebn.A)
-        end
+        return CredalNetwork(nodes, topology, A)
     end
 end
 
-# Reached via `reduce`/`_dispatch`: narrow a CredalNetwork to a BayesianNetwork when all its nodes turn out precise; otherwise keep it credal.
-function _dispatch(cn::CredalNetwork)
-    if all(isprecise.(cn.nodes))
-        return BayesianNetwork(Vector{DiscreteNode}(cn.nodes), cn.topology, cn.A)
-    else
-        return cn
+# Final step of `reduce`: pick the concrete network type for a (reduced) enhanced network. If any node is still continuous it cannot become a purely discrete network, so return the eBN unchanged; otherwise all nodes are discrete, giving a BayesianNetwork when every node is precise and a CredalNetwork when some are imprecise.
+function _dispatch(ebn::EnhancedBayesianNetwork)
+    if any(isa.(ebn.nodes, EnhancedBayesianNetworks.AbstractContinuousNode))
+        return ebn
     end
+    return _dispatch(Vector{DiscreteNode}(ebn.nodes), ebn.topology, ebn.A)
 end

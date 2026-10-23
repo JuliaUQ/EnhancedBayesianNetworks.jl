@@ -62,7 +62,7 @@ This reduction is the core operation of the library (see [Reduction & Structural
 
 The reduced network is then ready for **inference**: exact posteriors by *variable elimination* for a BN, or lower/upper posterior bounds for a CN (see[Inference](inference.md)). 
 
-The package also supports learning CPTs from data ([Parameter Learning](parameterlearning.md)) and drawing the network structure ([Plotting](plotting.md)).
+The package also supports learning CPTs from data ([Parameter Learning](../api/learning.md)) and drawing the network structure ([Plotting](plotting.md)).
 
 ## How this manual is organized
 
@@ -71,7 +71,7 @@ The package also supports learning CPTs from data ([Parameter Learning](paramete
 - [Networks](networks.md): Bayesian, credal, and enhanced Bayesian Networks.
 - [Reduction & Structural Reliability Problem](reduction.md): reducing an eBN, and imprecise reliability.
 - [Inference](inference.md): variable elimination and credal inference.
-- [Parameter Learning](parameterlearning.md): learning CPTs from data.
+- [Parameter Learning](../api/learning.md): learning CPTs from data.
 - [Plotting](plotting.md): visualizing a network.
 
 The package builds directly on [UncertaintyQuantification.jl](https://github.com/JuliaUQ/UncertaintyQuantification.jl)

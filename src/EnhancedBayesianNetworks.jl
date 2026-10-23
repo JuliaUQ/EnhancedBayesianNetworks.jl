@@ -26,7 +26,13 @@ export DiscreteNode
 export ExactDiscretization
 export EnhancedBayesianNetwork
 export Evidence
+export ImpreciseDirichletModel
+export ImpreciseEstimator
+export ParameterEstimator
 export Posterior
+export PreciseDirichletModel
+export PreciseEstimator
+export QuesenberryHurst
 
 # Constants
 const Evidence = Dict{Symbol, Symbol}
@@ -45,8 +51,6 @@ export isprecise
 export isroot
 export joint_probability
 export learn
-export learn_parameters_em
-export learn_parameters_mle
 export markov_blanket
 export markov_envelope
 export order!
@@ -60,6 +64,8 @@ export states
 include("nodes/nodes.jl")
 include("networks/networks.jl")
 include("inference/inference.jl")
+include("learning/estimators.jl")
+include("learning/dag.jl")
 include("learning/learning_parameters.jl")
 include("plotting/plotting.jl")
 include("show/show.jl")
