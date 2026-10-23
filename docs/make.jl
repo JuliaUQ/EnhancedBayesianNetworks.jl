@@ -33,7 +33,7 @@ pages = [
         "Networks" => "manual/networks.md",
         "Reduction & Structural Reliability Problem" => "manual/reduction.md",
         "Inference" => "manual/inference.md",
-        # "Parameter Learning" => "manual/parameterlearning.md",
+        "Parameter Learning" => "manual/parameterlearning.md",
         "Plotting" => "manual/plotting.md",
     ],
     "Examples" => [
@@ -51,9 +51,10 @@ pages = [
             "Continuous Nodes" => "examples/Imprecisions/Imprecise_continuous_nodes.md",
             "Discrete Nodes" => "examples/Imprecisions/Imprecise_discrete_nodes.md",
         ],
-        # "Parameters Learning" => [
-        #     "Precise Parameters" => "examples/ParametersLearning/precise_parameters_learning.md",
-        # ],
+        "Parameters Learning" => [
+            "Precise Parameters" => "examples/ParametersLearning/precise_parameters_learning.md",
+            "Imprecise Parameters" => "examples/ParametersLearning/imprecise_parameters_learning.md",
+        ],
         "Utility Functions" => "examples/UtilityFunctions/utility_functions.md",
     ],
     "API" => [
