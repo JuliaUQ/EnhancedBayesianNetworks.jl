@@ -51,11 +51,9 @@ abstract type ImpreciseEstimator <: ParameterEstimator end
 
 CPT entries as `(cnt + α) / (total + α * k)`, the mean of a symmetric Dirichlet posterior with pseudo-count `α ≥ 0` in each of the `k` states. See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`.
 
-`α = 0` is maximum likelihood, the relative frequency, and gives exactly `0` to a state never observed in a configuration; any `α > 0` is additive, Lidstone or Laplace smoothing, pulling towards the uniform. Use [`ImpreciseDirichletModel`](@ref) to report that uncertainty as an interval rather than smooth it away. A parent configuration absent from the data gives the uniform distribution.
+`α = 0` is maximum likelihood, the relative frequency, and gives exactly `0` to a state never observed in a configuration; any `α > 0` is additive smoothing, Laplace smoothing at `α = 1`, pulling towards the uniform. Use [`ImpreciseDirichletModel`](@ref) to report that uncertainty as an interval rather than smooth it away. A parent configuration absent from the data gives the uniform distribution.
 
 On incomplete data [`learn`](@ref) reaches this estimator through expectation maximisation, which assumes the data are missing at random; `max_iter` and `tol` control the iteration.
-
-The estimator is due to Hardy (1889) and Lidstone (1920), and was recast by Johnson (1932) as an interpolation between the relative frequency and the uniform. Reference: Lidstone, G. J. (1920), *Note on the general case of the Bayes-Laplace formula for inductive or a posteriori probabilities*, Transactions of the Faculty of Actuaries 8, 182–192.
 
 # Examples
 ```julia
