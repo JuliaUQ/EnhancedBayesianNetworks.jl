@@ -19,9 +19,9 @@
     @test_throws ErrorException("Invalid QuesenberryHurst: confidence must lie strictly between 0 and 1, got 1") QuesenberryHurst(1)
 
     # the type hierarchy is what `learn` dispatches the missing-data treatment on
-    @test PreciseDirichletModel() isa PreciseEstimator
-    @test ImpreciseDirichletModel() isa ImpreciseEstimator
-    @test QuesenberryHurst() isa ImpreciseEstimator
+    @test PreciseDirichletModel() isa EnhancedBayesianNetworks.PreciseEstimator
+    @test ImpreciseDirichletModel() isa EnhancedBayesianNetworks.ImpreciseEstimator
+    @test QuesenberryHurst() isa EnhancedBayesianNetworks.ImpreciseEstimator
 end
 
 @testitem "ConfigurationCounts constructor" setup = [ExtraDeps] begin

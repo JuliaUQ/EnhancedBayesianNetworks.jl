@@ -26,7 +26,7 @@ end
     add_node!(dag, :G; parents = [:R])
     complete = DataFrame(R = [:wet, :dry], G = [:green, :brown])
     incomplete = DataFrame(R = [:wet, missing], G = [:green, :brown])
-    estimators(pairs...) = Dict{Symbol, ParameterEstimator}(pairs...)
+    estimators(pairs...) = Dict{Symbol, EnhancedBayesianNetworks.ParameterEstimator}(pairs...)
 
     # complete data takes the ordinary path whatever the estimators, so even QuesenberryHurst, which is refused below, is fine here
     @test EnhancedBayesianNetworks._verify_missingness(dag, complete, estimators(:R => QuesenberryHurst(), :G => QuesenberryHurst())) === :complete
@@ -144,7 +144,7 @@ end
     dag = DirectAcyclicGraph()
     add_node!(dag, :R)
     add_node!(dag, :G; parents = [:R])
-    estimators = Dict{Symbol, ParameterEstimator}(:R => PreciseDirichletModel(1), :G => PreciseDirichletModel(1))
+    estimators = Dict{Symbol, EnhancedBayesianNetworks.ParameterEstimator}(:R => PreciseDirichletModel(1), :G => PreciseDirichletModel(1))
 
     @test_throws ErrorException("Invalid call: max_iter must be at least 1, got 0") EnhancedBayesianNetworks._em(dag, DataFrame(R = [:wet], G = [:green]), Dict(:R => [:wet], :G => [:green]), estimators, 0, 1.0e-4, false)
     @test_throws ErrorException("Invalid call: tol must be strictly positive, got 0") EnhancedBayesianNetworks._em(dag, DataFrame(R = [:wet], G = [:green]), Dict(:R => [:wet], :G => [:green]), estimators, 10, 0, false)
@@ -298,10 +298,10 @@ end
     add_node!(dag, :G; parents = [:R, :P])
 
     spread = EnhancedBayesianNetworks._uniform_estimators(dag, ImpreciseDirichletModel(2))
-    @test spread isa Dict{Symbol, ParameterEstimator}
+    @test spread isa Dict{Symbol, EnhancedBayesianNetworks.ParameterEstimator}
     @test sort(collect(keys(spread))) == [:G, :P, :R, :W]
     @test all(e == ImpreciseDirichletModel(2) for e in values(spread))
-    @test spread isa AbstractDict{Symbol, <:ParameterEstimator}
+    @test spread isa AbstractDict{Symbol, <:EnhancedBayesianNetworks.ParameterEstimator}
 
     # estimators already declared on the DAG are ignored rather than merged: `learn` refuses that
     # combination before reaching here, so this function never has to choose between them
@@ -320,7 +320,7 @@ end
     add_node!(dag, :G; parents = [:R], states = [:never])
     df = DataFrame(R = [:wet, :wet, :dry, :dry, :wet, :dry], G = [:green, :green, :brown, :brown, :brown, :green])
     domains = EnhancedBayesianNetworks._domains(dag, df)
-    estimators = Dict{Symbol, ParameterEstimator}(:R => PreciseDirichletModel(0), :G => ImpreciseDirichletModel(1))
+    estimators = Dict{Symbol, EnhancedBayesianNetworks.ParameterEstimator}(:R => PreciseDirichletModel(0), :G => ImpreciseDirichletModel(1))
 
     fitted = EnhancedBayesianNetworks._fit_loop(dag, df, estimators, domains)
     @test fitted isa Vector{DiscreteNode}
@@ -340,7 +340,7 @@ end
     @test EnhancedBayesianNetworks._fit_loop(dag, df, estimators, domains; has_missing = true)[2].cpt.data.Π == fitted[2].cpt.data.Π
 
     # `weights` replaces row counting by summing responsibilities, so all-ones weights reproduce the unweighted fit exactly
-    precise = Dict{Symbol, ParameterEstimator}(:R => PreciseDirichletModel(1), :G => PreciseDirichletModel(1))
+    precise = Dict{Symbol, EnhancedBayesianNetworks.ParameterEstimator}(:R => PreciseDirichletModel(1), :G => PreciseDirichletModel(1))
     @test EnhancedBayesianNetworks._fit_loop(dag, df, precise, domains; weights = ones(nrow(df)))[2].cpt.data.Π ==
         EnhancedBayesianNetworks._fit_loop(dag, df, precise, domains)[2].cpt.data.Π
 end
@@ -351,8 +351,8 @@ end
     add_node!(dag, :G; parents = [:R])
     complete = DataFrame(R = [:wet, :wet, :dry, :dry, :wet, :dry], G = [:green, :green, :brown, :brown, :brown, :green])
     incomplete = DataFrame(R = [:wet, :wet, :dry, missing, :wet, :dry], G = [:green, :green, :brown, :brown, missing, :green])
-    precise = Dict{Symbol, ParameterEstimator}(:R => PreciseDirichletModel(1), :G => PreciseDirichletModel(1))
-    imprecise = Dict{Symbol, ParameterEstimator}(:R => ImpreciseDirichletModel(), :G => ImpreciseDirichletModel())
+    precise = Dict{Symbol, EnhancedBayesianNetworks.ParameterEstimator}(:R => PreciseDirichletModel(1), :G => PreciseDirichletModel(1))
+    imprecise = Dict{Symbol, EnhancedBayesianNetworks.ParameterEstimator}(:R => ImpreciseDirichletModel(), :G => ImpreciseDirichletModel())
 
     @test_throws ErrorException("Invalid data: the data frame has no rows, there is nothing to learn from") EnhancedBayesianNetworks._fit_cpts(dag, DataFrame(R = Symbol[], G = Symbol[]), precise)
 

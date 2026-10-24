@@ -80,7 +80,7 @@ That number is not a measurement but the prior speaking alone, and nothing in a 
 
 ### Imprecise estimates
 
-#### ImpreciseDirichletModel
+**ImpreciseDirichletModel**
 
 The **imprecise Dirichlet model** [walley_inferences_1996](@cite) replaces the single prior by the set of all Dirichlet priors of strength ``s``, with any mean.
 The posterior means then range over an interval, and [`ImpreciseDirichletModel`](@ref)`(s)` reports it:
@@ -104,7 +104,7 @@ order!(cn)
 cn.nodes[cn.topology[:R]]
 ```
 
-#### QuesenberryHurst
+**QuesenberryHurst**
 
 [`QuesenberryHurst`](@ref)`(confidence)` gives intervals of a different nature: the **simultaneous confidence intervals** for multinomial proportions of [quesenberry_large_1964](@cite), obtained by inverting Pearson's ``\chi^2`` test.
 With ``A`` the ``\chi^2_{k-1}`` quantile at the chosen confidence level,
