@@ -80,6 +80,8 @@ That number is not a measurement but the prior speaking alone, and nothing in a 
 
 ### Imprecise estimates
 
+#### ImpreciseDirichletModel
+
 The **imprecise Dirichlet model** [walley_inferences_1996](@cite) replaces the single prior by the set of all Dirichlet priors of strength ``s``, with any mean.
 The posterior means then range over an interval, and [`ImpreciseDirichletModel`](@ref)`(s)` reports it:
 
@@ -101,6 +103,8 @@ cn = learn(dag, df, ImpreciseDirichletModel())
 order!(cn)
 cn.nodes[cn.topology[:R]]
 ```
+
+#### QuesenberryHurst
 
 [`QuesenberryHurst`](@ref)`(confidence)` gives intervals of a different nature: the **simultaneous confidence intervals** for multinomial proportions of [quesenberry_large_1964](@cite), obtained by inverting Pearson's ``\chi^2`` test.
 With ``A`` the ``\chi^2_{k-1}`` quantile at the chosen confidence level,
@@ -148,7 +152,6 @@ The iteration stops when no CPT entry changes by more than `tol` (default ``10^{
 
 EM assumes the data are **missing at random**: whether a value is missing may depend on what was observed, but not on the missing value itself.
 When that fails, for instance when a sensor drops out precisely when the reading is extreme, the estimates are biased, and nothing in the result shows it.
-EM also converges to a local maximum of the likelihood, which need not be the global one.
 
 ```@example learning
 incomplete = allowmissing(df)
