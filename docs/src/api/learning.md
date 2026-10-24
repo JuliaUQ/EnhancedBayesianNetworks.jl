@@ -9,6 +9,7 @@ Pages = ["learning.md"]
 ## Types
 
 ```@docs
+ParameterEstimator
 PreciseDirichletModel
 ImpreciseDirichletModel
 QuesenberryHurst

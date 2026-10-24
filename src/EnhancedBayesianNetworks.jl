@@ -27,6 +27,7 @@ export ExactDiscretization
 export EnhancedBayesianNetwork
 export Evidence
 export ImpreciseDirichletModel
+export ParameterEstimator
 export Posterior
 export PreciseDirichletModel
 export QuesenberryHurst
