@@ -140,7 +140,15 @@ order!(cn)
 infer(cn, :Sc, Evidence(:Wc => :sunny))     # CredalPosterior: [lower, upper] bounds
 ```
 
-The cost grows with the number of extreme networks, one per combination of interval endpoints, so credal inference is exact but exponential in the number of imprecise entries.
+The cost grows with the number of extreme networks. Each conditional distribution of an imprecise node, one per configuration of its parents, has a credal set whose extreme points are its **vertices**, and an extreme network picks one vertex for every such distribution. Their number is therefore the product of the vertex counts of all the conditional distributions:
+
+```math
+N = \prod_{X} \prod_{j} \left| \operatorname{ext} K_j(X) \right| ,
+```
+
+where ``K_j(X)`` is the credal set of node ``X`` under the ``j``-th configuration of its parents, and a precise distribution counts as a single vertex. The vertices are not simply the combinations of interval endpoints, most of which do not sum to one: an interval-valued distribution has at most ``2`` vertices for a binary node and ``6`` for a three-state one, and more for larger nodes. Credal inference is therefore exact but exponential in the number of imprecise distributions.
+
+[`infer`](@ref) computes ``N`` before building any extreme network and raises an error when it exceeds the `max_networks` keyword, which defaults to ``10^6``. A network with too many extremes is thus refused at once, with the count in the error message, instead of starting a computation that cannot finish; raise `max_networks` to accept a longer run. Learned networks reach this limit easily, since learning makes every distribution of an imprecise node imprecise (see [Parameter Learning](parameterlearning.md)).
 
 !!! tip "Progress bar"
     Because each extreme network is a full variable-elimination pass, credal inference over many of them can be slow. The same `progress` keyword shows a progress bar over the extreme networks as they are solved (the inner per-network elimination bars are suppressed), likewise defaulting to `isinteractive()`.
