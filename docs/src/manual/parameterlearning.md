@@ -83,10 +83,13 @@ That number is not a measurement but the prior speaking alone, and nothing in a 
 **ImpreciseDirichletModel**
 
 The **imprecise Dirichlet model** [walley_inferences_1996](@cite) replaces the single prior by the set of all Dirichlet priors of strength ``s``, with any mean.
-The posterior means then range over an interval, and [`ImpreciseDirichletModel`](@ref)`(s)` reports it:
+Under a Dirichlet prior the posterior mean of ``\theta_{ij}`` is the **predictive probability** that the next case with parents in ``\pi_j`` has ``X = x_i``, so the set of priors gives a lower and an upper predictive probability, and [`ImpreciseDirichletModel`](@ref)`(s)` reports them:
 
 ```math
-\theta_{ij} \in \left[\, \frac{n_{ij}}{n_j + s},\; \frac{n_{ij} + s}{n_j + s} \,\right], \qquad s > 0 .
+\underline{P}(x_i \mid \pi_j, \mathcal{D}) = \frac{n_{ij}}{n_j + s},
+\qquad
+\overline{P}(x_i \mid \pi_j, \mathcal{D}) = \frac{n_{ij} + s}{n_j + s},
+\qquad s > 0 .
 ```
 
 The lower bound places the ``s`` prior observations outside the state ``x_i``, the upper bound places them all inside it.
@@ -116,8 +119,40 @@ With ``A`` the ``\chi^2_{k-1}`` quantile at the chosen confidence level,
 The ``k - 1`` degrees of freedom make the coverage hold for all ``k`` states of the column **at once**, not one state at a time; for a binary node the interval reduces to the Wilson score interval.
 A configuration absent from the data again gets ``[0, 1]``.
 
-!!! note "Two readings of an interval"
-    The two imprecise estimators answer different questions. An [`ImpreciseDirichletModel`](@ref) interval is a set of posterior beliefs: it is the range of estimates over a set of priors, and carries a behavioural interpretation. A [`QuesenberryHurst`](@ref) interval is a frequentist confidence region read as a credal set: it carries repeated-sampling coverage and no belief at all. Both give a valid [`CredalNetwork`](@ref), but results should say which one produced them.
+### Interpreting the intervals
+
+Both imprecise estimators return an `Interval` per CPT entry, and both give a [`CredalNetwork`](@ref), but the intervals are statements about different quantities.
+
+An [`ImpreciseDirichletModel`](@ref) interval bounds a **predictive probability**: the probability that the next case with parents in ``\pi_j`` has ``X = x_i``, given the data, under near-ignorance about the prior.
+That is exactly what an entry of a credal CPT means, a set of possible distributions for the node given its parents, so the interval can be used in a [`CredalNetwork`](@ref) as it is, and inference keeps its meaning.
+Its width ``s / (n_j + s)`` is the part of the uncertainty that comes from not knowing which prior to use: wide when there are few data, ``[0, 1]`` when there are none, and vanishing as data accumulate, when every prior leads to nearly the same answer.
+
+A [`QuesenberryHurst`](@ref) interval bounds the **parameter** ``\theta_{ij}`` of the process that generated the data: it is a confidence region, the output of a procedure that, over repeated samples, covers all the true parameters of a column at once with the chosen confidence.
+Its width follows the sampling error, of order ``1 / \sqrt{n_j}``, and the coverage is approximate, since the construction relies on a large-sample approximation, and holds column by column.
+Placing it in a [`CredalNetwork`](@ref) reads *the parameter is probably in here* as *the probability is somewhere in here*, a reasonable but imposed interpretation.
+
+The difference shows when the true parameter is known, as in an example that samples its data from a given network.
+Both kinds of interval converge to the true parameter as the data grow, but only the confidence region is built to *contain* it at a finite sample size.
+An imprecise Dirichlet interval is centred on the observed frequency ``n_{ij} / n_j``, which differs from ``\theta_{ij}`` by a sampling error of order ``1 / \sqrt{n_j}``, while the interval itself narrows as ``1 / n_j``: with many data it is a thin band next to the true parameter rather than around it.
+That is the behaviour of any estimate from finite data, the maximum-likelihood one included, which also converges to ``\theta_{ij}`` without ever equalling it, and it is not a defect: the predictive probability given the data *is* close to the observed frequency, and the interval says so.
+
+| | [`ImpreciseDirichletModel`](@ref) | [`QuesenberryHurst`](@ref) |
+|:--|:--|:--|
+| Bounds | the predictive probability of the next case | the parameter of the generating process |
+| Uncertainty represented | the choice of prior, i.e. the lack of data | sampling variability |
+| Width shrinks as | ``1 / n_j`` | ``1 / \sqrt{n_j}`` |
+| Converges to the true parameter | yes | yes |
+| Contains the true parameter at finite ``n_j`` | not guaranteed, and usually not when ``n_j`` is large | in about the chosen fraction of samples, per column |
+| Configuration without data | ``[0, 1]`` | ``[0, 1]`` |
+| Incomplete data | exact bounds over every completion | refused |
+| Parameter | prior strength ``s``, usually ``1`` or ``2`` | `confidence`, for instance ``0.95`` |
+
+Use [`ImpreciseDirichletModel`](@ref) to learn a credal network whose entries mean what credal entries mean: what the data support, without leaning on an arbitrary prior, in particular with small samples, rare or unobserved configurations, and values missing for unknown reasons.
+Use [`QuesenberryHurst`](@ref) when the intervals are meant as classical error bars on the parameters, with enough complete data for the large-sample approximation to hold.
+The [Imprecise Parameters Learning](../examples/ParametersLearning/imprecise_parameters_learning.md) example compares the two on the same data.
+
+!!! warning "Inference does not carry the confidence level"
+    [`infer`](@ref) treats every interval of a credal network as a set of possible distributions and bounds the posterior over all of them. For an [`ImpreciseDirichletModel`](@ref) network this is exactly what the intervals mean, so the posterior bounds are lower and upper predictive probabilities of the query. For a [`QuesenberryHurst`](@ref) network the intervals are **confidence intervals**, and the confidence level ``\gamma`` holds for each column separately. The posterior bounds returned by [`infer`](@ref) contain the true posterior whenever every column's interval contains its true parameters, so their confidence is the probability that all the columns cover at once, which is **smaller** than ``\gamma``. As a rule of thumb, for ``m`` imprecise columns covering independently it is about ``\gamma^m``: the ``9`` columns of a small network learned at ``\gamma = 0.95`` give posterior bounds with a confidence of only about ``0.95^9 \approx 0.63``. Report the posterior bounds with that reduced confidence, and say which estimator produced them.
 
 ### One estimator per node
 
@@ -176,7 +211,9 @@ A row contradicted by any observed parent is excluded, however much else is unkn
 The extreme completions ascribe these rows to the configuration and the state so as to push each bound as far as it goes, which adds a **virtual count** to the [`ImpreciseDirichletModel`](@ref) formula:
 
 ```math
-\theta_{ij} \in \left[\, \frac{n_{ij}}{n_j + \underline{v}_{ij} + s},\; \frac{n_{ij} + \overline{v}_{ij} + s}{n_j + \overline{v}_{ij} + s} \,\right],
+\underline{P}(x_i \mid \pi_j, \mathcal{D}) = \frac{n_{ij}}{n_j + \underline{v}_{ij} + s},
+\qquad
+\overline{P}(x_i \mid \pi_j, \mathcal{D}) = \frac{n_{ij} + \overline{v}_{ij} + s}{n_j + \overline{v}_{ij} + s},
 \qquad
 \begin{aligned}
 \overline{v}_{ij} &= n^{?}_{j} + n^{??}_{j} + m_{ij}, \\

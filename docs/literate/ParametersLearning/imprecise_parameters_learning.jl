@@ -1,6 +1,6 @@
 # # Imprecise Parameters Learning
 #
-# The [Precise Parameters Learning](precise_parameters_learning.md) example estimates every CPT entry as a single number, so a learned `0.5` looks the same whether a thousand rows support it or none at all. Imprecise estimators report an `Interval` instead, and the learned network is a [`CredalNetwork`](@ref). This example learns the same network from the same data with [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref), shows what their intervals do and do not promise, bounds the estimates over every completion of incomplete data, and keeps credal inference feasible with per-node estimators. The theory behind each estimator is in the [Parameter Learning](../../manual/parameterlearning.md) chapter of the manual.
+# The [Precise Parameters Learning](precise_parameters_learning.md) example estimates every CPT entry as a single number, so a learned `0.5` looks the same whether a thousand rows support it or none at all. Imprecise estimators report an `Interval` instead, and the learned network is a [`CredalNetwork`](@ref). This example learns the same network from the same data with [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref), shows that their intervals bound two different quantities, bounds the estimates over every completion of incomplete data, and keeps credal inference feasible with per-node estimators. The theory behind each estimator is in the [Parameter Learning](../../manual/parameterlearning.md) chapter of the manual.
 
 using EnhancedBayesianNetworks
 using DataFrames
@@ -57,13 +57,13 @@ nothing # hide
 
 # ## Imprecise Dirichlet model
 #
-# [`ImpreciseDirichletModel`](@ref)`()`, with the default prior strength `s = 1`, gives each entry the interval of posterior means over every Dirichlet prior of that strength. A precise entry is printed as a number, an imprecise one as an interval:
+# [`ImpreciseDirichletModel`](@ref)`()`, with the default prior strength `s = 1`, gives each entry the lower and upper **predictive probability**, the probability that the next case with these parents is in this state, over every Dirichlet prior of that strength. This is exactly what an entry of a credal CPT means. A precise entry is printed as a number, an imprecise one as an interval:
 
 learned_idm = learn(dag, df, ImpreciseDirichletModel())
 order!(learned_idm)
 learned_idm.nodes[learned_idm.topology[:R]]
 
-# To compare a learned credal network with the true one, we check node by node whether every true CPT entry lies inside its learned interval, and how wide the widest interval is. As in the precise example, the CPTs are joined on their state columns.
+# Here the true network is known, so we can compare the learned intervals with the true parameters it was sampled from. Node by node, we check whether every true CPT entry lies inside its learned interval, how far it lies outside when it does not, and how wide the widest interval is. As in the precise example, the CPTs are joined on their state columns.
 
 function interval_check(learned, truth)
     return DataFrame(
@@ -73,18 +73,19 @@ function interval_check(learned, truth)
             joined = innerjoin(t, l; on = setdiff(propertynames(t), [:Π]), makeunique = true)
             lower = [p isa Interval ? p.lb : p for p in joined.Π_1]
             upper = [p isa Interval ? p.ub : p for p in joined.Π_1]
-            (node = node.name, contains_truth = all(lower .<= joined.Π .<= upper), max_width = maximum(upper .- lower))
+            distance = max.(lower .- joined.Π, joined.Π .- upper, 0.0)
+            (node = node.name, contains_truth = all(iszero, distance), max_distance = maximum(distance), max_width = maximum(upper .- lower))
         end
     )
 end
 
 interval_check(learned_idm, bn)
 
-# The intervals are narrow, and they **miss** the true values. That is not a failure of the estimator but a statement of what it measures: an imprecise Dirichlet interval is the range of estimates over a set of *priors*, and has width `s / (n + s)` for a configuration seen `n` times. With a thousand rows the prior hardly matters, so the interval is tight around the relative frequency, whatever the sampling error of that frequency. It says how much the conclusion depends on the prior, not where the true value lies.
+# The intervals are narrow, close to the true parameters, and do not contain them. This is what an imprecise Dirichlet interval should do. It bounds the predictive probability given *these* data, which is centred on the observed frequency, and the observed frequency differs from the true parameter by a sampling error of order one over the square root of the number of rows. The interval itself has width `s / (n + s)` for a configuration seen `n` times: it measures how much the answer depends on the prior, and with a thousand rows the prior hardly matters. So the interval is a thin band next to the true parameter, just as the maximum-likelihood estimate of the precise example is a single number next to it.
 
 # ## Quesenberry–Hurst confidence intervals
 #
-# [`QuesenberryHurst`](@ref)`()` answers the other question. Its intervals are simultaneous 95% confidence intervals for the proportions of each column: over repeated samples, all the entries of a column are covered at once in 95% of them.
+# [`QuesenberryHurst`](@ref)`()` bounds a different quantity: the **parameter** of the process that generated the data. Its intervals are simultaneous 95% confidence intervals for the proportions of each column: over repeated samples, all the true entries of a column are covered at once in 95% of them.
 
 learned_qh = learn(dag, df, QuesenberryHurst())
 order!(learned_qh)
@@ -98,20 +99,24 @@ interval_check(learned_qh, bn)
 
 learned_qh.nodes[learned_qh.topology[:G]]
 
-# The two kinds of interval also shrink at different rates as data accumulate: an imprecise Dirichlet interval as one over the sample size, a confidence interval as one over its square root, the rate of the sampling error itself.
+# As data accumulate both kinds of interval close in on the true parameters, at different rates. A confidence interval narrows as one over the square root of the sample size, the rate of the sampling error itself, so it usually contains the true values, and misses them by little when it does not. An imprecise Dirichlet interval narrows as one over the sample size, faster than its centre approaches the truth, so it seldom contains it; but its distance from the truth vanishes all the same:
 
 DataFrame(
     map([100, 1_000, 10_000]) do n
         data = sample(bn, n)
+        idm = interval_check(learn(dag, data, ImpreciseDirichletModel()), bn)
+        qh = interval_check(learn(dag, data, QuesenberryHurst()), bn)
         (
             rows = n,
-            idm_width = maximum(interval_check(learn(dag, data, ImpreciseDirichletModel()), bn).max_width),
-            qh_width = maximum(interval_check(learn(dag, data, QuesenberryHurst()), bn).max_width),
+            idm_width = maximum(idm.max_width),
+            idm_distance = maximum(idm.max_distance),
+            qh_width = maximum(qh.max_width),
+            qh_distance = maximum(qh.max_distance),
         )
     end
 )
 
-# Both are valid credal networks, but they answer different questions, and a result should say which one produced it.
+# Both are valid credal networks, but their intervals mean different things: the imprecise Dirichlet model bounds predictive probabilities, which is the native meaning of a credal CPT entry, while Quesenberry–Hurst bounds parameters, and placing those bounds in a credal network is an interpretation. A result should say which one produced it.
 
 # ## Configurations without data
 #
@@ -146,7 +151,9 @@ learned_missing.nodes[learned_missing.topology[:R]]
 
 interval_check(learned_missing, bn)
 
-# The rain intervals are now wide enough to contain the true values, since the missing values, not the prior, are what limits the estimate. The other nodes are unaffected: every row still records the weather, the sprinkler and the grass. For comparison, expectation maximisation, which assumes the values are missing at random, gives single numbers that here lie inside those bounds:
+# The rain intervals widen by as much as the unknown values could change the predictive probability, here enough to contain the true parameters. The grass intervals widen too: rain is a parent of the grass, so a row whose rain is unknown could belong to either rain column of the grass node. The weather and sprinkler nodes do not involve rain and are unaffected. One grass column still lies next to its true parameter rather than around it, the one with no rain and the sprinkler on that already missed with Quesenberry–Hurst, because its sample has too few dry days: bounding over the completions accounts for the missing values, not for the sampling error.
+#
+# For comparison, expectation maximisation, which assumes the values are missing at random, gives single numbers that here lie inside the rain bounds:
 
 learned_em = learn(dag, df_missing, PreciseDirichletModel())
 learned_em.nodes[learned_em.topology[:R]]
@@ -169,7 +176,7 @@ infer(learned_idm, :R, Evidence(:G => :wetG))
 
 infer(learned_missing, :R, Evidence(:G => :wetG))
 
-# The true probability of rain is `0.496`. The complete-data bounds are narrow and, like the CPT intervals they come from, do not contain it; the bounds from the incomplete data are wide and do. In both cases [`infer`](@ref) visited 512 **extreme networks**, one for every combination of a vertex of each column's credal set: here 9 columns with 2 vertices each.
+# Under the true network the probability of rain given wet grass is `0.496`. The complete-data bounds are narrow and lie next to it, as the CPT intervals they come from lie next to the true parameters; the bounds from the incomplete data are wide and contain it. In both cases [`infer`](@ref) visited 512 **extreme networks**, one for every combination of a vertex of each column's credal set: here 9 columns with 2 vertices each.
 
 # ## Keeping credal inference feasible
 #
