@@ -28,7 +28,9 @@ A Julia package for imprecise enhanced Bayesian Networks. Current functionality 
   * Exact inference by variable elimination
   * Credal inference with lower/upper posterior bounds
 * Parameter learning
-  * Maximum likelihood estimation from complete data
-  * Expectation–Maximization for data with missing entries
+  * Precise estimates by maximum likelihood or Dirichlet smoothing, learning a Bayesian network
+  * Imprecise estimates by the Imprecise Dirichlet Model or Quesenberry–Hurst confidence intervals, learning a credal network
+  * One estimator for the whole network, or one per node
+  * Incomplete data: Expectation–Maximization for precise estimators, bounds over every completion for imprecise ones
 * Visualization
   * Layered, top-down network plots that encode each node's kind, precision, and discretization
