@@ -171,6 +171,15 @@ end
     end
 end
 
+@testitem "Inference - max_networks kwarg" setup = [ExtraDeps, SetupFireProtectionCN] begin
+    nodes = [T, F, A, S, L, R]
+    cn = CredalNetwork(nodes)
+    @test EnhancedBayesianNetworks._n_extreme_bayesian_networks(cn) == 2048
+    @test_throws ErrorException("Invalid CredalNetwork: exact credal inference enumerates every extreme Bayesian network, and this one has 2048 of them, above max_networks = 2047; raise max_networks or reduce the imprecision of the network") infer(cn, [:Fire], Evidence(); max_networks = 2047)
+    p = @suppress infer(cn, [:Fire], Evidence(); max_networks = 2048)
+    @test p isa CredalPosterior
+end
+
 @testitem "Inference - Infer" setup = [ExtraDeps, SetupAsiaBN, SetupFireProtectionCN] begin
 
     p = infer(bn, [:V], Evidence())

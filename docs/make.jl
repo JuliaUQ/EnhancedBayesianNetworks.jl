@@ -53,6 +53,7 @@ pages = [
         ],
         "Parameters Learning" => [
             "Precise Parameters" => "examples/ParametersLearning/precise_parameters_learning.md",
+            "Imprecise Parameters" => "examples/ParametersLearning/imprecise_parameters_learning.md",
         ],
         "Utility Functions" => "examples/UtilityFunctions/utility_functions.md",
     ],

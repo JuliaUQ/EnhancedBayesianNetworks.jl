@@ -86,4 +86,4 @@ See [Reduction & Structural Reliability Problem](reduction.md) for the full stor
 - [Introduction](introduction.md): the concepts behind enhanced Bayesian Networks.
 - [Nodes](nodes.md) and [Networks](networks.md): the building blocks in depth.
 - [Reduction & Structural Reliability Problem](reduction.md): evaluating enhanced Bayesian Networks, with and without imprecision.
-- [Inference](inference.md), [Parameter Learning](parameterlearning.md), and [Plotting](plotting.md).
+- [Inference](inference.md), [Parameter Learning](../api/learning.md), and [Plotting](plotting.md).
