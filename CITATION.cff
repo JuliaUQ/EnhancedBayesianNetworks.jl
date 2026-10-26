@@ -19,7 +19,7 @@ authors:
     family-names: Knipper
 identifiers:
   - type: doi
-    value: 10.5281/zenodo.14054154
+    value: 10.5281/zenodo.14054153
 repository-code: 'https://github.com/JuliaUQ/EnhancedBayesianNetworks.jl'
 license: MIT
 version: 0.3.0
