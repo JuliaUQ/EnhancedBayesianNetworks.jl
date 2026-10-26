@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 250" width="260" height="250">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3a3a3a"/>
+    </marker>
+  </defs>
+
+  <!-- edges (parents -> functional child) -->
+  <g stroke="#3a3a3a" stroke-width="4" fill="none">
+    <line x1="78"  y1="102" x2="112" y2="150" marker-end="url(#arrow)"/>
+    <line x1="182" y1="106" x2="150" y2="152" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- continuous node: circle (Julia purple) -->
+  <g>
+    <circle cx="68" cy="72" r="38" fill="#9558B2"/>
+    <circle cx="57" cy="66" r="6" fill="#fff"/><circle cx="57" cy="67" r="2.6" fill="#2a2a2a"/>
+    <circle cx="79" cy="66" r="6" fill="#fff"/><circle cx="79" cy="67" r="2.6" fill="#2a2a2a"/>
+    <path d="M55,82 Q68,95 81,82" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- discrete node: rounded rectangle (Julia red) -->
+  <g>
+    <rect x="150" y="38" width="72" height="66" rx="14" fill="#CB3C33"/>
+    <circle cx="175" cy="64" r="6" fill="#fff"/><circle cx="175" cy="65" r="2.6" fill="#2a2a2a"/>
+    <circle cx="197" cy="64" r="6" fill="#fff"/><circle cx="197" cy="65" r="2.6" fill="#2a2a2a"/>
+    <path d="M173,80 Q186,93 199,80" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- functional node: hexagon (Julia green) -->
+  <g>
+    <polygon points="130,138 168,159 168,201 130,222 92,201 92,159" fill="#389826"/>
+    <circle cx="119" cy="176" r="6" fill="#fff"/><circle cx="119" cy="177" r="2.6" fill="#2a2a2a"/>
+    <circle cx="141" cy="176" r="6" fill="#fff"/><circle cx="141" cy="177" r="2.6" fill="#2a2a2a"/>
+    <path d="M117,192 Q130,205 143,192" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
