@@ -1,4 +1,8 @@
 using EnhancedBayesianNetworks
+using Random
+
+Random.seed!(1)    # fixed seed: the discretization edges are clamped to the simulated support, so an unlucky sample could drop the queried intervals
+nothing # hide
 
 μ_gamma = 60         # kN  (mean vertical load V)
 cov_gamma = 0.2
