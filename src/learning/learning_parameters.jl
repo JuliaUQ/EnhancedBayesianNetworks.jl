@@ -4,7 +4,7 @@
 
 Learn the CPTs of `dag` from `df`. Either pass one `estimator` for every node, or declare one per node with [`add_node!`](@ref) and call the two-argument form. The two exclude each other, and a DAG declaring an estimator for only some of its nodes is rejected here rather than at [`add_node!`](@ref), since a DAG under construction is legitimately partial.
 
-Every node of `dag` needs a `Symbol` column in `df`; other columns are ignored with a warning. A node's domain is the states observed in `df` together with any declared through [`add_node!`](@ref). A [`PreciseEstimator`](@ref) writes numbers and an [`ImpreciseEstimator`](@ref) writes `Interval`s; one interval anywhere gives a [`CredalNetwork`](@ref), otherwise a [`BayesianNetwork`](@ref).
+Every node of `dag` needs a `Symbol` column in `df`; other columns are ignored with a warning. A node's domain is the states observed in `df` together with any declared through [`add_node!`](@ref). A precise estimator ([`PreciseDirichletModel`](@ref)) writes numbers and an imprecise one ([`ImpreciseDirichletModel`](@ref), [`QuesenberryHurst`](@ref)) writes `Interval`s; one interval anywhere gives a [`CredalNetwork`](@ref), otherwise a [`BayesianNetwork`](@ref).
 
 `missing` entries are allowed, and the estimators fix how they are treated:
 

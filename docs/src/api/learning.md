@@ -10,8 +10,6 @@ Pages = ["learning.md"]
 
 ```@docs
 ParameterEstimator
-PreciseEstimator
-ImpreciseEstimator
 PreciseDirichletModel
 ImpreciseDirichletModel
 QuesenberryHurst

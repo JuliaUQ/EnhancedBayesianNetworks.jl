@@ -22,16 +22,7 @@ function Base.show(io::IO, ::MIME"text/plain", net::EnhancedBayesianNetwork)
     println(io, "Topology:")
     println(io)
 
-    println(
-        io,
-        rpad("Node", 20),
-        rpad("Type", 24),
-        rpad("Precision", 12),
-        "Parents"
-    )
-
-    println(io, repeat("-", 80))
-
+    rows = Vector{String}[]
     for node in net.nodes
 
         typ =
@@ -49,8 +40,9 @@ function Base.show(io::IO, ::MIME"text/plain", net::EnhancedBayesianNetwork)
 
         parstr = _topology_parents(net, node)
 
-        println(io, rpad(string(node.name), 20), rpad(typ, 24), rpad(precision, 12), parstr)
+        push!(rows, [string(node.name), typ, precision, parstr])
     end
+    _show_table(io, ["Node", "Type", "Precision", "Parents"], rows)
     return
 end
 
@@ -71,30 +63,16 @@ function Base.show(io::IO, ::MIME"text/plain", bn::BayesianNetwork)
     println(io, "Topology:")
     println(io)
 
-    println(
-        io,
-        rpad("#", 4),
-        rpad("Node", 16),
-        rpad("States", 20),
-        "Parents"
-    )
-
-    println(io, repeat("-", 80))
-
+    rows = Vector{String}[]
     for (i, node) in enumerate(bn.nodes)
 
         statestr = join(string.(states(node)), ", ")
 
         parstr = _topology_parents(bn, node)
 
-        println(
-            io,
-            rpad(string(i), 4),
-            rpad(string(node.name), 16),
-            rpad(statestr, 20),
-            parstr
-        )
+        push!(rows, [string(i), string(node.name), statestr, parstr])
     end
+    _show_table(io, ["#", "Node", "States", "Parents"], rows)
     return
 end
 
@@ -121,16 +99,7 @@ function Base.show(io::IO, ::MIME"text/plain", cn::CredalNetwork)
     println(io, "Topology:")
     println(io)
 
-    println(
-        io,
-        rpad("#", 4),
-        rpad("Node", 16),
-        rpad("Precision", 12),
-        "Parents"
-    )
-
-    println(io, repeat("-", 80))
-
+    rows = Vector{String}[]
     for (i, node) in enumerate(cn.nodes)
 
         precision =
@@ -138,13 +107,8 @@ function Base.show(io::IO, ::MIME"text/plain", cn::CredalNetwork)
 
         parstr = _topology_parents(cn, node)
 
-        println(
-            io,
-            rpad(string(i), 4),
-            rpad(string(node.name), 16),
-            rpad(precision, 12),
-            parstr
-        )
+        push!(rows, [string(i), string(node.name), precision, parstr])
     end
+    _show_table(io, ["#", "Node", "Precision", "Parents"], rows)
     return
 end

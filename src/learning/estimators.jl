@@ -17,45 +17,30 @@ end
 """
     ParameterEstimator
 
-Abstract supertype of the estimators accepted by [`learn`](@ref). An estimator fixes *how* the probabilities for one parent configuration are derived from data counts, and with it the kind of network returned:
+Abstract supertype of the estimators accepted by [`learn`](@ref) and by the `estimator` keyword of [`add_node!`](@ref). An estimator fixes *how* the probabilities of one parent configuration are derived from the data, and with it the kind of network returned: a precise estimator gives one probability per node state and a [`BayesianNetwork`](@ref), an imprecise one an `Interval` per node state and a [`CredalNetwork`](@ref).
 
-  - [`PreciseEstimator`](@ref), one probability per node state, giving a [`BayesianNetwork`](@ref).
-  - [`ImpreciseEstimator`](@ref), an `Interval` per node state, giving a [`CredalNetwork`](@ref).
-
-Every estimator works on **one parent configuration**: one node together with one configuration of its parents' states. Three quantities describe it, and every formula in this module is written in terms of them:
+Every estimator works on **one parent configuration**: one node together with one configuration of its parents' states. Three quantities describe it:
 
   - `k`, how many states the node has.
   - `cnt`, how many data rows match the parent configuration *and* have the node in the state being estimated.
-  - `total`, how many such rows there are over all `k` states, so `total` is always `sum(cnt)` and is the normaliser. On incomplete data it counts only the rows where the node *and* every one of its parents were observed; a row that merely could belong to the configuration is carried separately, and only [`ImpreciseDirichletModel`](@ref) reads it.
+  - `total`, how many such rows there are over all `k` states, so `total` is always `sum(cnt)`. On incomplete data it counts only the rows where the node *and* every one of its parents were observed.
 
 Available estimators are [`PreciseDirichletModel`](@ref), [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref).
 """
 abstract type ParameterEstimator end
 
-"""
-    PreciseEstimator <: ParameterEstimator
-
-Estimators returning a single probability per node state, so that [`learn`](@ref) returns a [`BayesianNetwork`](@ref). See [`PreciseDirichletModel`](@ref).
-"""
+# The two families of estimators, internal: users only ever construct the concrete ones. `_verify_missingness` reads them to choose between expectation maximisation, for precise networks, and bounding over the completions of the data, for imprecise ones.
 abstract type PreciseEstimator <: ParameterEstimator end
-
-"""
-    ImpreciseEstimator <: ParameterEstimator
-
-Estimators returning an `Interval` per node state, so that [`learn`](@ref) returns a [`CredalNetwork`](@ref). See [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref).
-"""
 abstract type ImpreciseEstimator <: ParameterEstimator end
 
 """
     PreciseDirichletModel(α = 0)
 
-CPT entries as `(cnt + α) / (total + α * k)`, the mean of a symmetric Dirichlet posterior with pseudo-count `α ≥ 0` in each of the `k` states. See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`.
+CPT entries as `(cnt + α) / (total + α * k)`, the mean of a symmetric Dirichlet posterior with pseudo-count `α ≥ 0` in each of the `k` states. Here `k` is the number of states of the node, `cnt` the number of rows matching the parent configuration with the node in the state being estimated, and `total` the number of rows matching it in any state.
 
-`α = 0` is maximum likelihood, the relative frequency, and gives exactly `0` to a state never observed in a configuration; any `α > 0` is additive, Lidstone or Laplace smoothing, pulling towards the uniform. Use [`ImpreciseDirichletModel`](@ref) to report that uncertainty as an interval rather than smooth it away. A parent configuration absent from the data gives the uniform distribution.
+`α = 0` is maximum likelihood, the relative frequency, and gives exactly `0` to a state never observed in a configuration; any `α > 0` is additive smoothing, Laplace smoothing at `α = 1`, pulling towards the uniform. Use [`ImpreciseDirichletModel`](@ref) to report that uncertainty as an interval rather than smooth it away. A parent configuration absent from the data gives the uniform distribution.
 
 On incomplete data [`learn`](@ref) reaches this estimator through expectation maximisation, which assumes the data are missing at random; `max_iter` and `tol` control the iteration.
-
-The estimator is due to Hardy (1889) and Lidstone (1920), and was recast by Johnson (1932) as an interpolation between the relative frequency and the uniform. Reference: Lidstone, G. J. (1920), *Note on the general case of the Bayes-Laplace formula for inductive or a posteriori probabilities*, Transactions of the Faculty of Actuaries 8, 182–192.
 
 # Examples
 ```julia
@@ -77,7 +62,7 @@ end
 """
     ImpreciseDirichletModel(s = 1)
 
-CPT entries as the interval `[cnt / (total + s), (cnt + s) / (total + s)]`, with `s > 0` the prior strength: `s` extra observations whose states are left unspecified, placed outside the estimated state for the lower bound and inside it for the upper. See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`. `s = 1` and `s = 2` are the usual choices; larger `s` gives wider intervals.
+CPT entries as the interval `[cnt / (total + s), (cnt + s) / (total + s)]`, with `s > 0` the prior strength: `s` extra observations whose states are left unspecified, placed outside the estimated state for the lower bound and inside it for the upper. Here `k` is the number of states of the node, `cnt` the number of rows matching the parent configuration with the node in the state being estimated, and `total` the number of rows matching it in any state. `s = 1` and `s = 2` are the usual choices; larger `s` gives wider intervals.
 
 It is [`PreciseDirichletModel`](@ref) with the prior mean left free instead of pinned to the uniform, so the interval always contains `PreciseDirichletModel(s / k)`. Two properties make it the default for credal learning: the credal set is never empty, the lower bounds of a configuration summing to at most `1` and the upper bounds to at least `1`; and a configuration absent from the data gives `[0, 1]` with no special case, which [`infer`](@ref) handles through the regular extension.
 
@@ -109,7 +94,7 @@ CPT entries as the simultaneous confidence region for multinomial proportions pr
 
     θ = [(A + 2 * cnt) ± sqrt(A * (A + 4 * cnt * (total - cnt) / total))] / (2 * (total + A))
 
-with `A = quantile(Chisq(k - 1), confidence)`. See [`ParameterEstimator`](@ref) for `cnt`, `total` and `k`. The `k - 1` degrees of freedom are what make the coverage **simultaneous** over the node's states rather than one state at a time; at `k = 2` this is exactly the Wilson score interval. A configuration absent from the data gives `[0, 1]`, and coherence holds whenever `total > 0`.
+with `A = quantile(Chisq(k - 1), confidence)`. Here `k` is the number of states of the node, `cnt` the number of rows matching the parent configuration with the node in the state being estimated, and `total` the number of rows matching it in any state. The `k - 1` degrees of freedom are what make the coverage **simultaneous** over the node's states rather than one state at a time; at `k = 2` this is exactly the Wilson score interval. A configuration absent from the data gives `[0, 1]`, and coherence holds whenever `total > 0`.
 
 Unlike [`ImpreciseDirichletModel`](@ref) this is a frequentist confidence region read as a credal set: it carries repeated-sampling coverage, not a behavioural interpretation, so results should say which of the two produced them.
 

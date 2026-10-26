@@ -27,11 +27,9 @@ export ExactDiscretization
 export EnhancedBayesianNetwork
 export Evidence
 export ImpreciseDirichletModel
-export ImpreciseEstimator
 export ParameterEstimator
 export Posterior
 export PreciseDirichletModel
-export PreciseEstimator
 export QuesenberryHurst
 
 # Constants

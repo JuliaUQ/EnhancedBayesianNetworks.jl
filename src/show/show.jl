@@ -57,6 +57,16 @@ end
 # "-" or the comma-joined parent names, for a node's row in a network topology table.
 _topology_parents(net, node) = isempty(parents(net, node)) ? "-" : join(string.(parents(net, node)), ", ")
 
+# Topology table of the network `show` methods: every column but the last is as wide as its longest entry plus two spaces, so long node names or state lists never run into the next column; the last column, the parents, is left unpadded. The rule under the header spans the whole table, and never less than 80 characters.
+function _show_table(io, header::Vector{String}, rows::Vector{Vector{String}})
+    widths = [maximum(textwidth, vcat(header[c], getindex.(rows, c))) + 2 for c in 1:(length(header) - 1)]
+    line(cells) = println(io, join(rpad.(cells[1:(end - 1)], widths)), cells[end])
+    line(header)
+    println(io, repeat("-", max(80, sum(widths) + maximum(textwidth, vcat(header[end], last.(rows))))))
+    foreach(line, rows)
+    return
+end
+
 include("nodes.jl")
 include("posteriors.jl")
 include("networks.jl")

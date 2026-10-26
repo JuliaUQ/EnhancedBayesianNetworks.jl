@@ -55,7 +55,7 @@ Declare a node in a [`DirectAcyclicGraph`](@ref) by `name`. All three keywords a
 
   - `parents` are the names of the node's parents, which become the conditioning columns of its CPT. Each must already be in the DAG, so nodes are added top-down, parents first; the edges are wired here. Omit it to declare a root.
   - `states` are *extra* domain states, kept even when they never appear in the training data. Under maximum likelihood they end up in the CPT with probability exactly `0`, otherwise with whatever the estimator assigns an unobserved state. Omit it to take the domain entirely from the data.
-  - `estimator` is the [`ParameterEstimator`](@ref) to fit this node with, letting one DAG mix precise and imprecise nodes. It is all or nothing: [`learn`](@ref) rejects a DAG where some nodes declare one and others do not. Omit it throughout and pass the estimator to [`learn`](@ref) instead.
+  - `estimator` is the [`ParameterEstimator`](@ref) to fit this node with, one of [`PreciseDirichletModel`](@ref), [`ImpreciseDirichletModel`](@ref) and [`QuesenberryHurst`](@ref), letting one DAG mix precise and imprecise nodes. It is all or nothing: [`learn`](@ref) rejects a DAG where some nodes declare one and others do not. Omit it throughout and pass the estimator to [`learn`](@ref) instead.
 
 # Examples
 
