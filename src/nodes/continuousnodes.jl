@@ -46,7 +46,7 @@ struct ContinuousNode <: AbstractContinuousNode
             error(":Π is not allowed as node name")
         end
         if isempty(discretization) && !isempty(parents)
-            discretization = ApproximatedDiscretization()
+            discretization = ApproximatedDiscretization(; mesh = discretization.mesh, technique = discretization.technique)
         end
         if isempty(parents) && isa(discretization, ApproximatedDiscretization)
             error("Invalid Network: node $(repr(name)) is a root node and the discretization must be an ExactDiscretization")

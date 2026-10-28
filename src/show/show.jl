@@ -22,6 +22,12 @@ function _show_discretization(io, d)
             println(io, "  λ: ", d.λ)
         end
         println(io, "  Intervals: ", join(d.intervals, ", "))
+        # only worth a line when the node departs from the default p-box mass settings
+        if d.technique !== :optimised
+            println(io, "  P-box mass: ", d.technique)
+        elseif d.mesh != PBOX_MASS_MESH
+            println(io, "  P-box mass: ", d.technique, " (mesh ", d.mesh, ")")
+        end
     end
 end
 

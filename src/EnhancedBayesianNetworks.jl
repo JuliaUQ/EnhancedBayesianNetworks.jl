@@ -4,12 +4,14 @@ using Compose
 using DataFrames
 using Distributions
 using LinearAlgebra
+using MeshAdaptiveDirectSearch: OrthoMADS, minimize
 using Polyhedra: HalfSpace, doubledescription
 using ProgressMeter: Progress, next!, finish!
 using Reexport
 using SparseArrays
 
 @reexport using UncertaintyQuantification
+using UncertaintyQuantification: bounds, map_to_precise
 
 import Base: *, sum, reduce
 
