@@ -9,7 +9,7 @@ This is the central operation of the library: it is the route by the **Structura
 [`reduce`](@ref) follows the enhanced Bayesian Network (eBN) procedure of [straub_bayesian_2010](@cite), and rests on the node-removal operations for evaluating influence diagrams [Shachter86a](@cite):
 
 1. **Build** and **Order** the network ([`order!`](@ref), see [Building and validating a network](@ref)).
-2. **Discretize** every continuous node that carries a discretization structure it is replaced by a discrete node (the per-interval probability masses) plus a residual continuous node, with parents rewired to the discrete part and children to the continuous part (`discretize!`, see [Discretization](@ref)).
+2. **Discretize** every continuous node that carries a discretization structure it is replaced by a discrete node (one probability mass per discretization-interval) plus a residual continuous node, with parents rewired to the discrete part and children to the continuous part (`discretize!`, see [Discretization](@ref)).
 3. **Transfer** the model of each continuous functional node without discretization, into its children (`_transfer_continuous_functional_node!`).
 This is a computational optimization of the evaluation stage.
 A continuous-functional node that merely feeds another functional node would otherwise be evaluated on its own, sampling its models and fitting an [`EmpiricalDistribution`](@extref `UncertaintyQuantification.EmpiricalDistribution`) per scenario, only for that distribution to be re-sampled by the child and then thrown away when the node is eliminated.

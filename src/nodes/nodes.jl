@@ -28,7 +28,7 @@ Discretization strategy for a continuous **root** node, allowing evidence to be 
 `technique` and `mesh` control how the probability mass of a discretization-interval is obtained when the node's entry is a `ProbabilityBox`, and are ignored for a precise distribution or an `Interval`:
 
   - `:optimised` (default) minimises and maximises the mass over the parameter box, one member of the family at a time, with `mesh` as the optimiser's terminal mesh size. Smaller is tighter and slower.
-  - `:distribution_free` differences the CDF envelopes instead. Valid for *any* CDF lying between them, hence an enclosure of the parametric answer rather than the answer itself, but far cheaper and the only sound choice once the p-box is not described by a parameter box. `mesh` is unused.
+  - `:distribution_free` differences the CDF envelopes instead. Valid for *any* CDF lying between them, hence an enclosure of the parametric answer rather than the answer itself, but far cheaper. It is the only sound choice for a p-box not described by a parameter box, which cannot arise yet: a `ProbabilityBox` is always parametric, and distribution-free boxes have no type in UncertaintyQuantification so far. `mesh` is unused.
 
 # Examples
 ```julia

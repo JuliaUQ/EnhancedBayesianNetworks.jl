@@ -36,6 +36,7 @@ a continuous entry is a `UnivariateDistribution` for a **precise** continuous no
 Imprecision decides the resulting network type.
 It has to be genuine to count: a zero-width probability [`Interval`](@extref `UncertaintyQuantification.Interval`), or a [`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`) whose every interval parameter has zero width, describes something precise.
 Such an entry is stored as the `Real` probability or the `UnivariateDistribution` it denotes, with a warning, so it leaves the node precise and does not make the network credal.
+A zero-width `Interval` on a *continuous* node is the one exception, and is kept: there an interval bounds the variable rather than a probability, so there is no precise distribution it denotes.
 
 Among the purely discrete networks, one holding an imprecise discrete node is a [Credal Network](@ref) (CN) rather than a [Bayesian Network](@ref) (BN).
 An [Enhanced Bayesian Network](@ref) (eBN) that contains *any* imprecise node reduces to a CN instead of a BN.
@@ -64,7 +65,8 @@ S
 
 A child's entries can be **mixed across scenarios**: some given as a `Real` probability and
 others as an [`Interval`](@extref `UncertaintyQuantification.Interval`).
-As soon as at least one entry is a non-degenerate Interval, the whole node is **imprecise**, its CPT becomes a credal set, which calls for a CN rather than a BN:
+As soon as at least one entry is a non-degenerate Interval, the whole node is **imprecise**, its CPT becomes a credal set, which calls for a CN rather than a BN.
+An `Interval` of zero width is the exception: a discrete entry is a probability, and a probability known to a point is precise, so `Interval(0.2, 0.2)` is stored as `0.2` (with a warning) and leaves the node precise:
 
 ```@example nodes
 S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)
@@ -108,99 +110,30 @@ scenarios(C)
 ```
 
 A continuous entry is **precise** when it is a `UnivariateDistribution`; using an [`Interval`](@extref `UncertaintyQuantification.Interval`) or a [`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`) instead represents epistemic uncertainty (i.e. **imprecise** entry).
-As with discrete nodes, a child's entries may be **mixed across parent-state combinations**, a `UnivariateDistribution` for some scenarios and an Interval` or a Probability Box for others, and a single genuinely imprecise entry makes the whole node **imprecise**.
+A probability box written as an entry is always a **parametric** one — a distribution family whose parameters are given as intervals — since distribution-free boxes have no type yet.
+As with discrete nodes, a child's entries may be **mixed across parent-state combinations**, a `UnivariateDistribution` for some scenarios and an `Interval` or a probability box for others, and a single genuinely imprecise entry makes the whole node **imprecise**.
 
-#### Discretization
+The two imprecise forms behave differently when they carry no width.
+A probability box whose every interval parameter is a point describes a single distribution, so that distribution is stored instead and the node stays precise — the truncation a box carries is kept, so a truncated box becomes a truncated distribution.
+A zero-width `Interval` is *not* collapsed: on a continuous node an interval bounds the variable itself, not a probability, and `Interval(2.0, 2.0)` is a legitimate statement that the variable equals 2 only within an interval-valued model, so it is left as written and the node stays imprecise.
+Both emit a warning where they change what you stored.
 
-[Reduction](reduction.md) eliminates continuous nodes, so a continuous node's posterior cannot be recovered afterward.
-To keep evidence observable on a continuous node and to let it enter discrete inference, it can be **discretized** [straub_bayesian_2010](@cite): its support is partitioned at a list of interval edges into a discrete node plus a conditioned continuous remainder.
-The strategy is attached to the node and depends on its position:
+#### Discretizing a continuous node
 
-- a **root** carries an [`ExactDiscretization`](@ref): the discrete probabilities follow *exactly* from the node's distribution, because the marginal is known;
-- a **child** carries an [`ApproximatedDiscretization`](@ref): the marginal is not generally available, so the tails are approximated (a uniform assumption over each bounded interval and an exponential assumption, with rate `λ`, over an unbounded tail).
+A continuous node cannot be queried after [Reduction](reduction.md), which eliminates it.
+To keep evidence observable on it, and to let it enter discrete inference, the node can be **discretized**: its support is partitioned into **discretization-intervals**, and the node is replaced by a discrete **surrogate** carrying one state per discretization-interval plus a continuous **residual** holding what is left of the variable inside the observed one.
 
-Throughout, ``x_{ik}^-`` and ``x_{ik}^+`` denote the lower and upper edges of the ``k``-th discretization interval.
-
-##### Precise node
-
-The scheme follows [straub_bayesian_2010](@cite). The conditional CDF of the continuous remainder ``X_i'`` given the discrete state ``k`` takes one of three forms.
-
-A discretization on a **root** truncates the node's own CDF ``F_{X_i}`` to the interval, exactly:
-
-```math
-F_{X_i'}(x_i \mid k) =
-\begin{cases}
-0 & x_i \le x_{ik}^-, \\
-\dfrac{F_{X_i}(x_i) - F_{X_i}(x_{ik}^-)}{F_{X_i}(x_{ik}^+) - F_{X_i}(x_{ik}^-)} & x_{ik}^- \le x_i \le x_{ik}^+, \\
-1 & x_i \ge x_{ik}^+.
-\end{cases}
-```
-
-While a discretization on a **child** cannot use the (unknown) marginal, so each bounded interval is filled with a **uniform** assumption,
-
-```math
-F_{X_i}(x_i \mid k) =
-\begin{cases}
-0 & x_i \le x_{ik}^-, \\
-\dfrac{x_i - x_{ik}^-}{x_{ik}^+ - x_{ik}^-} & x_{ik}^- \le x_i \le x_{ik}^+, \\
-1 & x_i \ge x_{ik}^+,
-\end{cases}
-```
-
-and an unbounded (right) tail with an **exponential** assumption of rate ``\lambda`` (the `λ`
-argument):
-
-```math
-F_{X_i}(x_i \mid k) =
-\begin{cases}
-0 & x_i \le x_{ik}^-, \\
-1 - \exp\!\left[-\lambda\,(x_i - x_{ik}^-)\right] & x_i > x_{ik}^-.
-\end{cases}
-```
+How that is done is declared **when the node is built**, as its `discretization` field, and is a property of the node from then on: a **root** takes an [`ExactDiscretization`](@ref), a **child** an [`ApproximatedDiscretization`](@ref), each given the edges of the partition and, for a child, the exponential tail scale `λ`.
 
 ```@example nodes
-Tr = ContinuousNode(:Tr, Normal(), ExactDiscretization([-2.0, 0.0, 2.0]))   # root
+# the discretization travels with the node: edges declared here, applied at reduction
+Vd = ContinuousNode(:Vd, Uniform(7, 12), ExactDiscretization([7.0, 9.5, 12.0]))
 ```
 
-```@example nodes
-# child: interval edges plus the exponential tail rate (here 1.5)
-Cd = ContinuousNode(:Cd, [:W], ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5))
-```
+A node left with an empty strategy — the default — is simply never discretized.
+Both strategies additionally carry the `technique` and `mesh` settings, which decide how the mass of a discretization-interval is obtained when the entry is a probability box.
 
-##### Imprecise node
-
-When the node is **imprecise** the same partition is used, but both the surrogate's interval probabilities and the residual are chosen to preserve the imprecision.
-
-The probability mass of interval ``k`` is ``p_{ik} = F_{X_i}(x_{ik}^+) - F_{X_i}(x_{ik}^-)``. For a **probability box** the CDF is bounded by a lower ``\underline{F}`` and an upper ``\overline{F}``, so this mass is itself an interval,
-
-```math
-\begin{aligned}
-p_{ik} &= \big[\, \min(d^-, d^+),\; \max(d^-, d^+) \,\big], \\
-d^- &= \underline{F}(x_{ik}^+) - \underline{F}(x_{ik}^-), \quad
-d^+ = \overline{F}(x_{ik}^+) - \overline{F}(x_{ik}^-),
-\end{aligned}
-```
-
-while for a bare **interval** entry no CDF is available — only the support — so every interval receives the vacuous mass ``p_{ik} = [0, 1]``. Either way the surrogate node becomes imprecise (credal), and that is what carries the imprecision into inference.
-
-!!! note "Vacuous masses and conditioning"
-    A node discretized from a bare **interval** is *vacuous*: masses of ``[0, 1]`` on every bin constrain nothing beyond summing to one, so the node's credal set is the whole probability simplex over its states and its extreme points are the degenerate distributions putting all the mass on a single bin. Evidence on such a node then has probability zero under some of those extreme points, and meaningful bounds are only obtained under regular extension — see [Credal inference](@ref). A [`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`) can narrow these mass intervals, but it avoids zero-probability extremes only when the lower mass of the observed bin is strictly positive.
-
-The residual then differs by position. On a **root** it keeps the imprecision: a probability box is restricted to ``[x_{ik}^-, x_{ik}^+]`` (a narrower box) and an interval entry becomes the sub-interval ``[x_{ik}^-, x_{ik}^+]``. On a **child** the residual is the same precise uniform (or exponential-tail) approximation as in the precise case, regardless of the entry's imprecision.
-
-The asymmetry is deliberate: on a root the imprecision lives in both the surrogate probabilities and the residual; on a child it is pushed entirely into the surrogate's interval probabilities, leaving a precise residual.
-
-```@example nodes
-# imprecise root: an interval distribution, discretized exactly
-Ti = ContinuousNode(:Ti, Interval(-2.0, 2.0), ExactDiscretization([-2.0, 0.0, 2.0]))
-```
-
-```@example nodes
-# imprecise child: an interval entry plus the exponential tail rate
-Ci = ContinuousNode(:Ci, [:W], ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5))
-Ci[:W => :sunny] = Interval(-1.0, 1.0)
-Ci
-```
+See [Discretization](@ref) for the surrogate and residual formulas in both the precise and the imprecise case, and for `technique` and `mesh` in detail.
 
 ## Nodes with an a-priori-unknown CPT (functional nodes)
 

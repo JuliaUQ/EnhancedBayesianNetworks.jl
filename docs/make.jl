@@ -31,6 +31,7 @@ pages = [
         "Getting Started" => "manual/gettingstarted.md",
         "Nodes" => "manual/nodes.md",
         "Networks" => "manual/networks.md",
+        "Discretization" => "manual/discretization.md",
         "Reduction & Structural Reliability Problem" => "manual/reduction.md",
         "Inference" => "manual/inference.md",
         "Parameter Learning" => "manual/parameterlearning.md",
