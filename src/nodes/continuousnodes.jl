@@ -3,15 +3,9 @@
     ContinuousNode(name, dist::ContinuousProbability)
     ContinuousNode(name, dist::ContinuousProbability, discretization::ExactDiscretization)
 
-A continuous-valued node. Its table (`cpt`) maps each parent-state combination to a continuous
-probability, either precise (a `UnivariateDistribution`) or imprecise/credal (an `Interval` or a
-`ProbabilityBox`). The `discretization` field controls how the node is turned into discrete bins
-during inference: a **root** node carries an `ExactDiscretization` (explicit interval edges), a
-**child** node an `ApproximatedDiscretization` (chosen automatically when parents are given).
+A continuous-valued node. Its table (`cpt`) maps each parent-state combination to a continuous probability, either precise (a `UnivariateDistribution`) or imprecise/credal (an `Interval` or a `ProbabilityBox`). A `ProbabilityBox` whose every interval parameter has zero width describes a single distribution, so it is stored as that distribution (with a warning), keeping any truncation it carried; a degenerate `Interval` is left as it is, since there it bounds the variable rather than a probability. The `discretization` field controls how the node is turned into discretization-intervals during inference: a **root** node carries an `ExactDiscretization` (explicit interval edges), a **child** node an `ApproximatedDiscretization` (chosen automatically when parents are given).
 
-Build a root either with the `ContinuousNode(name, dist)` shortcut or by assigning `node[] = dist`;
-build a child by naming its parents and filling one distribution per parent state with
-`node[parent => state] = dist`.
+Build a root either with the `ContinuousNode(name, dist)` shortcut or by assigning `node[] = dist`; build a child by naming its parents and filling one distribution per parent state with `node[parent => state] = dist`.
 
 # Examples
 ```julia
@@ -28,6 +22,14 @@ C[:W => :cloudy] = Normal(2, 1)
 
 # imprecise (credal) entries use an Interval instead of a distribution:
 C[:W => :sunny] = Interval(0.1, 0.5)
+
+# a ProbabilityBox is the other imprecise form: a family of distributions indexed by a parameter box
+C[:W => :cloudy] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+
+# a p-box with no width left describes one distribution, and is stored as that distribution (warning):
+Tp = ContinuousNode(:Tp, ProbabilityBox{Normal}(Dict(:μ => Interval(0.2, 0.2), :σ => 1)))
+Tp[]                                                 # Normal(0.2, 1.0), not a ProbabilityBox
+isprecise(Tp)                                        # true
 ```
 """
 struct ContinuousNode <: AbstractContinuousNode
@@ -46,12 +48,12 @@ struct ContinuousNode <: AbstractContinuousNode
             error(":Π is not allowed as node name")
         end
         if isempty(discretization) && !isempty(parents)
-            discretization = ApproximatedDiscretization()
+            discretization = ApproximatedDiscretization(; mesh = discretization.mesh, technique = discretization.technique)
         end
         if isempty(parents) && isa(discretization, ApproximatedDiscretization)
-            error("Invalid Network: node $(repr(name)) is a root node and the discretization must be an ExactDiscretization")
+            error("Invalid Node: node $(repr(name)) is a root node and the discretization must be an ExactDiscretization")
         elseif !isempty(parents) && isa(discretization, ExactDiscretization)
-            error("Invalid Network: node $(repr(name)) is a child node and the discretization must be an ApproximatedDiscretization")
+            error("Invalid Node: node $(repr(name)) is a child node and the discretization must be an ApproximatedDiscretization")
         end
 
         cpt = EnhancedBayesianNetworks.ScenariosTable{ContinuousProbability}(parents, :Π)
@@ -85,7 +87,19 @@ function ContinuousNode(name::Symbol, dist::ContinuousProbability, discretizatio
     return n
 end
 
-Base.setindex!(node::ContinuousNode, value, key...) = setindex!(node.cpt, value, key...)
+# A ProbabilityBox whose every interval parameter has zero width has a single member, so it is a precise distribution in disguise. Storing that member keeps the node precise everywhere downstream: `isprecise`, `_inputs`, `_truncate`, the discretization mass and the BayesianNetwork/CredalNetwork dispatch. `map_to_precise` preserves any truncation the p-box carried, so a truncated p-box collapses to a `Truncated` distribution and not to the bare family member.
+function _collapse_pbox(dist::ProbabilityBox, name::Symbol)
+    intervals = filter(p -> isa(p, Interval), collect(values(dist.parameters)))
+    if !isempty(intervals) && all(isdegenerate, intervals)
+        @warn "node $(repr(name)) was assigned a ProbabilityBox whose every interval parameter is degenerate: the corresponding precise distribution is stored instead"
+        return map_to_precise(first(bounds(dist)), dist)
+    end
+    return dist
+end
+
+_collapse_pbox(value, _::Symbol) = value
+
+Base.setindex!(node::ContinuousNode, value, key...) = setindex!(node.cpt, _collapse_pbox(value, node.name), key...)
 
 Base.getindex(node::ContinuousNode, key...) = getindex(node.cpt, key...)
 

@@ -84,8 +84,7 @@ end
 end
 
 @testitem "Evaluate Node - mismatched model output name" setup = [ExtraDeps] begin
-    # the imprecise branch must read the result column by the model's output name,
-    # not by the node name; here they differ (node :Y, model output :out)
+    # the imprecise branch must read the result column by the model's output name, not by the node name; here they differ (node :Y, model output :out)
     A = DiscreteNode(:A, [:a1 => [Parameter(1, :A)], :a2 => [Parameter(2, :A)]])
     A[:A => :a1] = 0.5
     A[:A => :a2] = 0.5
@@ -108,6 +107,23 @@ end
     evaluated_Y = @suppress EnhancedBayesianNetworks.evaluate(net, Y)
     @test evaluated_Y.name == :Y
     @test all(isa.(evaluated_Y.cpt.data.Π, Vector{Pair{Symbol, EmpiricalDistribution}}))
+end
+
+@testitem "Evaluate Node - discretization settings survive the root swap" setup = [ExtraDeps] begin
+    # A continuous functional node with no discrete ancestors has its Approximated strategy replaced by an Exact one when it is evaluated; the p-box mass settings must come along with the edges.
+    V = ContinuousNode(:V, Normal())
+    model = Model(df -> df.V .* 2, :Y)
+    disc = ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5; technique = :distribution_free, mesh = 1.0e-3)
+    Y = ContinuousFunctionalNode(:Y, [model], MonteCarlo(100), disc)
+    net = EnhancedBayesianNetwork([V, Y])
+    add_child!(net, :V, :Y)
+    order!(net)
+    EnhancedBayesianNetworks._build_simulations!(net, Y)
+    evaluated = @suppress EnhancedBayesianNetworks.evaluate(net, Y, false)
+    @test isa(evaluated.discretization, ExactDiscretization)
+    @test evaluated.discretization.intervals == disc.intervals
+    @test evaluated.discretization.technique == :distribution_free
+    @test evaluated.discretization.mesh == 1.0e-3
 end
 
 @testitem "Evaluate Node - discrete precise" setup = [SetupEvaluateeBN] begin
@@ -151,15 +167,14 @@ end
     model = Model(df -> df.A .+ df.V, :Z)
     performance = df -> 1 .- df.Z
 
-    # discretizing V moves its imprecision into the credal surrogate V_d and leaves a
-    # precise residual feeding E, so an imprecise (double-loop) simulation is invalid
+    # discretizing V moves its imprecision into the credal surrogate V_d and leaves a precise residual feeding E, so an imprecise (double-loop) simulation is invalid
     E = DiscreteFunctionalNode(:E, [model], performance, DoubleLoop(MonteCarlo(100)))
     ebn = EnhancedBayesianNetwork([A, V, E])
     add_child!(ebn, A, V)
     add_child!(ebn, [A, V], E)
     order!(ebn)
 
-    @test_throws ErrorException("Invalid simulation for functional node :E: the assigned DoubleLoop is an imprecise (double-loop) simulation, but every input reaching :E is precise. This happens when an imprecise continuous ancestor of :E is discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding :E. Use a single-loop simulation (e.g. MonteCarlo) for :E; the network stays credal through the discretized node. Alternatively, remove the discretization from the imprecise continuous ancestor so its imprecision reaches :E directly.") @suppress reduce(ebn)
+    @test_throws ErrorException("Invalid simulation for functional node :E: the assigned DoubleLoop is an imprecise (double-loop) simulation, but every input reaching :E is precise. There are two ways to get here. Either an imprecise continuous ancestor of :E was discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding :E, so use a single-loop simulation (e.g. MonteCarlo) for :E and the network stays credal through the discretized node, or remove the discretization from the ancestor so its imprecision reaches :E directly. Or a continuous ancestor was given as a ProbabilityBox whose every interval parameter has zero width: that describes a single distribution, so it is stored as that distribution and no imprecision ever reaches :E. Use a single-loop simulation for :E, or widen a parameter interval if that ancestor was meant to be imprecise.") @suppress reduce(ebn)
 
     # the same network with a single-loop simulation reduces to a CredalNetwork
     E = DiscreteFunctionalNode(:E, [model], performance, MonteCarlo(100))

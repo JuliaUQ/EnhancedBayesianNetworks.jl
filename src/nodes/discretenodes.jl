@@ -1,12 +1,7 @@
 """
     DiscreteNode(name, parents = Symbol[], parameters = [], results = nothing)
-    DiscreteNode(cpt::ScenariosTable, parameters = [], results = nothing)
 
-A discrete-state node. Holds a conditional probability table (`cpt`) over its parents' state
-combinations and its own states. Optional per-state `parameters` (used when it feeds a
-functional node) and optional stored `results` when a FunctionalNode is evaluated into a
-DiscreteNode. Entries may be precise (`Real`) or imprecise/credal (`Interval`).
-Build by name and fill with `node[parent1 => sₚ1, ..., name => sₙ] = p`.
+A discrete-state node. Holds a conditional probability table (`cpt`) over its parents' state combinations and its own states. Optional per-state `parameters` (used when it feeds a functional node) and optional stored `results` when a FunctionalNode is evaluated into a DiscreteNode. Entries may be precise (`Real`) or imprecise/credal (`Interval`). An `Interval` of zero width describes a precise probability, so it is stored as the corresponding `Real` (with a warning) and leaves the node precise. Build by name and fill with `node[parent1 => sₚ1, ..., name => sₙ] = p`.
 
 # Examples
 ```julia
@@ -24,6 +19,10 @@ S[:W => :cloudy, :S => :off] = 0.8
 
 # credal (imprecise) entries use an Interval instead of a Real:
 S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)
+
+# an Interval of zero width is a precise probability, and is stored as one (with a warning):
+S[:W => :cloudy, :S => :on] = Interval(0.2, 0.2)
+S[:W => :cloudy, :S => :on]                 # 0.2, a Real
 ```
 """
 struct DiscreteNode <: AbstractDiscreteNode
@@ -44,30 +43,29 @@ struct DiscreteNode <: AbstractDiscreteNode
         cpt = ScenariosTable{DiscreteProbability}([parents..., name], :Π)
         return new(name, cpt, parameters, results)
     end
-    ## DiscreteNode with CPT
-    function DiscreteNode(
-            cpt::ScenariosTable{DiscreteProbability},
-            parameters::Vector{Pair{Symbol, Vector{Parameter}}} = Vector{Pair{Symbol, Vector{Parameter}}}(),
-            results::Union{ScenariosTable{Any}, Nothing} = nothing
-        )
-        name = Symbol(names(cpt.data)[end - 1])
-        return new(name, cpt, parameters, results)
-    end
 end
 
 DiscreteNode(name::Symbol, parameters::Vector{Pair{Symbol, Vector{Parameter}}}) = DiscreteNode(name, Symbol[], parameters, nothing)
 
-Base.setindex!(node::DiscreteNode, value, key...) = setindex!(node.cpt, value, key...)
+# A degenerate interval probability is a precise probability. Storing it as a `Real` keeps the node precise, so inference stays exact instead of enumerating the extreme points of a zero-width credal set, and `reduce` returns a BayesianNetwork rather than a CredalNetwork.
+function _collapse_mass(value::Interval, name::Symbol)
+    if isdegenerate(value)
+        @warn "node $(repr(name)) was assigned the degenerate Interval probability $value: the precise probability $(value.lb) is stored instead"
+        return value.lb
+    end
+    return value
+end
+
+_collapse_mass(value, _::Symbol) = value
+
+Base.setindex!(node::DiscreteNode, value, key...) = setindex!(node.cpt, _collapse_mass(value, node.name), key...)
 
 Base.getindex(node::DiscreteNode, key...) = getindex(node.cpt, key...)
 
 """
     states(node)
 
-Return the vector of discrete states a node can take. Defined for discrete-type nodes:
-a `DiscreteNode` returns its own states, a `DiscreteFunctionalNode` returns its two derived
-states `:<name>_safe` and `:<name>_failed`. Continuous nodes have no discrete states, so
-calling `states` on them is a `MethodError`.
+Return the vector of discrete states a node can take. Defined for discrete-type nodes: a `DiscreteNode` returns its own states, a `DiscreteFunctionalNode` returns its two derived states `:<name>_safe` and `:<name>_failed`. Continuous nodes have no discrete states, so calling `states` on them is a `MethodError`.
 
 # Examples
 ```julia
@@ -84,10 +82,7 @@ states(node::DiscreteNode) = unique(node.cpt.data[:, node.name])
 """
     scenarios(node)
 
-List every row of the node's CPT as a vector of `parent => state` pairs. For a `DiscreteNode`
-each scenario also carries the node's own state; for a `ContinuousNode` only the parent-state
-combinations are returned (a continuous node has no discrete state of its own). A root node
-yields a single empty scenario. Not defined for functional nodes.
+List every row of the node's CPT as a vector of `parent => state` pairs. For a `DiscreteNode` each scenario also carries the node's own state; for a `ContinuousNode` only the parent-state combinations are returned (a continuous node has no discrete state of its own). A root node yields a single empty scenario. Not defined for functional nodes.
 
 # Examples
 ```julia
@@ -105,10 +100,8 @@ scenarios(node::DiscreteNode) = map(row -> [Symbol(col) => row[col] for col in n
 """
     isprecise(node)
 
-Return `true` if every entry in the node's CPT is precise, `false` if any is imprecise/credal.
-For a `DiscreteNode` precise means every probability is a `Real` (imprecise entries are
-`Interval`s); for a `ContinuousNode` precise means every entry is a `UnivariateDistribution`
-(imprecise entries are `Interval`/`ProbabilityBox`).
+Return `true` if every entry in the node's CPT is precise, `false` if any is imprecise/credal. For a `DiscreteNode` precise means every probability is a `Real` (imprecise entries are `Interval`s); for a `ContinuousNode` precise means every entry is a `UnivariateDistribution` (imprecise entries are `Interval`/`ProbabilityBox`).
+Zero-width imprecision is normalised when an entry is assigned, so a node reported as imprecise is genuinely imprecise rather than merely holding an imprecise type.
 
 # Examples
 ```julia
@@ -120,7 +113,11 @@ isprecise(S)                                # true
 S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)   # a credal entry
 isprecise(S)                                # false
 
-T = ContinuousNode(:T, Normal());  isprecise(T)     # true
+S[:W => :sunny, :S => :on] = Interval(0.9, 0.9)    # zero width, so stored as 0.9
+isprecise(S)                                # true again
+
+T = ContinuousNode(:T, Normal());  isprecise(T)                 # true
+Ti = ContinuousNode(:Ti, Interval(-1.0, 1.0));  isprecise(Ti)   # false
 ```
 """
 isprecise(node::DiscreteNode) = all(isa.(node.cpt.data[:, :Π], Real))
@@ -128,8 +125,7 @@ isprecise(node::DiscreteNode) = all(isa.(node.cpt.data[:, :Π], Real))
 """
     isroot(node)
 
-Return `true` if the node has no parents (a root of the network). A `FunctionalNode` is never
-a root (`false` always), since it is defined by models over its ancestors.
+Return `true` if the node has no parents (a root of the network). A `FunctionalNode` is never a root (`false` always), since it is defined by models over its ancestors.
 
 # Examples
 ```julia
@@ -147,10 +143,7 @@ isroot(node::DiscreteNode) = size(node.cpt.data, 2) == 2
     parents(net, name::Symbol)
     parents(net, node)
 
-Return the parent names of a node as a `Vector{Symbol}` (empty for a root). The single-argument
-form reads the parents off the node's own table (`DiscreteNode`/`ContinuousNode`); the
-network forms look up the parents of `name` (or `node`) within `net`'s topology and work for
-every node type, including functional nodes.
+Return the parent names of a node as a `Vector{Symbol}` (empty for a root). The single-argument form reads the parents off the node's own table (`DiscreteNode`/`ContinuousNode`); the network forms look up the parents of `name` (or `node`) within `net`'s topology and work for every node type, including functional nodes.
 
 # Examples
 ```julia

@@ -1,8 +1,9 @@
-# Evaluate a continuous functional node into a plain ContinuousNode: for each discrete-ancestor scenario,
-# sample the parents' inputs through the models and refit the output as an EmpiricalDistribution
-# (or lower/upper EmpiricalDistributions when the inputs are imprecise). `collect` keeps the raw samples.
+# Evaluate a continuous functional node into a plain ContinuousNode: for each discrete-ancestor scenario, sample the parents' inputs through the models and refit the output as an EmpiricalDistribution (or lower/upper EmpiricalDistributions when the inputs are imprecise). `collect` keeps the raw samples.
 function evaluate(
-        net::EnhancedBayesianNetwork, node::ContinuousFunctionalNode, collect::Bool = true; progress::Bool = isinteractive()
+        net::EnhancedBayesianNetwork,
+        node::ContinuousFunctionalNode,
+        collect::Bool = true;
+        progress::Bool = isinteractive()
     )
     scs = _simulation_scenarios(node)
     inputs_vector = map(sc -> (sc, _simulation_inputs(net, node, sc)), scs)
@@ -13,7 +14,7 @@ function evaluate(
     end
     ancestors = discrete_ancestors(net, node)
     if isempty(ancestors) && node.discretization isa ApproximatedDiscretization
-        disc = ExactDiscretization(node.discretization.intervals)
+        disc = ExactDiscretization(node.discretization.intervals; mesh = node.discretization.mesh, technique = node.discretization.technique)
     else
         disc = node.discretization
     end
@@ -46,11 +47,12 @@ function evaluate(
     return new_continuous
 end
 
-# Evaluate a discrete functional node into a DiscreteNode: for each scenario, estimate the failure
-# probability from the models + performance function, storing it on the _failed state and its complement
-# on _safe. `collect` keeps the raw samples on `results`.
+# Evaluate a discrete functional node into a DiscreteNode: for each scenario, estimate the failure probability from the models + performance function, storing it on the _failed state and its complement on _safe. `collect` keeps the raw samples on `results`.
 function evaluate(
-        net::EnhancedBayesianNetwork, node::DiscreteFunctionalNode, collect::Bool = true; progress::Bool = isinteractive()
+        net::EnhancedBayesianNetwork,
+        node::DiscreteFunctionalNode,
+        collect::Bool = true;
+        progress::Bool = isinteractive()
     )
     scs = _simulation_scenarios(node)
     inputs_vector = map(sc -> (sc, EnhancedBayesianNetworks._simulation_inputs(net, node, sc)), scs)
@@ -67,7 +69,7 @@ function evaluate(
         sim = node.simulation[scenario...]
         if isa(sim, Union{DoubleLoop, RandomSlicing}) && !UncertaintyQuantification.isimprecise(uqinputs)
             error(
-                "Invalid simulation for functional node $(repr(node.name)): the assigned $(nameof(typeof(sim))) is an imprecise (double-loop) simulation, but every input reaching $(repr(node.name)) is precise. This happens when an imprecise continuous ancestor of $(repr(node.name)) is discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding $(repr(node.name)). Use a single-loop simulation (e.g. MonteCarlo) for $(repr(node.name)); the network stays credal through the discretized node. Alternatively, remove the discretization from the imprecise continuous ancestor so its imprecision reaches $(repr(node.name)) directly."
+                "Invalid simulation for functional node $(repr(node.name)): the assigned $(nameof(typeof(sim))) is an imprecise (double-loop) simulation, but every input reaching $(repr(node.name)) is precise. There are two ways to get here. Either an imprecise continuous ancestor of $(repr(node.name)) was discretized: discretization moves the imprecision into the discrete (credal) surrogate node and leaves a precise continuous residual feeding $(repr(node.name)), so use a single-loop simulation (e.g. MonteCarlo) for $(repr(node.name)) and the network stays credal through the discretized node, or remove the discretization from the ancestor so its imprecision reaches $(repr(node.name)) directly. Or a continuous ancestor was given as a ProbabilityBox whose every interval parameter has zero width: that describes a single distribution, so it is stored as that distribution and no imprecision ever reaches $(repr(node.name)). Use a single-loop simulation for $(repr(node.name)), or widen a parameter interval if that ancestor was meant to be imprecise."
             )
         end
         res = probability_of_failure(node.models, node.performance, uqinputs, sim)
@@ -85,8 +87,7 @@ function evaluate(
     return new_discrete
 end
 
-# The discrete-ancestor state combinations (scenarios) the node is evaluated over, read from its
-# simulation table; a single empty scenario when it has no discrete ancestors.
+# The discrete-ancestor state combinations (scenarios) the node is evaluated over, read from its simulation table; a single empty scenario when it has no discrete ancestors.
 function _simulation_scenarios(node::FunctionalNode)
     df = node.simulation.data[:, Not("sim")]
     cols = Symbol.(names(df))
@@ -97,8 +98,7 @@ function _simulation_scenarios(node::FunctionalNode)
     return scs
 end
 
-# Assemble the UQ inputs for one scenario: the random variables / parameters contributed by the node's
-# direct parents (uncertainty comes from parents only; the discrete ancestors just form the scenario grid).
+# Assemble the UQ inputs for one scenario: the random variables / parameters contributed by the node's direct parents (uncertainty comes from parents only; the discrete ancestors just form the scenario grid).
 function _simulation_inputs(net::EnhancedBayesianNetwork, node::FunctionalNode, sc::Evidence)
     par_names = parents(net, node)
     par_nodes = filter(n -> n.name ∈ par_names, net.nodes)

@@ -7,8 +7,8 @@ A continuous node whose value is **computed** from its ancestors by one or more 
 `MonteCarlo`) propagates the parents' uncertainty through the models to produce output samples;
 these samples are then turned back into a continuous distribution by fitting an
 [`EmpiricalDistribution`](https://juliauq.github.io/UncertaintyQuantification.jl/stable/manual/kde)
-with `nbins` bins. Separately, `discretization` (an `ApproximatedDiscretization`) holds the interval
-edges used to discretize that continuous node into discrete states for downstream discrete inference.
+with `nbins` bins. Separately, `discretization` (an `ApproximatedDiscretization`) holds the
+discretization-interval edges used to discretize that continuous node into discrete states for downstream discrete inference.
 The node is evaluated once per combination of its discrete ancestors, so its uncertainty comes only
 from its direct parents while the discrete ancestors form the scenario grid the simulation is repeated
 over. A functional node is never a root; its parents are the inputs referenced by the models, or may be

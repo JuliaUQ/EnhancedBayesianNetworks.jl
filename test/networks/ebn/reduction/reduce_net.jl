@@ -329,6 +329,62 @@ end
     @test isnothing(ebn2.nodes[4].results)
 end
 
+@testitem "Evaluate Net - degenerate p-box reduces precisely" setup = [ExtraDeps] begin
+    # A ProbabilityBox whose every interval parameter has zero width is a precise distribution, and is stored as one
+    degenerate = ProbabilityBox{Normal}(Dict(:μ => Interval(0.2, 0.2), :σ => 1))
+    X = ContinuousNode(:X, degenerate, ExactDiscretization([-1.0, 0.0, 1.0]))
+    model = Model(df -> df.X .+ 1.0, :g)
+    F = DiscreteFunctionalNode(:F, [model], df -> df.g, MonteCarlo(200))
+
+    ebn = EnhancedBayesianNetwork([X, F])
+    add_child!(ebn, :X, :F)
+    order!(ebn)
+
+    reduced = @suppress reduce(ebn)
+    @test isa(reduced, BayesianNetwork)
+
+    surrogate = only(filter(n -> n.name == :X_d, reduced.nodes))
+    member = Normal(0.2, 1.0)
+    expected = [
+        cdf(member, -1.0),
+        cdf(member, 0.0) - cdf(member, -1.0),
+        cdf(member, 1.0) - cdf(member, 0.0),
+        1 - cdf(member, 1.0),
+    ]
+    @test all(isa.(surrogate.cpt.data.Π, Real))
+    @test all(isapprox.(surrogate.cpt.data.Π, expected; atol = 1.0e-12))
+
+    X = ContinuousNode(:X, degenerate, ExactDiscretization([-1.0, 0.0, 1.0]))
+    F = DiscreteFunctionalNode(:F, [model], df -> df.g, DoubleLoop(MonteCarlo(200)))
+    ebn = EnhancedBayesianNetwork([X, F])
+    add_child!(ebn, :X, :F)
+    order!(ebn)
+    @test_throws "is an imprecise (double-loop) simulation, but every input reaching :F is precise" @suppress reduce(ebn)
+end
+
+@testitem "Evaluate Net - degenerate interval probabilities reduce precisely" setup = [ExtraDeps] begin
+    # Zero-width interval probabilities describe a precise CPT, so the network is a BayesianNetwork and inference stays exact.
+    A = DiscreteNode(:A)
+    A[:A => :a1] = Interval(0.3, 0.3)
+    A[:A => :a2] = Interval(0.7, 0.7)
+    B = DiscreteNode(:B, [:A])
+    B[:A => :a1, :B => :b1] = 0.9
+    B[:A => :a1, :B => :b2] = 0.1
+    B[:A => :a2, :B => :b1] = 0.2
+    B[:A => :a2, :B => :b2] = 0.8
+
+    net = EnhancedBayesianNetwork([A, B])
+    add_child!(net, :A, :B)
+    order!(net)
+
+    reduced = @suppress reduce(net)
+    @test isa(reduced, BayesianNetwork)
+    root = only(filter(n -> n.name == :A, reduced.nodes))
+    @test all(isa.(root.cpt.data.Π, Real))
+    @test root.cpt.data.Π == [0.3, 0.7]
+end
+
+
 @testitem "Evaluate Net - Auxiliary Functions" begin
     A = DiscreteNode(:A)
     A[:A => :a1] = 0.5

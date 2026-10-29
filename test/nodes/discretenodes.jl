@@ -48,27 +48,33 @@
     @test node_c.cpt.data.a == [:a1]
     @test node_c.cpt.data.Π == [0.2]
     @test node_c.parameters == parameters
+end
 
-    ## tests for nodes with a pre-defined CPT
-    cpt_a = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}(:a, :Π)
-    cpt_a[:a => :a1] = 0.2
-    cpt_a[:a => :a2] = 0.8
-    parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)]]
-    node_a = DiscreteNode(cpt_a)
-    @test node_a.cpt == cpt_a
-    node_a = DiscreteNode(cpt_a, parameters)
-    @test node_a.cpt == cpt_a
-    @test node_a.parameters == parameters
+@testitem "DiscreteNode - degenerate interval probabilities" begin
+    node_a = DiscreteNode(:a)
+    node_a[:a => :a1] = Interval(0.3, 0.3)
+    @test node_a.cpt.data.Π[1] === 0.3
+    node_a[:a => :a2] = Interval(0.7, 0.7)
+    @test isprecise(node_a)
 
-    cpt_c = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:a, :c], :Π)
-    cpt_c[:a => :a1, :c => :c1] = 0.2
-    cpt_c[:a => :a1, :c => :c2] = 0.8
-    parameters = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(0, :C)]]
-    node_c = DiscreteNode(cpt_c)
-    @test node_c.cpt == cpt_c
-    node_c = DiscreteNode(cpt_c, parameters)
-    @test node_c.cpt == cpt_c
-    @test node_c.parameters == parameters
+    # a genuinely imprecise entry is stored exactly as written
+    node_b = DiscreteNode(:b)
+    node_b[:b => :b1] = Interval(0.2, 0.8)
+    @test node_b.cpt.data.Π[1] == Interval(0.2, 0.8)
+    @test !isprecise(node_b)
+
+    # the collapse changes the type of what the caller stored, so it is announced; nothing is said otherwise
+    node_c = DiscreteNode(:c)
+    @test_logs (:warn,) (node_c[:c => :c1] = Interval(0.4, 0.4))
+    @test_logs (node_c[:c => :c2] = Interval(0.1, 0.9))
+
+    node_d = DiscreteNode(:d, [:a])
+    node_d[:a => :a1, :d => :d1] = Interval(0.3, 0.3)
+    node_d[:a => :a1, :d => :d2] = Interval(0.2, 0.8)
+    node_d[:a => :a1, :d => :d3] = Interval(0.3, 0.3)
+    @test node_d.cpt.data.Π == [0.3, Interval(0.2, 0.8), 0.3]
+    @test eltype(node_d.cpt.data.Π) == EnhancedBayesianNetworks.DiscreteProbability
+    @test !isprecise(node_d)
 end
 
 @testitem "DiscreteNode - main functions" begin

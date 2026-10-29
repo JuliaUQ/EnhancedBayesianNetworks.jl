@@ -13,6 +13,11 @@
     @test names(node_c.cpt.data) == ["a", "Π"]
     @test isa(node_c.discretization, ApproximatedDiscretization)
     @test isnothing(node_c.results)
+    # the swap to an Approximated strategy must not drop the p-box mass settings
+    node_cf = ContinuousNode(:c, [:a], ExactDiscretization(; technique = :distribution_free, mesh = 1.0e-3))
+    @test isa(node_cf.discretization, ApproximatedDiscretization)
+    @test node_cf.discretization.technique == :distribution_free
+    @test node_cf.discretization.mesh == 1.0e-3
     node_a[] = Normal()
     @test node_a.cpt.data.Π[1] == Normal()
     node_c[:a => :a1] = Normal()
@@ -23,6 +28,36 @@
     @test node_c.cpt.data.a == [:a1, :a2]
     @test node_c.cpt.data.Π[1] == Normal()
     @test node_c.cpt.data.Π[2] == Interval(0.3, 0.6)
+end
+
+@testitem "ContinuousNode - degenerate probability boxes" begin
+    all_degenerate = ProbabilityBox{Normal}(Dict(:μ => Interval(0.2, 0.2), :σ => Interval(1.0, 1.0)))
+    node_a = ContinuousNode(:a, all_degenerate)
+    @test node_a.cpt.data.Π[1] == Normal(0.2, 1.0)
+    @test isprecise(node_a)
+
+    # one free parameter is enough to keep it a p-box
+    one_free = ProbabilityBox{Normal}(Dict(:μ => Interval(0.0, 0.5), :σ => Interval(1.0, 1.0)))
+    node_b = ContinuousNode(:b, one_free)
+    @test isa(node_b.cpt.data.Π[1], ProbabilityBox)
+    @test !isprecise(node_b)
+
+    # the truncation a p-box carries survives the collapse, so the stored entry is the truncated member and not the bare family member — the residual nodes discretization produces are truncated this way.
+    truncated_pbox = EnhancedBayesianNetworks._truncate(all_degenerate, (0.0, 1.0))
+    node_c = ContinuousNode(:c, truncated_pbox)
+    @test node_c.cpt.data.Π[1] == truncated(Normal(0.2, 1.0), 0.0, 1.0)
+    @test isprecise(node_c)
+    @test cdf(node_c.cpt.data.Π[1], 0.5) == cdf(truncated_pbox, 0.5).lb
+
+    # An Interval on a continuous node is the variable's range, not a probability, so a degenerate one is deliberately left alone: there is no precise distribution to put in its place.
+    node_d = ContinuousNode(:d)
+    node_d[] = Interval(2.0, 2.0)
+    @test node_d.cpt.data.Π[1] == Interval(2.0, 2.0)
+    @test !isprecise(node_d)
+
+    # the collapse changes the type of what the caller stored, so it is announced; nothing is said otherwise
+    @test_logs (:warn,) ContinuousNode(:e, all_degenerate)
+    @test_logs ContinuousNode(:f, one_free)
 end
 
 @testitem "ContinuousNode - main functions" begin
@@ -75,12 +110,12 @@ end
 
     exact = ExactDiscretization([-1, 0, 1])
     approx = ApproximatedDiscretization([-1, 0, 1], 2)
-    @test_throws ErrorException("Invalid Network: node :e is a root node and the discretization must be an ExactDiscretization") ContinuousNode(:e, approx)
+    @test_throws ErrorException("Invalid Node: node :e is a root node and the discretization must be an ExactDiscretization") ContinuousNode(:e, approx)
     node_e = ContinuousNode(:e, [:a], approx)
     @test node_e.name == :e
     @test issetequal(Symbol.(names(node_e.cpt.data)), [:a, :Π])
     @test node_e.discretization == approx
-    @test_throws ErrorException("Invalid Network: node :e is a child node and the discretization must be an ApproximatedDiscretization") ContinuousNode(:e, [:a], exact)
+    @test_throws ErrorException("Invalid Node: node :e is a child node and the discretization must be an ApproximatedDiscretization") ContinuousNode(:e, [:a], exact)
     node_e = ContinuousNode(:e, exact)
     @test node_e.name == :e
     @test issetequal(Symbol.(names(node_e.cpt.data)), [:Π])
