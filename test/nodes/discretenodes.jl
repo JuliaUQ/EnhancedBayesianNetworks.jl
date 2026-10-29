@@ -50,6 +50,33 @@
     @test node_c.parameters == parameters
 end
 
+@testitem "DiscreteNode - degenerate interval probabilities" begin
+    node_a = DiscreteNode(:a)
+    node_a[:a => :a1] = Interval(0.3, 0.3)
+    @test node_a.cpt.data.Π[1] === 0.3
+    node_a[:a => :a2] = Interval(0.7, 0.7)
+    @test isprecise(node_a)
+
+    # a genuinely imprecise entry is stored exactly as written
+    node_b = DiscreteNode(:b)
+    node_b[:b => :b1] = Interval(0.2, 0.8)
+    @test node_b.cpt.data.Π[1] == Interval(0.2, 0.8)
+    @test !isprecise(node_b)
+
+    # the collapse changes the type of what the caller stored, so it is announced; nothing is said otherwise
+    node_c = DiscreteNode(:c)
+    @test_logs (:warn,) (node_c[:c => :c1] = Interval(0.4, 0.4))
+    @test_logs (node_c[:c => :c2] = Interval(0.1, 0.9))
+
+    node_d = DiscreteNode(:d, [:a])
+    node_d[:a => :a1, :d => :d1] = Interval(0.3, 0.3)
+    node_d[:a => :a1, :d => :d2] = Interval(0.2, 0.8)
+    node_d[:a => :a1, :d => :d3] = Interval(0.3, 0.3)
+    @test node_d.cpt.data.Π == [0.3, Interval(0.2, 0.8), 0.3]
+    @test eltype(node_d.cpt.data.Π) == EnhancedBayesianNetworks.DiscreteProbability
+    @test !isprecise(node_d)
+end
+
 @testitem "DiscreteNode - main functions" begin
     @test_throws ErrorException(":Π is not allowed as node name") DiscreteNode(:Π)
     node_a = DiscreteNode(:a)

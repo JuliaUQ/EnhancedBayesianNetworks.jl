@@ -6,6 +6,17 @@
     @test exact_interval.intervals == interval
     @test !isempty(exact_interval)
     @test isempty(ExactDiscretization())
+
+    # p-box mass settings: defaults, keyword forms (also on the empty strategy) and validation
+    @test exact_interval.mesh == EnhancedBayesianNetworks.PBOX_MASS_MESH
+    @test exact_interval.technique == :optimised
+    @test ExactDiscretization(interval; mesh = 1.0e-4).mesh == 1.0e-4
+    @test ExactDiscretization(interval; technique = :distribution_free).technique == :distribution_free
+    @test ExactDiscretization(; technique = :distribution_free).technique == :distribution_free
+    @test isempty(ExactDiscretization(; mesh = 1.0e-4))
+    @test_throws ErrorException("Invalid discretization: p-box mass mesh must be positive, got 0.0") ExactDiscretization(interval; mesh = 0.0)
+    @test_throws ErrorException("Invalid discretization: p-box mass mesh must be positive, got -1.0") ExactDiscretization(interval; mesh = -1.0)
+    @test_throws ErrorException("Invalid discretization: unknown p-box mass technique :optimized, must be one of :optimised, :distribution_free") ExactDiscretization(interval; technique = :optimized)
 end
 
 @testitem "Approximated Discretization" begin
@@ -22,4 +33,13 @@ end
     @test approx_interval.intervals == interval
     @test !isempty(approx_interval)
     @test isempty(ApproximatedDiscretization())
+
+    # p-box mass settings: defaults, keyword forms (also on the empty strategy) and validation
+    @test approx_interval.mesh == EnhancedBayesianNetworks.PBOX_MASS_MESH
+    @test approx_interval.technique == :optimised
+    @test ApproximatedDiscretization(interval, λ; mesh = 1.0e-4).mesh == 1.0e-4
+    @test ApproximatedDiscretization(interval, λ; technique = :distribution_free).technique == :distribution_free
+    @test ApproximatedDiscretization(; technique = :distribution_free).technique == :distribution_free
+    @test_throws ErrorException("Invalid discretization: p-box mass mesh must be positive, got 0.0") ApproximatedDiscretization(interval, λ; mesh = 0.0)
+    @test_throws ErrorException("Invalid discretization: unknown p-box mass technique :free, must be one of :optimised, :distribution_free") ApproximatedDiscretization(interval, λ; technique = :free)
 end

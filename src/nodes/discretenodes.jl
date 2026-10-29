@@ -1,7 +1,7 @@
 """
     DiscreteNode(name, parents = Symbol[], parameters = [], results = nothing)
 
-A discrete-state node. Holds a conditional probability table (`cpt`) over its parents' state combinations and its own states. Optional per-state `parameters` (used when it feeds a functional node) and optional stored `results` when a FunctionalNode is evaluated into a DiscreteNode. Entries may be precise (`Real`) or imprecise/credal (`Interval`). Build by name and fill with `node[parent1 => sₚ1, ..., name => sₙ] = p`.
+A discrete-state node. Holds a conditional probability table (`cpt`) over its parents' state combinations and its own states. Optional per-state `parameters` (used when it feeds a functional node) and optional stored `results` when a FunctionalNode is evaluated into a DiscreteNode. Entries may be precise (`Real`) or imprecise/credal (`Interval`). An `Interval` of zero width describes a precise probability, so it is stored as the corresponding `Real` (with a warning) and leaves the node precise. Build by name and fill with `node[parent1 => sₚ1, ..., name => sₙ] = p`.
 
 # Examples
 ```julia
@@ -97,6 +97,7 @@ scenarios(node::DiscreteNode) = map(row -> [Symbol(col) => row[col] for col in n
     isprecise(node)
 
 Return `true` if every entry in the node's CPT is precise, `false` if any is imprecise/credal. For a `DiscreteNode` precise means every probability is a `Real` (imprecise entries are `Interval`s); for a `ContinuousNode` precise means every entry is a `UnivariateDistribution` (imprecise entries are `Interval`/`ProbabilityBox`).
+Zero-width imprecision is normalised when an entry is assigned, so a node reported as imprecise is genuinely imprecise rather than merely holding an imprecise type.
 
 # Examples
 ```julia
