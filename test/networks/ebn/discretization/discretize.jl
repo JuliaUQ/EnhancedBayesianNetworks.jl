@@ -71,6 +71,16 @@ end
     @test all(map((f, o) -> f.lb <= o.lb && f.ub >= o.ub, probs_free, probs))
     @test probs_free[3].ub - probs_free[3].lb > probs[3].ub - probs[3].lb
     @test all(map(p -> 0.0 <= p.lb && p.ub <= 1.0, probs_free))
+    @test all(
+        same.(
+            probs_free, [
+                Interval(0.022750131948179205, 0.15865525393145702),
+                Interval(0.0, 0.4772498680518208),
+                Interval(0.0, 0.6826894921370861),
+                Interval(0.15865525393145696, 0.5),
+            ]
+        )
+    )
 
     # Bounds given as a mix of Int and Float: `bounds` then returns a Vector{Real}, which must still reach the optimiser as plain Float64.
     dist = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 0.5), :σ => 1))
@@ -219,4 +229,39 @@ end
     @test isa(new_continuous.cpt.data.Π[2], Uniform)
     @test isa(new_continuous.cpt.data.Π[3], Uniform)
     @test isa(new_continuous.cpt.data.Π[4].ρ, Exponential)
+
+    ## Imprecise Child Nodes
+    same(a::Interval, b::Interval) = isapprox(a.lb, b.lb; atol = 1.0e-9) && isapprox(a.ub, b.ub; atol = 1.0e-9)
+    precise_masses = [0.15865525393145702, 0.341344746068543, 0.34134474606854304, 0.15865525393145696]
+    expected = Dict(
+        :optimised => [
+            Interval(0.022750131948179205, 0.15865525393145702),
+            Interval(0.1359051219832778, 0.341344746068543),
+            Interval(0.34134474606854304, 0.38292492254802624),
+            Interval(0.15865525393145696, 0.5),
+        ],
+        :distribution_free => [
+            Interval(0.022750131948179205, 0.15865525393145702),
+            Interval(0.0, 0.4772498680518208),
+            Interval(0.0, 0.6826894921370861),
+            Interval(0.15865525393145696, 0.5),
+        ],
+    )
+    for technique in (:optimised, :distribution_free)
+        node = ContinuousNode(:x, [:y], ApproximatedDiscretization([-1, 0, 1], 2; technique = technique))
+        node[:y => :y1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        node[:y => :y2] = Normal()
+        discretized_node, new_continuous = @suppress EnhancedBayesianNetworks._discretize(node)
+        @test Symbol.(names(discretized_node.cpt.data)) == [:y, :x_d, :Π]
+        @test unique(discretized_node.cpt.data.x_d) == discretized_states
+        for (i, state) in enumerate(discretized_states)
+            @test same(discretized_node[:y => :y1, :x_d => state], expected[technique][i])
+            @test discretized_node[:y => :y2, :x_d => state] ≈ precise_masses[i]
+        end
+        # the technique decides masses only; the residual is the same precise approximation either way
+        @test isa(new_continuous.cpt.data.Π[1].ρ, Exponential)
+        @test new_continuous.cpt.data.Π[2] == Uniform(-1.0, 0.0)
+        @test new_continuous.cpt.data.Π[3] == Uniform(0.0, 1.0)
+        @test isa(new_continuous.cpt.data.Π[4].ρ, Exponential)
+    end
 end
