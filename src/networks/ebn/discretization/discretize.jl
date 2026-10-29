@@ -69,10 +69,10 @@ function _discretize(_::Interval, _::Vector{<:Real}, _::AbstractDiscretization)
 end
 
 function _discretize(dist::ProbabilityBox, interval::Vector{<:Real}, d::AbstractDiscretization)
-    return if d.technique === :optimised
-        _pbox_mass_optimised(dist, interval; mesh = d.mesh)
+    if d.technique === :optimised
+        return _pbox_mass_optimised(dist, interval; mesh = d.mesh)
     else
-        _pbox_mass_free(dist, interval)
+        return _pbox_mass_free(dist, interval)
     end
 end
 

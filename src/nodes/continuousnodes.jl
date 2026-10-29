@@ -43,9 +43,9 @@ struct ContinuousNode <: AbstractContinuousNode
             discretization = ApproximatedDiscretization(; mesh = discretization.mesh, technique = discretization.technique)
         end
         if isempty(parents) && isa(discretization, ApproximatedDiscretization)
-            error("Invalid Network: node $(repr(name)) is a root node and the discretization must be an ExactDiscretization")
+            error("Invalid Node: node $(repr(name)) is a root node and the discretization must be an ExactDiscretization")
         elseif !isempty(parents) && isa(discretization, ExactDiscretization)
-            error("Invalid Network: node $(repr(name)) is a child node and the discretization must be an ApproximatedDiscretization")
+            error("Invalid Node: node $(repr(name)) is a child node and the discretization must be an ApproximatedDiscretization")
         end
 
         cpt = EnhancedBayesianNetworks.ScenariosTable{ContinuousProbability}(parents, :Π)

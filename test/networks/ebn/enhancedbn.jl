@@ -59,8 +59,7 @@ end
 end
 
 @testitem "EnhancedBayesianNetwork - node vector type" setup = [ExtraDeps] begin
-    # a network with no discrete node must still store a widened vector, so
-    # discretization can push a DiscreteNode during reduce
+    # a network with no discrete node must still store a widened vector, so discretization can push a DiscreteNode during reduce
     X = ContinuousNode(:X, Normal())
     Yf = ContinuousFunctionalNode(
         :Y, [Model(df -> df.X .* 2, :Y)], MonteCarlo(100),
@@ -188,6 +187,23 @@ end
     @test issetequal(parents(net, F), [:D, :B, :C])
     @test net.A == sparse([1, 2, 4, 5, 6, 7], [6, 3, 5, 3, 7, 3], [true, true, true, true, true, true], 7, 7)
     check_index_coherence(net)
+end
+
+@testitem "EnhancedBayesianNetwork - Discretize p-box technique" setup = [ExtraDeps] begin
+    # discretize! must take the p-box mass technique from the node being discretized. The enclosure the distribution-free technique returns is looser than the optimised range on every bin whose mass is not monotone in the parameter, and never tighter on any bin.
+    function masses(technique)
+        X = ContinuousNode(:X, ExactDiscretization([-1.0, 0.0, 1.0]; technique = technique))
+        X[] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        net = EnhancedBayesianNetwork([X])
+        @suppress EnhancedBayesianNetworks.discretize!(net)
+        return only(filter(n -> n.name == :X_d, net.nodes)).cpt.data[:, :Π]
+    end
+
+    optimised = masses(:optimised)
+    distribution_free = masses(:distribution_free)
+    @test length(optimised) == length(distribution_free) == 4
+    @test all(map((f, o) -> f.lb <= o.lb && f.ub >= o.ub, distribution_free, optimised))
+    @test any(map((f, o) -> f.ub - f.lb > o.ub - o.lb, distribution_free, optimised))
 end
 
 @testitem "EnhancedBayesianNetwork - Markov Envelope" begin
