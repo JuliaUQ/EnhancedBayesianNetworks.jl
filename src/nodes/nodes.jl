@@ -78,6 +78,9 @@ C = ContinuousNode(:C, [:W], disc)
 
 # same edges, but take the CDF-envelope enclosure for any imprecise entry:
 ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5; technique = :distribution_free)
+
+# or keep the optimisation, on a coarser and cheaper mesh:
+ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5; mesh = 1.0e-4)
 ```
 """
 struct ApproximatedDiscretization <: AbstractDiscretization

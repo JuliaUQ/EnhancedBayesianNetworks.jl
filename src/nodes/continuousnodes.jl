@@ -5,7 +5,7 @@
 
 A continuous-valued node. Its table (`cpt`) maps each parent-state combination to a continuous probability, either precise (a `UnivariateDistribution`) or imprecise/credal (an `Interval` or a `ProbabilityBox`). A `ProbabilityBox` whose every interval parameter has zero width describes a single distribution, so it is stored as that distribution (with a warning), keeping any truncation it carried; a degenerate `Interval` is left as it is, since there it bounds the variable rather than a probability. The `discretization` field controls how the node is turned into discrete bins during inference: a **root** node carries an `ExactDiscretization` (explicit interval edges), a **child** node an `ApproximatedDiscretization` (chosen automatically when parents are given).
 
-Build a root either with the `ContinuousNode(name, dist)` shortcut or by assigning `node[] = dist`;build a child by naming its parents and filling one distribution per parent state with`node[parent => state] = dist`.
+Build a root either with the `ContinuousNode(name, dist)` shortcut or by assigning `node[] = dist`; build a child by naming its parents and filling one distribution per parent state with `node[parent => state] = dist`.
 
 # Examples
 ```julia
@@ -22,6 +22,14 @@ C[:W => :cloudy] = Normal(2, 1)
 
 # imprecise (credal) entries use an Interval instead of a distribution:
 C[:W => :sunny] = Interval(0.1, 0.5)
+
+# a ProbabilityBox is the other imprecise form: a family of distributions indexed by a parameter box
+C[:W => :cloudy] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+
+# a p-box with no width left describes one distribution, and is stored as that distribution (warning):
+Tp = ContinuousNode(:Tp, ProbabilityBox{Normal}(Dict(:μ => Interval(0.2, 0.2), :σ => 1)))
+Tp[]                                                 # Normal(0.2, 1.0), not a ProbabilityBox
+isprecise(Tp)                                        # true
 ```
 """
 struct ContinuousNode <: AbstractContinuousNode

@@ -19,6 +19,10 @@ S[:W => :cloudy, :S => :off] = 0.8
 
 # credal (imprecise) entries use an Interval instead of a Real:
 S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)
+
+# an Interval of zero width is a precise probability, and is stored as one (with a warning):
+S[:W => :cloudy, :S => :on] = Interval(0.2, 0.2)
+S[:W => :cloudy, :S => :on]                 # 0.2, a Real
 ```
 """
 struct DiscreteNode <: AbstractDiscreteNode
@@ -109,7 +113,11 @@ isprecise(S)                                # true
 S[:W => :sunny, :S => :on] = Interval(0.8, 0.95)   # a credal entry
 isprecise(S)                                # false
 
-T = ContinuousNode(:T, Normal());  isprecise(T)     # true
+S[:W => :sunny, :S => :on] = Interval(0.9, 0.9)    # zero width, so stored as 0.9
+isprecise(S)                                # true again
+
+T = ContinuousNode(:T, Normal());  isprecise(T)                 # true
+Ti = ContinuousNode(:Ti, Interval(-1.0, 1.0));  isprecise(Ti)   # false
 ```
 """
 isprecise(node::DiscreteNode) = all(isa.(node.cpt.data[:, :Π], Real))
