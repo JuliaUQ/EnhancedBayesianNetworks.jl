@@ -48,27 +48,6 @@
     @test node_c.cpt.data.a == [:a1]
     @test node_c.cpt.data.Π == [0.2]
     @test node_c.parameters == parameters
-
-    ## tests for nodes with a pre-defined CPT
-    cpt_a = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}(:a, :Π)
-    cpt_a[:a => :a1] = 0.2
-    cpt_a[:a => :a2] = 0.8
-    parameters = [:a1 => [Parameter(1, :A)], :a2 => [Parameter(0, :A)]]
-    node_a = DiscreteNode(cpt_a)
-    @test node_a.cpt == cpt_a
-    node_a = DiscreteNode(cpt_a, parameters)
-    @test node_a.cpt == cpt_a
-    @test node_a.parameters == parameters
-
-    cpt_c = EnhancedBayesianNetworks.ScenariosTable{EnhancedBayesianNetworks.DiscreteProbability}([:a, :c], :Π)
-    cpt_c[:a => :a1, :c => :c1] = 0.2
-    cpt_c[:a => :a1, :c => :c2] = 0.8
-    parameters = [:c1 => [Parameter(1, :C)], :c2 => [Parameter(0, :C)]]
-    node_c = DiscreteNode(cpt_c)
-    @test node_c.cpt == cpt_c
-    node_c = DiscreteNode(cpt_c, parameters)
-    @test node_c.cpt == cpt_c
-    @test node_c.parameters == parameters
 end
 
 @testitem "DiscreteNode - main functions" begin

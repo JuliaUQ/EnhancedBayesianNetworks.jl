@@ -11,7 +11,7 @@ using Reexport
 using SparseArrays
 
 @reexport using UncertaintyQuantification
-using UncertaintyQuantification: bounds, map_to_precise
+using UncertaintyQuantification: bounds, isdegenerate, map_to_precise
 
 import Base: *, sum, reduce
 

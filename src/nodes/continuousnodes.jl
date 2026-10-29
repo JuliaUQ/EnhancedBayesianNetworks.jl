@@ -3,15 +3,9 @@
     ContinuousNode(name, dist::ContinuousProbability)
     ContinuousNode(name, dist::ContinuousProbability, discretization::ExactDiscretization)
 
-A continuous-valued node. Its table (`cpt`) maps each parent-state combination to a continuous
-probability, either precise (a `UnivariateDistribution`) or imprecise/credal (an `Interval` or a
-`ProbabilityBox`). The `discretization` field controls how the node is turned into discrete bins
-during inference: a **root** node carries an `ExactDiscretization` (explicit interval edges), a
-**child** node an `ApproximatedDiscretization` (chosen automatically when parents are given).
+A continuous-valued node. Its table (`cpt`) maps each parent-state combination to a continuous probability, either precise (a `UnivariateDistribution`) or imprecise/credal (an `Interval` or a `ProbabilityBox`). The `discretization` field controls how the node is turned into discrete bins during inference: a **root** node carries an `ExactDiscretization` (explicit interval edges), a **child** node an `ApproximatedDiscretization` (chosen automatically when parents are given).
 
-Build a root either with the `ContinuousNode(name, dist)` shortcut or by assigning `node[] = dist`;
-build a child by naming its parents and filling one distribution per parent state with
-`node[parent => state] = dist`.
+Build a root either with the `ContinuousNode(name, dist)` shortcut or by assigning `node[] = dist`;build a child by naming its parents and filling one distribution per parent state with`node[parent => state] = dist`.
 
 # Examples
 ```julia
@@ -85,7 +79,19 @@ function ContinuousNode(name::Symbol, dist::ContinuousProbability, discretizatio
     return n
 end
 
-Base.setindex!(node::ContinuousNode, value, key...) = setindex!(node.cpt, value, key...)
+# A ProbabilityBox whose every interval parameter has zero width has a single member, so it is a precise distribution in disguise. Storing that member keeps the node precise everywhere downstream: `isprecise`, `_inputs`, `_truncate`, the discretization mass and the BayesianNetwork/CredalNetwork dispatch. `map_to_precise` preserves any truncation the p-box carried, so a truncated p-box collapses to a `Truncated` distribution and not to the bare family member.
+function _collapse_pbox(dist::ProbabilityBox, name::Symbol)
+    intervals = filter(p -> isa(p, Interval), collect(values(dist.parameters)))
+    if !isempty(intervals) && all(isdegenerate, intervals)
+        @warn "node $(repr(name)) was assigned a ProbabilityBox whose every interval parameter is degenerate: the corresponding precise distribution is stored instead"
+        return map_to_precise(first(bounds(dist)), dist)
+    end
+    return dist
+end
+
+_collapse_pbox(value, _::Symbol) = value
+
+Base.setindex!(node::ContinuousNode, value, key...) = setindex!(node.cpt, _collapse_pbox(value, node.name), key...)
 
 Base.getindex(node::ContinuousNode, key...) = getindex(node.cpt, key...)
 
