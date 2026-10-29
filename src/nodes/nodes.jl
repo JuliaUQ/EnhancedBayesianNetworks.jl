@@ -23,9 +23,9 @@ end
 """
     ExactDiscretization(intervals = Real[]; mesh = $PBOX_MASS_MESH, technique = :optimised)
 
-Discretization strategy for a continuous **root** node, allowing evidence to be observed on it. The node's distribution support is partitioned exactly at the sorted `intervals` edges, turning the continuous root into discrete bins. The default (empty `intervals`) leaves the node continuous, i.e. no discretization is applied. The edges must be sorted.
+Discretization strategy for a continuous **root** node, allowing evidence to be observed on it. The node's distribution support is partitioned exactly at the sorted `intervals` edges into discretization-intervals, turning the continuous root into one discrete state per discretization-interval. The default (empty `intervals`) leaves the node continuous, i.e. no discretization is applied. The edges must be sorted.
 
-`technique` and `mesh` control how the probability mass of a bin is obtained when the node's entry is a `ProbabilityBox`, and are ignored for a precise distribution or an `Interval`:
+`technique` and `mesh` control how the probability mass of a discretization-interval is obtained when the node's entry is a `ProbabilityBox`, and are ignored for a precise distribution or an `Interval`:
 
   - `:optimised` (default) minimises and maximises the mass over the parameter box, one member of the family at a time, with `mesh` as the optimiser's terminal mesh size. Smaller is tighter and slower.
   - `:distribution_free` differences the CDF envelopes instead. Valid for *any* CDF lying between them, hence an enclosure of the parametric answer rather than the answer itself, but far cheaper and the only sound choice once the p-box is not described by a parameter box. `mesh` is unused.
@@ -66,9 +66,9 @@ ExactDiscretization(; kwargs...) = ExactDiscretization(Vector{Real}(); kwargs...
 """
     ApproximatedDiscretization(intervals = Real[], λ = 0; mesh = $PBOX_MASS_MESH, technique = :optimised)
 
-Discretization strategy for a continuous **non-root (child)** node, allowing evidence to be observed on it. The sorted `intervals` edges partition the support into discrete bins, while `λ` is the rate parameter of the exponential used to approximate the original continuous distribution's tails when a discrete state is mapped back to a continuous range. `λ` must be non-negative; a value above `2` is accepted but warns, as it tends to give an unrealistic tail approximation.
+Discretization strategy for a continuous **non-root (child)** node, allowing evidence to be observed on it. The sorted `intervals` edges partition the support into discretization-intervals, while `λ` is the scale parameter of the exponential used to approximate the original continuous distribution's tails when a discrete state is mapped back to a continuous range. `λ` must be non-negative; a value above `2` is accepted but warns, as it tends to give an unrealistic tail approximation.
 
-`technique` and `mesh` are as in [`ExactDiscretization`](@ref): they select how a `ProbabilityBox` entry's bin mass is computed, and have no effect on a precise distribution or an `Interval`.
+`technique` and `mesh` are as in [`ExactDiscretization`](@ref): they select how a `ProbabilityBox` entry's discretization-interval mass is computed, and have no effect on a precise distribution or an `Interval`.
 
 # Examples
 ```julia
