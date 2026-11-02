@@ -5,7 +5,7 @@ To keep evidence observable on a continuous node and to let it enter discrete in
 The strategy is attached to the node and depends on its position:
 
 - a **root** carries an [`ExactDiscretization`](@ref): the discrete probabilities follow *exactly* from the node's distribution, because the marginal is known;
-- a **child** carries an [`ApproximatedDiscretization`](@ref): the marginal is not generally available, so the tails are approximated (a uniform assumption over each bounded discretization-interval and an exponential assumption, of scale `λ`, over an unbounded one).
+- a **child** carries an [`ApproximatedDiscretization`](@ref): the marginal is not generally available, so the tails are approximated (a uniform assumption over each bounded discretization-interval and an exponential assumption, whose `scale` is the strategy's second argument, over an unbounded one).
 
 Both strategies also carry two keyword settings, `technique` and `mesh`, which decide how the probability mass of a discretization-interval is obtained when the entry is a [`ProbabilityBox`](@extref `UncertaintyQuantification.ProbabilityBox`) and are ignored otherwise; they are described under [Imprecise node](@ref) below.
 
@@ -47,13 +47,13 @@ F_{X_i'}(x_i \mid k) =
 \end{cases}
 ```
 
-and each unbounded tail with an **exponential** assumption of scale ``\lambda`` (the `λ` argument), pointing away from the discretization-interval's one finite edge. Above a lower edge ``x_{ik}^-``,
+and each unbounded tail with an **exponential** assumption of scale ``s`` (the `scale` argument), pointing away from the discretization-interval's one finite edge. Above a lower edge ``x_{ik}^-``,
 
 ```math
 F_{X_i'}(x_i \mid k) =
 \begin{cases}
 0 & x_i \le x_{ik}^-, \\
-1 - \exp\!\left[-(x_i - x_{ik}^-) / \lambda\right] & x_i > x_{ik}^-,
+1 - \exp\!\left[-(x_i - x_{ik}^-) / s\right] & x_i > x_{ik}^-,
 \end{cases}
 ```
 
@@ -62,12 +62,12 @@ and, mirrored, below an upper edge ``x_{ik}^+``,
 ```math
 F_{X_i'}(x_i \mid k) =
 \begin{cases}
-\exp\!\left[-(x_{ik}^+ - x_i) / \lambda\right] & x_i \le x_{ik}^+, \\
+\exp\!\left[-(x_{ik}^+ - x_i) / s\right] & x_i \le x_{ik}^+, \\
 1 & x_i > x_{ik}^+.
 \end{cases}
 ```
 
-A larger ``\lambda`` is a longer tail: it is the exponential's **scale**, so the residual sits a mean distance ``\lambda`` beyond the finite edge.
+A larger ``s`` is a longer tail: it is the exponential's **scale**, so the residual sits a mean distance ``s`` beyond the finite edge. Straub's formulation uses the rate ``1/s`` instead; the family of tails is the same either way.
 
 ```@example discretization
 using EnhancedBayesianNetworks # hide

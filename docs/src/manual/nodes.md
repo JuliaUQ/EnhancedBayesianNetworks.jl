@@ -123,7 +123,7 @@ Both emit a warning where they change what you stored.
 A continuous node cannot be queried after [Reduction](reduction.md), which eliminates it.
 To keep evidence observable on it, and to let it enter discrete inference, the node can be **discretized**: its support is partitioned into **discretization-intervals**, and the node is replaced by a discrete **surrogate** carrying one state per discretization-interval plus a continuous **residual** holding what is left of the variable inside the observed one.
 
-How that is done is declared **when the node is built**, as its `discretization` field, and is a property of the node from then on: a **root** takes an [`ExactDiscretization`](@ref), a **child** an [`ApproximatedDiscretization`](@ref), each given the edges of the partition and, for a child, the exponential tail scale `λ`.
+How that is done is declared **when the node is built**, as its `discretization` field, and is a property of the node from then on: a **root** takes an [`ExactDiscretization`](@ref), a **child** an [`ApproximatedDiscretization`](@ref), each given the edges of the partition and, for a child, the exponential tail `scale`.
 
 ```@example nodes
 # the discretization travels with the node: edges declared here, applied at reduction

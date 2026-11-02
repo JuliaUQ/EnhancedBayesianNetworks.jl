@@ -64,15 +64,15 @@ end
 ExactDiscretization(; kwargs...) = ExactDiscretization(Vector{Real}(); kwargs...)
 
 """
-    ApproximatedDiscretization(intervals = Real[], λ = 0; mesh = $PBOX_MASS_MESH, technique = :optimised)
+    ApproximatedDiscretization(intervals = Real[], scale = 0; mesh = $PBOX_MASS_MESH, technique = :optimised)
 
-Discretization strategy for a continuous **non-root (child)** node, allowing evidence to be observed on it. The sorted `intervals` edges partition the support into discretization-intervals, while `λ` is the scale parameter of the exponential used to approximate the original continuous distribution's tails when a discrete state is mapped back to a continuous range. `λ` must be non-negative; a value above `2` is accepted but warns, as it tends to give an unrealistic tail approximation.
+Discretization strategy for a continuous **non-root (child)** node, allowing evidence to be observed on it. The sorted `intervals` edges partition the support into discretization-intervals, while `scale` is the scale parameter of the exponential used to approximate the original continuous distribution's tails when a discrete state is mapped back to a continuous range. `scale` must be non-negative; a value above `2` is accepted but warns, as it tends to give an unrealistic tail approximation.
 
 `technique` and `mesh` are as in [`ExactDiscretization`](@ref): they select how a `ProbabilityBox` entry's discretization-interval mass is computed, and have no effect on a precise distribution or an `Interval`.
 
 # Examples
 ```julia
-# discretize a child node at edges -1, 0, 1, approximating tails with rate 1.5:
+# discretize a child node at edges -1, 0, 1, approximating tails with an exponential of scale 1.5:
 disc = ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5)
 C = ContinuousNode(:C, [:W], disc)
 
@@ -85,24 +85,24 @@ ApproximatedDiscretization([-1.0, 0.0, 1.0], 1.5; mesh = 1.0e-4)
 """
 struct ApproximatedDiscretization <: AbstractDiscretization
     intervals::Vector{<:Real}
-    λ::Real
+    scale::Real
     mesh::Real
     technique::Symbol
 
     function ApproximatedDiscretization(
-            intervals::Vector{<:Real}, λ::Real;
+            intervals::Vector{<:Real}, scale::Real;
             mesh::Real = PBOX_MASS_MESH,
             technique::Symbol = :optimised
         )
         if !issorted(intervals)
             error("Invalid ApproximatedDiscretization: interval values $intervals are not sorted")
-        elseif λ < 0
-            error("Invalid ApproximatedDiscretization: rate parameter must be non-negative")
-        elseif λ > 2
-            @warn "Selected rate parameter $λ could be too large for a realistic tails approximation"
+        elseif scale < 0
+            error("Invalid ApproximatedDiscretization: scale parameter must be non-negative")
+        elseif scale > 2
+            @warn "Selected scale parameter $scale could be too large for a realistic tails approximation"
         end
         _check_pbox_mass(mesh, technique)
-        return new(intervals, λ, mesh, technique)
+        return new(intervals, scale, mesh, technique)
     end
 end
 

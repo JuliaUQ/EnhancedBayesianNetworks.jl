@@ -31,7 +31,7 @@
     @test_logs (:warn, "node :z1 has maximum intervals value 11 > support upper bound 10.0. Upper bound will be used as intervals end") EnhancedBayesianNetworks._format_interval(root)
 
     intervals = [[-Inf, -1.0], [-1.0, 0.0], [0.0, 1.0], [1.0, Inf]]
-    λ = 2
+    scale = 2
 
     exp1 = -Exponential(2) - 1
     exp2 = Exponential(2) + 1
@@ -41,7 +41,7 @@
         Uniform(0.0, 1.0),
         exp2,
     ]
-    @test approx == EnhancedBayesianNetworks._approximate.(intervals, λ)
+    @test approx == EnhancedBayesianNetworks._approximate.(intervals, scale)
 end
 
 @testitem "Discretize Distributions" begin
@@ -110,19 +110,19 @@ end
 
 @testitem "Approximate" begin
     intervals = [[-Inf, -1.0], [-1.0, 1.0], [1.0, Inf]]
-    λ = 2
-    approximated_dist = EnhancedBayesianNetworks._approximate.(intervals, λ)
+    scale = 2
+    approximated_dist = EnhancedBayesianNetworks._approximate.(intervals, scale)
     @test approximated_dist[1].μ == -1
     @test approximated_dist[1].σ == -1
     @test isa(approximated_dist[1].ρ, Exponential)
-    @test approximated_dist[1].ρ.θ == λ
+    @test approximated_dist[1].ρ.θ == scale
     @test approximated_dist[2].a == -1
     @test approximated_dist[2].b == 1
     @test isa(approximated_dist[2], Uniform)
     @test approximated_dist[3].μ == 1
     @test approximated_dist[3].σ == 1
     @test isa(approximated_dist[3].ρ, Exponential)
-    @test approximated_dist[3].ρ.θ == λ
+    @test approximated_dist[3].ρ.θ == scale
 end
 
 @testitem "Discretize Nodes" begin
@@ -247,21 +247,22 @@ end
             Interval(0.15865525393145696, 0.5),
         ],
     )
+    # names distinct from the root-node bindings above, which are still in scope here
     for technique in (:optimised, :distribution_free)
-        node = ContinuousNode(:x, [:y], ApproximatedDiscretization([-1, 0, 1], 2; technique = technique))
-        node[:y => :y1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
-        node[:y => :y2] = Normal()
-        discretized_node, new_continuous = @suppress EnhancedBayesianNetworks._discretize(node)
-        @test Symbol.(names(discretized_node.cpt.data)) == [:y, :x_d, :Π]
-        @test unique(discretized_node.cpt.data.x_d) == discretized_states
+        child = ContinuousNode(:x, [:y], ApproximatedDiscretization([-1, 0, 1], 2; technique = technique))
+        child[:y => :y1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        child[:y => :y2] = Normal()
+        child_surrogate, child_residual = @suppress EnhancedBayesianNetworks._discretize(child)
+        @test Symbol.(names(child_surrogate.cpt.data)) == [:y, :x_d, :Π]
+        @test unique(child_surrogate.cpt.data.x_d) == discretized_states
         for (i, state) in enumerate(discretized_states)
-            @test same(discretized_node[:y => :y1, :x_d => state], expected[technique][i])
-            @test discretized_node[:y => :y2, :x_d => state] ≈ precise_masses[i]
+            @test same(child_surrogate[:y => :y1, :x_d => state], expected[technique][i])
+            @test child_surrogate[:y => :y2, :x_d => state] ≈ precise_masses[i]
         end
         # the technique decides masses only; the residual is the same precise approximation either way
-        @test isa(new_continuous.cpt.data.Π[1].ρ, Exponential)
-        @test new_continuous.cpt.data.Π[2] == Uniform(-1.0, 0.0)
-        @test new_continuous.cpt.data.Π[3] == Uniform(0.0, 1.0)
-        @test isa(new_continuous.cpt.data.Π[4].ρ, Exponential)
+        @test isa(child_residual.cpt.data.Π[1].ρ, Exponential)
+        @test child_residual.cpt.data.Π[2] == Uniform(-1.0, 0.0)
+        @test child_residual.cpt.data.Π[3] == Uniform(0.0, 1.0)
+        @test isa(child_residual.cpt.data.Π[4].ρ, Exponential)
     end
 end

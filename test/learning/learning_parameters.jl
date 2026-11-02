@@ -162,7 +162,7 @@ end
     # with data to disagree about `max_iter` genuinely bounds the loop rather than being ignored
     incomplete = DataFrame(R = [:wet, :wet, :dry, missing], G = [:green, :green, :brown, :brown])
     domains = EnhancedBayesianNetworks._domains(dag, incomplete)
-    once = EnhancedBayesianNetworks._em(dag, incomplete, domains, estimators, 1, 1.0e-10, false)
+    once = @suppress EnhancedBayesianNetworks._em(dag, incomplete, domains, estimators, 1, 1.0e-10, false)
     converged = EnhancedBayesianNetworks._em(dag, incomplete, domains, estimators, 100, 1.0e-10, false)
     @test any(a.cpt.data.Π != b.cpt.data.Π for (a, b) in zip(once, converged))
 
@@ -369,9 +369,9 @@ end
     @test EnhancedBayesianNetworks._fit_cpts(dag, incomplete, precise)[2].cpt.data.Π == EnhancedBayesianNetworks._em(dag, incomplete, domains, precise, 100, 1.0e-4, false)[2].cpt.data.Π
 
     # `max_iter` and `tol` reach the EM path and nowhere else
-    early = EnhancedBayesianNetworks._fit_cpts(dag, incomplete, precise; max_iter = 1)
+    early = @suppress EnhancedBayesianNetworks._fit_cpts(dag, incomplete, precise; max_iter = 1)
     @test any(a.cpt.data.Π != b.cpt.data.Π for (a, b) in zip(early, EnhancedBayesianNetworks._fit_cpts(dag, incomplete, precise)))
-    @test EnhancedBayesianNetworks._fit_cpts(dag, complete, precise; max_iter = 1)[2].cpt.data.Π == EnhancedBayesianNetworks._fit_cpts(dag, complete, precise)[2].cpt.data.Π
+    @test (@suppress EnhancedBayesianNetworks._fit_cpts(dag, complete, precise; max_iter = 1))[2].cpt.data.Π == EnhancedBayesianNetworks._fit_cpts(dag, complete, precise)[2].cpt.data.Π
 end
 
 @testitem "Bounds over every completion of the data" setup = [ExtraDeps] begin

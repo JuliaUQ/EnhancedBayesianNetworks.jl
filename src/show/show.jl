@@ -13,13 +13,13 @@ function _show_parents(io, node)
     end
 end
 
-# Discretization block: scheme name, the λ line only for ApproximatedDiscretization, then intervals.
+# Discretization block: scheme name, the scale line only for ApproximatedDiscretization, then intervals.
 # Prints nothing for an empty discretization.
 function _show_discretization(io, d)
     return if !isempty(d)
         println(io, "Discretization: ", nameof(typeof(d)))
         if d isa ApproximatedDiscretization
-            println(io, "  λ: ", d.λ)
+            println(io, "  scale: ", d.scale)
         end
         println(io, "  Intervals: ", join(d.intervals, ", "))
         # only worth a line when the node departs from the default p-box mass settings
