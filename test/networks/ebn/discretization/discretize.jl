@@ -247,21 +247,22 @@ end
             Interval(0.15865525393145696, 0.5),
         ],
     )
+    # names distinct from the root-node bindings above, which are still in scope here
     for technique in (:optimised, :distribution_free)
-        node = ContinuousNode(:x, [:y], ApproximatedDiscretization([-1, 0, 1], 2; technique = technique))
-        node[:y => :y1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
-        node[:y => :y2] = Normal()
-        discretized_node, new_continuous = @suppress EnhancedBayesianNetworks._discretize(node)
-        @test Symbol.(names(discretized_node.cpt.data)) == [:y, :x_d, :Π]
-        @test unique(discretized_node.cpt.data.x_d) == discretized_states
+        child = ContinuousNode(:x, [:y], ApproximatedDiscretization([-1, 0, 1], 2; technique = technique))
+        child[:y => :y1] = ProbabilityBox{Normal}(Dict(:μ => Interval(0, 1), :σ => 1))
+        child[:y => :y2] = Normal()
+        child_surrogate, child_residual = @suppress EnhancedBayesianNetworks._discretize(child)
+        @test Symbol.(names(child_surrogate.cpt.data)) == [:y, :x_d, :Π]
+        @test unique(child_surrogate.cpt.data.x_d) == discretized_states
         for (i, state) in enumerate(discretized_states)
-            @test same(discretized_node[:y => :y1, :x_d => state], expected[technique][i])
-            @test discretized_node[:y => :y2, :x_d => state] ≈ precise_masses[i]
+            @test same(child_surrogate[:y => :y1, :x_d => state], expected[technique][i])
+            @test child_surrogate[:y => :y2, :x_d => state] ≈ precise_masses[i]
         end
         # the technique decides masses only; the residual is the same precise approximation either way
-        @test isa(new_continuous.cpt.data.Π[1].ρ, Exponential)
-        @test new_continuous.cpt.data.Π[2] == Uniform(-1.0, 0.0)
-        @test new_continuous.cpt.data.Π[3] == Uniform(0.0, 1.0)
-        @test isa(new_continuous.cpt.data.Π[4].ρ, Exponential)
+        @test isa(child_residual.cpt.data.Π[1].ρ, Exponential)
+        @test child_residual.cpt.data.Π[2] == Uniform(-1.0, 0.0)
+        @test child_residual.cpt.data.Π[3] == Uniform(0.0, 1.0)
+        @test isa(child_residual.cpt.data.Π[4].ρ, Exponential)
     end
 end

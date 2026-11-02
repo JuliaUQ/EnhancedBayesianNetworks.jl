@@ -30,9 +30,9 @@
     @test node_c.cpt.data.Π[2] == Interval(0.3, 0.6)
 end
 
-@testitem "ContinuousNode - degenerate probability boxes" begin
+@testitem "ContinuousNode - degenerate probability boxes" setup = [ExtraDeps] begin
     all_degenerate = ProbabilityBox{Normal}(Dict(:μ => Interval(0.2, 0.2), :σ => Interval(1.0, 1.0)))
-    node_a = ContinuousNode(:a, all_degenerate)
+    node_a = @suppress ContinuousNode(:a, all_degenerate)
     @test node_a.cpt.data.Π[1] == Normal(0.2, 1.0)
     @test isprecise(node_a)
 
@@ -44,7 +44,7 @@ end
 
     # the truncation a p-box carries survives the collapse, so the stored entry is the truncated member and not the bare family member — the residual nodes discretization produces are truncated this way.
     truncated_pbox = EnhancedBayesianNetworks._truncate(all_degenerate, (0.0, 1.0))
-    node_c = ContinuousNode(:c, truncated_pbox)
+    node_c = @suppress ContinuousNode(:c, truncated_pbox)
     @test node_c.cpt.data.Π[1] == truncated(Normal(0.2, 1.0), 0.0, 1.0)
     @test isprecise(node_c)
     @test cdf(node_c.cpt.data.Π[1], 0.5) == cdf(truncated_pbox, 0.5).lb
