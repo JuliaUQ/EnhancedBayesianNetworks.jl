@@ -31,7 +31,7 @@
     @test_logs (:warn, "node :z1 has maximum intervals value 11 > support upper bound 10.0. Upper bound will be used as intervals end") EnhancedBayesianNetworks._format_interval(root)
 
     intervals = [[-Inf, -1.0], [-1.0, 0.0], [0.0, 1.0], [1.0, Inf]]
-    λ = 2
+    scale = 2
 
     exp1 = -Exponential(2) - 1
     exp2 = Exponential(2) + 1
@@ -41,7 +41,7 @@
         Uniform(0.0, 1.0),
         exp2,
     ]
-    @test approx == EnhancedBayesianNetworks._approximate.(intervals, λ)
+    @test approx == EnhancedBayesianNetworks._approximate.(intervals, scale)
 end
 
 @testitem "Discretize Distributions" begin
@@ -110,19 +110,19 @@ end
 
 @testitem "Approximate" begin
     intervals = [[-Inf, -1.0], [-1.0, 1.0], [1.0, Inf]]
-    λ = 2
-    approximated_dist = EnhancedBayesianNetworks._approximate.(intervals, λ)
+    scale = 2
+    approximated_dist = EnhancedBayesianNetworks._approximate.(intervals, scale)
     @test approximated_dist[1].μ == -1
     @test approximated_dist[1].σ == -1
     @test isa(approximated_dist[1].ρ, Exponential)
-    @test approximated_dist[1].ρ.θ == λ
+    @test approximated_dist[1].ρ.θ == scale
     @test approximated_dist[2].a == -1
     @test approximated_dist[2].b == 1
     @test isa(approximated_dist[2], Uniform)
     @test approximated_dist[3].μ == 1
     @test approximated_dist[3].σ == 1
     @test isa(approximated_dist[3].ρ, Exponential)
-    @test approximated_dist[3].ρ.θ == λ
+    @test approximated_dist[3].ρ.θ == scale
 end
 
 @testitem "Discretize Nodes" begin

@@ -11,7 +11,7 @@ function _discretize(node::ContinuousNode)
         for i in intervals
             map((sc) -> discretized_node[(vcat(first.(sc), name_discrete) .=> vcat(last.(sc), Symbol(i)))...] = _discretize(node[(sc)...], i, node.discretization), scenarios(node))
         end
-        map(i -> new_continuous[(name_discrete .=> Symbol(i))] = _approximate(i, node.discretization.λ), intervals)
+        map(i -> new_continuous[(name_discrete .=> Symbol(i))] = _approximate(i, node.discretization.scale), intervals)
     end
     return (discretized_node, new_continuous)
 end
@@ -43,14 +43,14 @@ function _format_interval(node::ContinuousNode)
     return [[intervals[i], intervals[i + 1]] for i in 1:(length(intervals) - 1)]
 end
 
-# Reconstruct a continuous distribution over one interval: Uniform for a bounded interval, a shifted Exponential (rate λ) for a one-sided infinite tail (left tail below an upper edge, right tail above a lower edge).
-function _approximate(i::AbstractVector{<:Real}, λ::Real)
+# Reconstruct a continuous distribution over one interval: Uniform for a bounded interval, a shifted Exponential (scale `scale`) for a one-sided infinite tail (left tail below an upper edge, right tail above a lower edge).
+function _approximate(i::AbstractVector{<:Real}, scale::Real)
     if all(isfinite.(i))
         return Uniform(i...)
     elseif isfinite(last(i))
-        return -Exponential(λ) + last(i)
+        return -Exponential(scale) + last(i)
     elseif isfinite(first(i))
-        return Exponential(λ) + first(i)
+        return Exponential(scale) + first(i)
     end
 end
 

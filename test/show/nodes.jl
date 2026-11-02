@@ -100,7 +100,7 @@ end
     @test helper(_show_parents, W) == "Parents: none\n"
     @test helper(_show_parents, S) == "Parents: W\n"
     @test helper(_show_discretization, ExactDiscretization([-1.0, 1.0])) == "Discretization: ExactDiscretization\n  Intervals: -1.0, 1.0\n"
-    @test helper(_show_discretization, ApproximatedDiscretization([-1.0, 1.0], 2)) == "Discretization: ApproximatedDiscretization\n  λ: 2\n  Intervals: -1.0, 1.0\n"
+    @test helper(_show_discretization, ApproximatedDiscretization([-1.0, 1.0], 2)) == "Discretization: ApproximatedDiscretization\n  scale: 2\n  Intervals: -1.0, 1.0\n"
     # the p-box mass line shows up only when the strategy departs from the defaults
     @test helper(_show_discretization, ExactDiscretization([-1.0, 1.0]; technique = :distribution_free)) == "Discretization: ExactDiscretization\n  Intervals: -1.0, 1.0\n  P-box mass: distribution_free\n"
     @test helper(_show_discretization, ExactDiscretization([-1.0, 1.0]; mesh = 1.0e-3)) == "Discretization: ExactDiscretization\n  Intervals: -1.0, 1.0\n  P-box mass: optimised (mesh 0.001)\n"
@@ -137,7 +137,7 @@ end
     @test occursin("ContinuousNode: U", u)
     @test occursin("Parents: W", u)
     @test occursin("Discretization: ApproximatedDiscretization", u)
-    @test occursin("λ: 2", u)
+    @test occursin("scale: 2", u)
     @test occursin("Type: Precise", u)
     @test occursin("Support:", u)
     d = plainshow(D)
