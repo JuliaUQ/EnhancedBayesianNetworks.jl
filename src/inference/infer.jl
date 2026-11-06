@@ -155,8 +155,8 @@ function infer(
             chunk_posteriors = Posterior[]
             chunk_discarded = 0
             for i in chunk
-                factors = _extreme_combination(node_factors, sizes, i)
-                result, evidence_probability = _ve(factors, order, query_vars, evidence_idx)
+                extreme_factors = _extreme_combination(node_factors, sizes, i)
+                result, evidence_probability = _ve(extreme_factors, order, query_vars, evidence_idx)
                 # Regular extension: an extreme network under which the evidence is impossible says nothing about the conditional — its posterior is 0/0 — so it is dropped rather than folded into the bounds, where a single NaN would swallow both of them.
                 if evidence_probability > tol
                     push!(chunk_posteriors, Posterior(result, ns, query, evidence))
