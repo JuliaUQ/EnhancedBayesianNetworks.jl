@@ -69,7 +69,7 @@ Compute the posterior over query (a Symbol or a vector of them) given evidence, 
 
 On a credal network the bounds are taken over the extreme networks under which the evidence is possible; one under which P(evidence) is zero gives a 0/0 posterior and is discarded (regular extension). `tol` is the threshold at or below which P(evidence) counts as impossible, and defaults to 0.0, which discards exactly the structurally degenerate extremes. If the evidence is impossible under every extreme network, so that its upper probability is zero, infer raises an error rather than returning a vacuous interval.
 
-Exact credal inference runs one variable elimination per extreme network, and their number is the product of the vertex counts of every conditional distribution, so it grows exponentially with the imprecise nodes. `infer` counts them before building any and raises an error when the count exceeds `max_networks` (default `10^6`); raise it to accept a longer run.
+Exact credal inference runs one variable elimination per extreme network, and their number is the product of the vertex counts of every conditional distribution, so it grows exponentially with the imprecise nodes. `infer` counts them before building any and raises an error when the count exceeds `max_networks` (default `10^6`); raise it to accept a longer run. The extreme networks are inferred in parallel over the threads Julia was started with, so start it with `julia --threads=auto` to use every core; the result does not depend on the number of threads.
 
 Examples
 
@@ -98,7 +98,7 @@ function infer(
     return posterior
 end
 
-# One variable-elimination pass over a precise network: the posterior, and P(evidence) under it. `infer` keeps only the posterior; credal inference needs P(evidence) to tell whether a given extreme network admits the evidence at all.
+# One variable-elimination pass over a precise network: the posterior, and P(evidence) under it. `infer` keeps only the posterior.
 function _infer_ve(
         bn::BayesianNetwork,
         query::Vector{Symbol},
@@ -132,25 +132,45 @@ function infer(
     _verify_query(query, cn, evidence)
     _verify_evidence(evidence, cn)
 
-    posteriors = Posterior[]
-    discarded = 0
     # Count before building: enumerating the extreme networks is what costs, so refuse an infeasible network up front rather than hanging in the enumeration.
     n = _n_extreme_bayesian_networks(cn)
     if n > max_networks
         error("Invalid CredalNetwork: exact credal inference enumerates every extreme Bayesian network, and this one has $(n <= 10^12 ? n : "≈ 10^$(round(Float64(log10(n)); digits = 1))") of them, above max_networks = $max_networks; raise max_networks or reduce the imprecision of the network")
     end
-    bns = _extreme_bayesian_networks(cn)
+    # Every extreme network has the structure of `cn` and only its CPT entries differ, so the schema, the elimination order and the factor of each extreme node are computed once, and an extreme network is just a choice of one factor per node.
+    node_extremes = map(_extreme_nodes, cn.nodes)
+    sizes = length.(node_extremes)
+    template = BayesianNetwork(_extreme_combination(node_extremes, sizes, 0), copy(cn.topology), copy(cn.A))
+    ns = NetworkSchema(template)
+    order = _sort_nodes(InteractionGraph(template), ns, scorefun)
+    node_factors = [Factor[_factorize(node, ns) for node in extremes] for extremes in node_extremes]
+    query_vars = _query_to_idx(query, ns)
+    evidence_idx = _evidence_to_idx(evidence, ns)
+
     p = Progress(Int(n); desc = "Inferring over $n BNs ", enabled = progress)
-    for bn in bns
-        posterior, evidence_probability = _infer_ve(bn, query, evidence, scorefun; progress = false)
-        # Regular extension: an extreme network under which the evidence is impossible says nothing about the conditional — its posterior is 0/0 — so it is dropped rather than folded into the bounds, where a single NaN would swallow both of them.
-        if evidence_probability > tol
-            push!(posteriors, posterior)
-        else
-            discarded += 1
+    # The extreme networks are split among the available threads, a few chunks per thread so that a thread finishing early picks up more work. The chunks are joined back in order, so `posteriors` comes out the same as in a serial run.
+    chunks = Iterators.partition(0:(Int(n) - 1), cld(Int(n), 4 * Threads.nthreads()))
+    tasks = map(chunks) do chunk
+        Threads.@spawn begin
+            chunk_posteriors = Posterior[]
+            chunk_discarded = 0
+            for i in chunk
+                extreme_factors = _extreme_combination(node_factors, sizes, i)
+                result, evidence_probability = _ve(extreme_factors, order, query_vars, evidence_idx)
+                # Regular extension: an extreme network under which the evidence is impossible says nothing about the conditional — its posterior is 0/0 — so it is dropped rather than folded into the bounds, where a single NaN would swallow both of them.
+                if evidence_probability > tol
+                    push!(chunk_posteriors, Posterior(result, ns, query, evidence))
+                else
+                    chunk_discarded += 1
+                end
+                next!(p)
+            end
+            (chunk_posteriors, chunk_discarded)
         end
-        next!(p)
     end
+    results = fetch.(tasks)
+    posteriors = reduce(vcat, first.(results))
+    discarded = sum(last.(results))
     if isempty(posteriors)
         evidence_str = "[" * join(["$(repr(k)) => $(repr(v))" for (k, v) in evidence], ", ") * "]"
         # With the default tol every surviving extreme was genuinely impossible, so the conditional does not exist. With a raised tol the extremes may well have admitted the evidence and been cut by the threshold instead, which is the caller's doing and not a property of the model.
@@ -180,19 +200,12 @@ end
 # Number of extreme networks of `cn`, computed without building any: the product of the per-node counts.
 _n_extreme_bayesian_networks(cn::CredalNetwork) = prod(_n_extreme_nodes, cn.nodes; init = big(1))
 
-# Lazy: one network is built per iteration, so memory stays flat however many there are. The combinations are walked with an integer counter rather than `Iterators.product(node_extremes...)`, whose splat makes the compiler specialise on a tuple as long as the network and costs tens of seconds on the first call for a network of a hundred nodes.
-function _extreme_bayesian_networks(cn::CredalNetwork)
-    node_extremes = map(_extreme_nodes, cn.nodes)
-    sizes = length.(node_extremes)
-    return (BayesianNetwork(_extreme_combination(node_extremes, sizes, i), copy(cn.topology), copy(cn.A)) for i in 0:(prod(sizes) - 1))
-end
-
-# The `i`-th combination of one extreme per node, in the same order as `Iterators.product`: the first node varies fastest.
+# The `i`-th combination of one element per node, in the same order as `Iterators.product`: the first node varies fastest. `node_extremes` holds per node either its extreme nodes or their factors, and the result has the same element type. The combinations are walked with an integer counter rather than `Iterators.product(node_extremes...)`, whose splat makes the compiler specialise on a tuple as long as the network and costs tens of seconds on the first call for a network of a hundred nodes; it also lets each thread start at its own index.
 function _extreme_combination(node_extremes, sizes, i::Integer)
-    nodes = Vector{DiscreteNode}(undef, length(sizes))
+    picked = Vector{eltype(eltype(node_extremes))}(undef, length(sizes))
     for k in eachindex(sizes)
         i, r = divrem(i, sizes[k])
-        nodes[k] = node_extremes[k][r + 1]
+        picked[k] = node_extremes[k][r + 1]
     end
-    return nodes
+    return picked
 end

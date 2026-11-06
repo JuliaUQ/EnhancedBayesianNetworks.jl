@@ -159,16 +159,34 @@ end
     @test cp6.query == [:W]
 end
 
-@testitem "Inference - extreme bns" setup = [SetupFireProtectionCN] begin
-    nodes = [T, F, A, S, L, R]
-    cn = CredalNetwork(nodes)
-    bns = EnhancedBayesianNetworks._extreme_bayesian_networks(cn)
-    @test length(bns) == 2048
-    for bn in bns
-        @test length(bn.nodes) == length(cn.nodes)
-        @test bn.A == cn.A
-        @test bn.topology == cn.topology
+@testitem "Inference - extreme combinations" setup = [SetupFireProtectionCN] begin
+    cn = CredalNetwork([T, F, A, S, L, R])
+    node_extremes = map(EnhancedBayesianNetworks._extreme_nodes, cn.nodes)
+    sizes = length.(node_extremes)
+    @test prod(sizes) == 2048
+    combinations = [EnhancedBayesianNetworks._extreme_combination(node_extremes, sizes, i) for i in 0:(prod(sizes) - 1)]
+    @test eltype(first(combinations)) == DiscreteNode
+    @test all(all(a .=== collect(b)) for (a, b) in zip(combinations, Iterators.product(node_extremes...)))
+    node_factors = [[i, 10 * i] for i in 1:3]
+    @test EnhancedBayesianNetworks._extreme_combination(node_factors, [2, 2, 2], 5) == [10, 2, 30]
+    @test eltype(EnhancedBayesianNetworks._extreme_combination(node_factors, [2, 2, 2], 5)) == Int
+end
+
+@testitem "Inference - credal bounds match every extreme network" setup = [SetupFireProtectionCN] begin
+    evidence = Evidence(:Report => :YesR)
+    node_extremes = map(EnhancedBayesianNetworks._extreme_nodes, cn.nodes)
+    sizes = length.(node_extremes)
+    expected = map(0:(prod(sizes) - 1)) do i
+        bn = BayesianNetwork(EnhancedBayesianNetworks._extreme_combination(node_extremes, sizes, i), copy(cn.topology), copy(cn.A))
+        infer(bn, [:Fire], evidence; progress = false)
     end
+    p = infer(cn, [:Fire], evidence; progress = false)
+    @test p.discarded == 0
+    @test length(p.posteriors) == length(expected)
+    @test all(a.factor.table ≈ b.factor.table for (a, b) in zip(p.posteriors, expected))
+    tables = getproperty.(getproperty.(expected, :factor), :table)
+    @test p.lower.table ≈ reduce((a, b) -> min.(a, b), tables)
+    @test p.upper.table ≈ reduce((a, b) -> max.(a, b), tables)
 end
 
 @testitem "Inference - max_networks kwarg" setup = [ExtraDeps, SetupFireProtectionCN] begin

@@ -150,6 +150,8 @@ where ``K_j(X)`` is the credal set of node ``X`` under the ``j``-th configuratio
 
 [`infer`](@ref) computes ``N`` before building any extreme network and raises an error when it exceeds the `max_networks` keyword, which defaults to ``10^6``. A network with too many extremes is thus refused at once, with the count in the error message, instead of starting a computation that cannot finish; raise `max_networks` to accept a longer run. Learned networks reach this limit easily, since learning makes every distribution of an imprecise node imprecise (see [Parameter Learning](parameterlearning.md)).
 
+The extreme networks are independent of one another, so [`infer`](@ref) solves them in parallel over the threads Julia was started with. Julia starts with a single thread unless told otherwise: start it with `julia --threads=auto`, or set the `JULIA_NUM_THREADS` environment variable, to use every core. The bounds, the posteriors and the discarded count are the same whatever the number of threads, and on one thread the computation runs serially as before. All extreme networks share the structure of the credal network, so the elimination order and the factors of every extreme node are computed once and reused across them.
+
 !!! tip "Progress bar"
     Because each extreme network is a full variable-elimination pass, credal inference over many of them can be slow. The same `progress` keyword shows a progress bar over the extreme networks as they are solved (the inner per-network elimination bars are suppressed), likewise defaulting to `isinteractive()`.
 
